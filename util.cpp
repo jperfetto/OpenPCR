@@ -2,7 +2,7 @@
 
 void sprintFloat(char* str, float val, int decimalDigits) {
   int number = (int)val;
-  int decimal = (val - number) * pow(10, decimalDigits);
+  int decimal = (abs(val) - abs(number)) * pow(10, decimalDigits);
   sprintf(str, "%3d.%d", number, decimal);
 }
 

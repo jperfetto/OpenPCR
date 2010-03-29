@@ -19,12 +19,20 @@ public:
     ECooling
   };
   
+  enum ThermalDirection {
+    OFF,
+    HEAT,
+    COOL
+  };
+  
   Thermocycler();
   ~Thermocycler();
   
   // accessors
   ProgramState GetProgramState() { return iProgramState; }
   ThermalState GetThermalState() { return iThermalState; }
+  ThermalDirection GetThermalDirection() { return iThermalDirection; }
+  int GetPeltierPwm() { return iPeltierPwm; }
   float GetPlateTemp() { return iPlateTemp; }
   
   // control
@@ -37,6 +45,10 @@ public:
   
 private:
   void ReadPlateTemp();
+  void ControlPeltier();
+ 
+  //util functions
+  void SetPeltier(ThermalDirection dir, int pwm);
   
 private:
   // constants
@@ -54,6 +66,10 @@ private:
   float iPlateTemp;
   Cycle* ipProgram;
   Step* ipCurrentStep;
+  
+  // peltier control
+  ThermalDirection iThermalDirection;
+  int iPeltierPwm;
 };
 
 #endif

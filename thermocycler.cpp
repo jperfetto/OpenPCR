@@ -22,9 +22,16 @@ Thermocycler::Thermocycler():
   ipProgram(NULL),
   iProgramState(EStopped),
   iThermalState(EHolding),
-  ipCurrentStep(NULL) {
+  ipCurrentStep(NULL),
+  iThermalDirection(OFF),
+  iPeltierPwm(0) {
     
   ipDisplay = new Display(*this);
+  
+  //init pins
+  pinMode(2, OUTPUT);
+  pinMode(3, OUTPUT);
+  pinMode(4, OUTPUT);
 }
 
 Thermocycler::~Thermocycler() {
@@ -50,6 +57,9 @@ PcrStatus Thermocycler::Start() {
   
   iProgramState = ERunning;
   iThermalState = EHolding;
+  iThermalDirection = OFF;
+  iPeltierPwm = 0;
+  
   ipProgram->BeginIteration();
   ipCurrentStep = ipProgram->GetNextStep();
   return ESuccess;
@@ -57,13 +67,16 @@ PcrStatus Thermocycler::Start() {
 
 // internal
 void Thermocycler::Loop() {
-  ipDisplay->Update();
+  ReadPlateTemp();
+  ControlPeltier();
+  ipDisplay->Update();  
 }
 
 //private
 void Thermocycler::ReadPlateTemp() {
   float voltage = analogRead(PLATE_TEMP_SENSOR_PIN) * 5.0 / 1024;
-  float resistance = (75000 / voltage) - 15000;
+  int r1 = 4670;
+  float resistance = (r1 * 5.0 / voltage) - r1; //(75000 / voltage) - 15000;
  
   //simple linear search for now
   int i;
@@ -74,4 +87,56 @@ void Thermocycler::ReadPlateTemp() {
   unsigned long high_res = PLATE_RESISTANCE_TABLE[i-1];
   unsigned long low_res = PLATE_RESISTANCE_TABLE[i];
   iPlateTemp = i - 20 - (resistance - low_res) / (high_res - low_res);
+}
+
+void Thermocycler::ControlPeltier() {
+  float targetTemp = 99;
+  ThermalDirection newDirection;
+  int newPwm;
+  
+  //find new direction
+  if (iPlateTemp > targetTemp)
+    newDirection = COOL;
+  else if (iPlateTemp < targetTemp)
+    newDirection = HEAT;
+  else
+    newDirection = OFF;
+  
+  //find new power
+  float tempDiff = abs(targetTemp - iPlateTemp);
+  if (tempDiff <= 0.1)
+    newPwm = 0;
+  else if (tempDiff > 2.0)
+    newPwm = 255;
+  else
+    newPwm = tempDiff * 255 / 2.0;
+    
+  //change power/direction slowly
+  if (newDirection != iThermalDirection)
+    newPwm = 0;
+  if (newPwm > iPeltierPwm + 2)
+    newPwm = iPeltierPwm + 2;
+    
+  //if (newDirection == COOL && newPwm > 200)
+    //newPwm = 200;
+    
+  //update state
+  iPeltierPwm = newPwm;
+  iThermalDirection = newDirection;
+  SetPeltier(newDirection, newPwm);
+}
+
+void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
+  if (dir == COOL) {
+    digitalWrite(2, LOW);
+    digitalWrite(4, HIGH);
+  } else if (dir == HEAT) {
+    digitalWrite(2, HIGH);
+    digitalWrite(4, LOW);
+  } else {
+    digitalWrite(2, LOW);
+    digitalWrite(4, LOW);
+  }
+  
+  analogWrite(3, pwm);
 }
