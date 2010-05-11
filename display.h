@@ -20,6 +20,8 @@ private:
   LiquidCrystal iLcd;
   Thermocycler& iThermocycler;
   Cycle* ipDisplayCycle;
+  Thermocycler::ProgramState iLastState;
 };
 
 #endif
+

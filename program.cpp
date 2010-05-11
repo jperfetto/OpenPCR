@@ -77,3 +77,4 @@ void Cycle::RestartCycle() {
   for (int i = 0; i < iNumComponents; i++)
     iComponents[i]->BeginIteration();
 }
+
