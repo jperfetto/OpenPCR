@@ -9,6 +9,7 @@ Step::Step(char* name, int duration, float temp):
   iStepReturned(false) {
     
   strncpy(iName, name, STEP_NAME_LENGTH - 1);
+  iName[STEP_NAME_LENGTH] = '\0';
 }
 
 void Step::BeginIteration() {

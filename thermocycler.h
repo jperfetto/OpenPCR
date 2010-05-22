@@ -33,7 +33,9 @@ public:
   // accessors
   ProgramState GetProgramState() { return iProgramState; }
   ThermalState GetThermalState() { return iThermalState; }
+  Step* GetCurrentStep() { return ipCurrentStep; }
   ThermalDirection GetThermalDirection() { return iThermalDirection; }
+  boolean Ramping() { return iRamping; }
   int GetPeltierPwm() { return iPeltierPwm; }
   float GetPlateTemp() { return iPlateTemp; }
   float GetLidTemp() { return iLidTemp; }
@@ -42,9 +44,6 @@ public:
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle); //takes ownership
   void Stop();
   PcrStatus Start();
-  
-  // temp
-  unsigned long GetRunTime() { return iRunTime; }
   
   // internal
   void Loop();
@@ -80,16 +79,14 @@ private:
   float iLidTemp;
   Cycle* ipProgram;
   Step* ipCurrentStep;
+  unsigned long iCycleStartTime;
+  boolean iRamping;
   
   // peltier control
   ThermalDirection iThermalDirection;
   int iPeltierPwm;
   SPid iPeltierPid;
-  
-  //temp
-  unsigned long iRunTime;
-  unsigned long iStartTime;
-  boolean iRunning;
+  SPid iLidPid;
 };
 
 #endif

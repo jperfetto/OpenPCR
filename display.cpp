@@ -20,11 +20,6 @@ void Display::Update() {
   iLastState = state;
   
   if (state != Thermocycler::EOff) {
-    iLcd.setCursor(6, 1);
-    //iLcd.print("OpenPCR");
-    
-   // return;
-    
     //heat/cool status
     iLcd.setCursor(0, 1);
     iLcd.print("SNP Genotyping");
@@ -37,29 +32,42 @@ void Display::Update() {
     iLcd.setCursor(13, 0);
     iLcd.print(buf);
     
+    //state
+    char* stateStr;
+    if (iThermocycler.Ramping()) {
+      if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
+        stateStr = "Heating";
+      else
+        stateStr = "Cooling";
+    } else {
+      stateStr = iThermocycler.GetCurrentStep()->GetName();
+    }
+    iLcd.setCursor(0, 0);
+    sprintf(buf, "%-13s", stateStr);
+    iLcd.print(buf);
+    
     //lid temp
     sprintf(buf, "Lid: %3d C", (int)iThermocycler.GetLidTemp());
     iLcd.setCursor(10, 2);
     iLcd.print(buf);
-  
-    iLcd.setCursor(0, 0);
-    iLcd.print("Annealing");
    
-    //Cycle
-    if (ipDisplayCycle != NULL) {
+    if (state == Thermocycler::ERunning) {
+      //Cycle
+      if (ipDisplayCycle != NULL) {
+        iLcd.setCursor(0, 3);
+        sprintf(buf, "%d of %d", ipDisplayCycle->GetCurrentCycle(), ipDisplayCycle->GetNumCycles());
+        iLcd.print(buf);
+      }
+     
+      //Time Remaining
+      iLcd.setCursor(11, 3);
+      iLcd.print("ETA: 1:32");
+      
+    } else {
       iLcd.setCursor(0, 3);
-      sprintf(buf, "%d of %d", ipDisplayCycle->GetCurrentCycle(), 25);//***ipDisplayCycle->GetNumCycles());
-      iLcd.print(buf);
+      iLcd.print("*** Run Complete ***");
+      
     }
-   
-    //Time Remaining
-    iLcd.setCursor(11, 3);
-    iLcd.print("ETA: 1:32");
-    
-    //Debug
-  //  sprintf(buf, "Time = %u . %d s", iThermocycler.GetRunTime() / 1000, (int)(iThermocycler.GetRunTime() % 1000));
-  //  iLcd.setCursor(0, 2);
-//    iLcd.print(buf);
     
   } else {
     iLcd.setCursor(6, 1);

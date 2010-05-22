@@ -34,10 +34,10 @@ public:
   virtual Step* GetNextStep();
 
 private:
-  char iName[STEP_NAME_LENGTH];
   int iDuration; //in seconds
   float iTemp; // C
   boolean iStepReturned;
+  char iName[STEP_NAME_LENGTH];
 };
 
 ////////////////////////////////////////////////////////////////////
@@ -49,7 +49,7 @@ public:
   
   // accessors
   virtual TType GetType() { return ECycle; }
-  int GetCurrentCycle() { return iNumCycles + 1; } //add 1 because cycles start at 0
+  int GetCurrentCycle() { return iCurrentCycle + 1; } //add 1 because cycles start at 0
   int GetNumCycles() { return iNumCycles; }
   
   // mutators

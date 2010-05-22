@@ -52,6 +52,9 @@ const unsigned long Thermocycler::PLATE_RESISTANCE_TABLE[] = {
 #define SPICLOCK  13//sck
 #define SLAVESELECT 10//ss
 
+#define CYCLE_START_TOLERANCE 0.5
+#define LID_START_TOLERANCE 2.0
+
     
 //public
 Thermocycler::Thermocycler():
@@ -64,7 +67,9 @@ Thermocycler::Thermocycler():
   iThermalDirection(OFF),
   iPeltierPwm(0),
   iPlateTemp(0.0),
-  iLidTemp(0.0) {
+  iLidTemp(0.0),
+  iCycleStartTime(0),
+  iRamping(true) {
     
   ipDisplay = new Display(*this);
   ipSerialControl = new SerialControl(*this);
@@ -90,13 +95,17 @@ Thermocycler::Thermocycler():
   clr=SPDR;
   delay(10); 
   
-  iPeltierPid.pGain = 100.0;
-  iPeltierPid.iGain = 0.000010;
-  iPeltierPid.dGain = 100;
-  iPeltierPid.iMin = -25500000.0;// / 5;
-  iPeltierPid.iMax = 25500000.0;// / 5;
+  iPeltierPid.pGain = 100;
+  iPeltierPid.iGain = 0.2;
+  iPeltierPid.dGain = 0;
+  iPeltierPid.iMin = -255.0 / iPeltierPid.iGain;
+  iPeltierPid.iMax = 255.0 / iPeltierPid.iGain;
   
-//  Wire.begin();
+  iLidPid.pGain = 100;
+  iLidPid.iGain = 0.5;
+  iLidPid.dGain = 0.0;
+  iLidPid.iMin = 0;
+  iLidPid.iMax = 255.0 / iLidPid.iGain;
 }
 
 Thermocycler::~Thermocycler() {
@@ -121,18 +130,13 @@ void Thermocycler::Stop() {
 PcrStatus Thermocycler::Start() {
   if (ipProgram == NULL)
     return ENoProgram;
-  if (iProgramState == EOff)
-    return ENoPower;
+//  if (iProgramState == EOff) // DANGEROUS TEMP HACK, REMOVE ONCE SERIAL CONTROL IN PLACE
+  //  return ENoPower;
   
   iProgramState = ERunning;
   iThermalState = EHolding;
   iThermalDirection = OFF;
   iPeltierPwm = 0;
-  
-  //hack
-  iRunning = true;
-  iRunTime = 0;
-  iStartTime = millis();
   
   ipProgram->BeginIteration();
   ipCurrentStep = ipProgram->GetNextStep();
@@ -144,8 +148,26 @@ void Thermocycler::Loop() {
   CheckPower();
   ReadPlateTemp();
   ReadLidTemp();
+  
+  //update program
+  if (iProgramState == ERunning) {
+    if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
+      iRamping = false;
+      iCycleStartTime = millis();
+    } else if (!iRamping && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
+      ipCurrentStep = ipProgram->GetNextStep();
+      iPeltierPid.iState = 0;
+      iPeltierPid.dState = 0;
+      if (ipCurrentStep == NULL)
+        iProgramState = EFinished;
+      else
+        iRamping = true;
+    }
+  }
+  
   ControlPeltier();
   ControlLid();
+  
   ipDisplay->Update();  
   ipSerialControl->Process();
 }
@@ -199,38 +221,19 @@ void Thermocycler::ReadPlateTemp() {
   digitalWrite(SLAVESELECT, LOW);  
   for(int i = 0; i < 4; i++)
     spiBuf[i] = spi_transfer(0xFF);
-  for(int i = 0; i < 4; i++) {
-    sprintf(buf, "%d = %u\n", i, spiBuf[i]);
-    Serial.print(buf);
-  }
-//  unsigned long conv = *(unsigned long*)spiBuf;
+
   unsigned long conv = (((unsigned long)spiBuf[3] >> 7) & 0x01) + ((unsigned long)spiBuf[2] << 1) + ((unsigned long)spiBuf[1] << 9) + (((unsigned long)spiBuf[0] & 0x1F) << 17); //((spiBuf[0] & 0x1F) << 16) + (spiBuf[1] << 8) + spiBuf[2];
   
   unsigned long adcDivisor = 0x1FFFFF;
   float voltage = (float)conv * 5.0 / adcDivisor;
-  char floatStr[32];
-  sprintFloat(floatStr, voltage, 3);
-  sprintf(buf, "float = %s\n", floatStr);
-  Serial.print(buf);
-  sprintf(buf, "intvoltage = %d\n", (int)voltage);
-  Serial.print(buf);
 
   unsigned int convHigh = (conv >> 16);
-  sprintf(buf, "High = %u, low = %u, intvolt = %d\n", convHigh, conv, (int)voltage);
-  Serial.print(buf);
   
   digitalWrite(SLAVESELECT, HIGH);
   
   unsigned long r = 53; // hecto ohms
   unsigned long voltage_mv = voltage * 1000;
   unsigned long resistance = voltage_mv * 5300 / (5000 - voltage_mv);
-  
-  //unsigned long r2 = 22; // hecto ohms
-  //unsigned long resistance = (r1 * r2 * (unsigned long)voltage_mv * 100) / (5000 * r2 - (r1 + r2) * (unsigned long)voltage_mv);
- // sprintf(buf, "voltage = %d", voltage_mv);
-//  Serial.println(buf);
-  sprintf(buf, "resistance = %u", resistance);
-  Serial.println(buf);
  
   //simple linear search for now
   int i;
@@ -241,90 +244,51 @@ void Thermocycler::ReadPlateTemp() {
   unsigned long high_res = PLATE_RESISTANCE_TABLE[i-1];
   unsigned long low_res = PLATE_RESISTANCE_TABLE[i];
   iPlateTemp = i - 20 - (float)(resistance - low_res) / (float)(high_res - low_res); 
-
-  return;
-  //old below
-  iPlateTemp = iLidTemp;
-  return;
-  //config ADC
-  int chan = 0;
-  int res = 3;
-  int gain = 0;
-  uint8_t adcConfig = MCP342X_START | MCP342X_CHANNEL_1 | MCP342X_CONTINUOUS;
-  adcConfig |= chan << 5 | res << 2 | gain;
-  uint16_t mvDivisor = 1 << (gain + 2*res);
-  
-  mcp342xWrite(adcConfig);
-  
-  //read voltage
-//  Wire.requestFrom(MCP3422_ADDRESS, 3);
-//  if (Wire.available() != 3) {
-//    Serial.println("Wire.available failed");
-//    return;
- // }
-  
-//  int16_t voltage_mv = (Wire.receive() << 8);
-//  voltage_mv |= Wire.receive();
-
-
 }
 
 void Thermocycler::ControlPeltier() {
-  float targetTemp = 99;
-  ThermalDirection newDirection;
-  int newPwm;
+  int newPwm = 0;
+  ThermalDirection newDirection = HEAT;
   
-  //PID
-  double drive = UpdatePID(&iPeltierPid, targetTemp - iPlateTemp, iPlateTemp);
-  char buf[32];
-  if (drive > 255)
-    drive = 255;
-  else if (drive < -255)
-    drive = -255;
-  
-  newPwm = abs(drive);
-  if (drive > 0)
-    newDirection = HEAT;
-  else if (drive < 0)
-    newDirection = COOL; 
-  else
-    newDirection = OFF;
+  if (iProgramState == ERunning) {
+    float targetTemp = GetCurrentStep()->GetTemp();
     
-  //temp
-  if (iRunning && iPlateTemp >= targetTemp)
-    iRunning = false;
-  if (iRunning)
-    iRunTime = millis() - iStartTime;
+    //PID
+    double drive = UpdatePID(&iPeltierPid, targetTemp - iPlateTemp, iPlateTemp);
+    char buf[32];
+    if (drive > 255)
+      drive = 255;
+    else if (drive < -255)
+      drive = -255;
     
-  //change power/direction slowly
-//  if (newDirection != iThermalDirection)
- //   newPwm = 0;
- // if (newPwm > iPeltierPwm + 5)
-  //  newPwm = iPeltierPwm + 5;
-    
-  //if (newDirection == COOL && newPwm > 200)
-    //newPwm = 200;
-    
-  //update state
+    newPwm = abs(drive);
+    if (drive > 0)
+      newDirection = HEAT;
+    else if (drive < 0)
+      newDirection = COOL; 
+    else
+      newDirection = OFF;
+  }
+
   iPeltierPwm = newPwm;
   iThermalDirection = newDirection;
   SetPeltier(newDirection, newPwm);
 }
 
 void Thermocycler::ControlLid() {
-  float target = 100;
-  int newPwm;
- 
-  if (GetProgramState() == ERunning) {
-    if (iLidTemp > target)
-      newPwm = 0;
-    else
-      newPwm = 255;
-  } else {
-    newPwm = 0;
+  float targetTemp = 105;
+  double drive = 0;
+  
+  if (iProgramState == ERunning) {
+    drive = UpdatePID(&iLidPid, targetTemp - iLidTemp, iLidTemp);
+   
+    if (drive > 255)
+      drive = 255;
+    else if (drive < 0)
+      drive = 0;
   }
     
-  analogWrite(5, newPwm);
+  analogWrite(5, drive);
 }
 
 void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
