@@ -78,6 +78,7 @@ Thermocycler::Thermocycler():
   pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
   
   //spi pins
   pinMode(DATAOUT, OUTPUT);
@@ -97,7 +98,7 @@ Thermocycler::Thermocycler():
   
   iPeltierPid.pGain = 100;
   iPeltierPid.iGain = 0.2;
-  iPeltierPid.dGain = 0;
+  iPeltierPid.dGain = 0.1;
   iPeltierPid.iMin = -255.0 / iPeltierPid.iGain;
   iPeltierPid.iMax = 255.0 / iPeltierPid.iGain;
   
@@ -276,7 +277,7 @@ void Thermocycler::ControlPeltier() {
 }
 
 void Thermocycler::ControlLid() {
-  float targetTemp = 105;
+  float targetTemp = 120;
   double drive = 0;
   
   if (iProgramState == ERunning) {
