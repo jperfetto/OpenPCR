@@ -1,5 +1,6 @@
 /*
- *	This file is part of the OpenPCR control software.
+ *	util.cpp - OpenPCR control software.
+ *  Copyright (C) 2010 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -13,7 +14,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "pcr_includes.h"
 
