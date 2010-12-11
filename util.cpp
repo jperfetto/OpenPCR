@@ -35,6 +35,11 @@ double UpdatePID(SPid * pid, double error, double position) {
   iTerm = pid->iGain * pid->iState; // calculate the integral term
   dTerm = pid->dGain * (position - pid->dState);
   pid->dState = position;
+  
+  //char buf[255];
+  //sprintFloat(buf, pid->iState, 2);
+  //Serial.println(buf);
+  
   return pTerm + iTerm - dTerm;
 }
 

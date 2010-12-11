@@ -27,6 +27,7 @@ public:
   char* GetName() { return iName; }
   int GetDuration() { return iDuration; }
   float GetTemp() { return iTemp; }
+  void SetTemp(float temp) { iTemp = temp; } //TEMP HACK
   virtual TType GetType() { return EStep; }
   
   // iteration

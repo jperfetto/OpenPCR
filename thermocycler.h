@@ -5,7 +5,7 @@ class Display;
 class Cycle;
 class Step;
 class SerialControl;
-
+  
 class Thermocycler {
 public:
   enum ProgramState {
@@ -59,14 +59,13 @@ private:
   void SetPeltier(ThermalDirection dir, int pwm);
   uint8_t mcp342xWrite(uint8_t config);
   uint8_t mcp342xRead(int32_t &data);
+  float TableLookup(const unsigned long lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
+    float TableLookup(const unsigned int lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
   
   
 private:
   // constants
   static const int PLATE_TEMP_SENSOR_PIN = 0;
-  
-  // table identifies resistances in ohms for -20C to 100C
-  static const unsigned long PLATE_RESISTANCE_TABLE[];
   
   // components
   Display* ipDisplay;

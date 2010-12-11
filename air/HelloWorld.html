@@ -1,0 +1,33 @@
+<html> 
+<head> 
+    <title>Hello World</title>
+		<script src="AIRAliases.js" type="text/javascript"></script>
+		<script src="javascript/jquery-1.4.3.min.js" type="text/javascript" charset="utf-8" />
+		<script type="text/javascript"> 
+
+		$(function() {
+			var socket = new air.Socket();
+			socket.connect('localhost', 6000);
+			$("#controlForm").submit(function() {
+				var temp = parseInt($("input[name='temp']").val());
+				socket.writeUTFBytes(temp);
+				socket.flush();
+			});
+		});
+		
+		function appLoad(){ 
+		    air.trace("Hello Javascript World");
+		}
+		
+		</script>
+</head> 
+<body onLoad="appLoad()"> 
+    <h3>OpenPCR Control</h3>
+		<p>Set temperature:</p>
+		<form id="controlForm">
+				<input type="text" name="temp" /><span>C</span>
+				<br />
+				<input type="submit" />
+		</form>
+</body> 
+</html>

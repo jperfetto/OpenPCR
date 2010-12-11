@@ -2,8 +2,9 @@
 #include "serialcontrol.h"
 
 #include "thermocycler.h"
+#include "program.h"
 
-#define BAUD_RATE 19200
+#define BAUD_RATE 9600
 #define STATUS_INTERVAL_MS 250
 
 SerialControl::SerialControl(Thermocycler& thermocycler)
@@ -30,7 +31,17 @@ void SerialControl::Process() {
 // Private
 void SerialControl::ReadPacket()
 {
+   char strBuf[10];
   int availableBytes = Serial.available();
+  if (availableBytes == 2) {
+    strBuf[0] = Serial.read();
+    strBuf[1] = Serial.read();
+    strBuf[2] = 0;
+    int target = atoi(strBuf);
+    iThermocycler.GetCurrentStep()->SetTemp(target);
+  }
+  return;
+  /////////////
   if (readDataLen == 0){ //new packet
     //sync with start code
     while (availableBytes){
@@ -125,6 +136,7 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
   if (packetSeq != lastPacketSeq){ //not retransmission
     switch(packetType){
     case PROGRAM_RUN: 
+      Serial.println("Got run");
       break;
     case PROGRAM_STOP:
       iThermocycler.Stop();
@@ -157,7 +169,8 @@ void SerialControl::SendStatus()
    
   //send packet
   //WritePacket((byte*)&packet, sizeof(packet));
-  Debug("hello");
+  //Debug("hello");
+  //Serial.println("Test1\0");
 }
 void SerialControl::Debug(char* debugStr)
 {

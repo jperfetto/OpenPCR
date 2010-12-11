@@ -22,36 +22,36 @@ void Display::Update() {
   if (state != Thermocycler::EOff) {
     //heat/cool status
     iLcd.setCursor(0, 1);
-    iLcd.print("SNP Genotyping");
+    iLcd.print("SNParty");
     
-    char floatStr[10];
+    char floatStr[32];
     sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1);
     char buf[32];
     sprintf(buf, "%s C", floatStr);
    
     iLcd.setCursor(13, 0);
     iLcd.print(buf);
-    
-    //state
-    char* stateStr;
-    if (iThermocycler.Ramping()) {
-      if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
-        stateStr = "Heating";
-      else
-        stateStr = "Cooling";
-    } else {
-      stateStr = iThermocycler.GetCurrentStep()->GetName();
-    }
-    iLcd.setCursor(0, 0);
-    sprintf(buf, "%-13s", stateStr);
-    iLcd.print(buf);
-    
+        
     //lid temp
     sprintf(buf, "Lid: %3d C", (int)iThermocycler.GetLidTemp());
     iLcd.setCursor(10, 2);
     iLcd.print(buf);
    
     if (state == Thermocycler::ERunning) {
+      //state
+      char* stateStr;
+      if (iThermocycler.Ramping()) {
+        if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
+          stateStr = "Heating";
+        else
+          stateStr = "Cooling";
+      } else {
+        stateStr = iThermocycler.GetCurrentStep()->GetName();
+      }
+      iLcd.setCursor(0, 0);
+      sprintf(buf, "%-13s", stateStr);
+      iLcd.print(buf);
+
       //Cycle
       if (ipDisplayCycle != NULL) {
         iLcd.setCursor(0, 3);

@@ -6,18 +6,42 @@
 #include "program.h"
 #include "serialcontrol.h"
 #include "../Wire/Wire.h"
+#include <avr/pgmspace.h>
 
 //constants
-const unsigned long Thermocycler::PLATE_RESISTANCE_TABLE[] = {
-  146735, 138447, 130677, 123390, 116554, 110138, 104113,
-  98454, 93137, 88138, 83438, 79016, 74855, 70938, 67249, 63773, 60498, 57410, 54498, 51750, 49157, 46709,
-  44397, 42213, 40150, 38199, 36354, 34608, 32957, 31394, 29914, 28512, 27183, 25925, 24731, 23600, 22526,
-  21508, 20541, 19623, 18751, 17923, 17136, 16388, 15676, 15000, 14356, 13744, 13161, 12606, 12078, 11574,
-  11095, 10637, 10202, 9786, 9389, 9011, 8650, 8306, 7976, 7662, 7362, 7075, 6801, 6539, 6289, 6049, 5820,
-  5600, 5391, 5190, 4997, 4813, 4637, 4467, 4305, 4150, 4001, 3858, 3721, 3590, 3464, 3343, 3227, 3115,
-  3008, 2905, 2806, 2711, 2620, 2532, 2448, 2367, 2288, 2213, 2141, 2072, 2005, 1940, 1878, 1818, 1761,
-  1705, 1652, 1601, 1551, 1503, 1457, 1412, 1369, 1328, 1288, 1250, 1212, 1176, 1142, 1108, 1076, 1045,
-  1014 };
+// in 0.1 Ohms
+PROGMEM const unsigned long PLATE_RESISTANCE_TABLE[] = {
+  3364790, 3149040, 2948480, 2761940, 2588380, 2426810, 2276320, 2136100, 2005390, 1883490,
+  1769740, 1663560, 1564410, 1471770, 1385180, 1304210, 1228470, 1157590, 1091220, 1029060,
+  970810, 916210, 865010, 816980, 771900, 729570, 689820, 652460, 617360, 584340,
+  553290, 524070, 496560, 470660, 446260, 423270, 401590, 381150, 361870, 343680,
+  326500, 310290, 294980, 280520, 266850, 253920, 241700, 230130, 219180, 208820,
+  199010, 189710, 180900, 172550, 164630, 157120, 149990, 143230, 136810, 130720,
+  124930, 119420, 114190, 109220, 104500, 100000, 95720, 91650, 87770, 84080,
+  80570, 77220, 74020, 70980, 68080, 65310, 62670, 60150, 57750, 55450,
+  53260, 51170, 49170, 47250, 45430, 43680, 42010, 40410, 38880, 37420,
+  36020, 34680, 33400, 32170, 30990, 29860, 28780, 27740, 26750, 25790,
+  24880, 24000, 23160, 22350, 21570, 20830, 20110, 19420, 18760, 18130,
+  17520, 16930, 16370, 15820, 15300, 14800, 14320, 13850, 13400, 12970,
+  12550, 12150, 11770, 11400, 11040, 10700, 10370, 10050, 9738, 9441,
+  9155, 8878, 8612, 8354, 8106, 7866, 7635, 7412, 7196, 6987, 6786,
+  6591, 6403, 6222, 6046, 5876 };
+
+// in Ohms
+PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {  
+  32919, 31270, 29715, 28246, 26858, 25547, 24307, 23135, 22026, 20977,
+  19987, 19044, 18154, 17310, 16510, 15752, 15034, 14352, 13705, 13090,
+  12507, 11953, 11427, 10927, 10452, 10000, 9570, 9161, 8771, 8401,
+  8048, 7712, 7391, 7086, 6795, 6518, 6254, 6001, 5761, 5531, 5311,
+  5102, 4902, 4710, 4528, 4353, 4186, 4026, 3874, 3728, 3588,
+  3454, 3326, 3203, 3085, 2973, 2865, 2761, 2662, 2567, 2476,
+  2388, 2304, 2223, 2146, 2072, 2000, 1932, 1866, 1803, 1742,
+  1684, 1627, 1573, 1521, 1471, 1423, 1377, 1332, 1289, 1248,
+  1208, 1170, 1133, 1097, 1063, 1030, 998, 968, 938, 909,
+  882, 855, 829, 805, 781, 758, 735, 714, 693, 673,
+  653, 635, 616, 599, 582, 565, 550, 534, 519, 505,
+  491, 478, 465, 452, 440, 428, 416, 405, 395, 384,
+  374, 364, 355, 345, 337 };
   
 // I2C address for MCP3422 - base address for MCP3424
 #define MCP3422_ADDRESS 0X68
@@ -75,6 +99,7 @@ Thermocycler::Thermocycler():
   ipSerialControl = new SerialControl(*this);
   
   //init pins
+  pinMode(15, INPUT);
   pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
@@ -94,15 +119,19 @@ Thermocycler::Thermocycler():
   clr=SPSR;
   clr=SPDR;
   delay(10); 
-  
+
   iPeltierPid.pGain = 100;
   iPeltierPid.iGain = 0.2;
   iPeltierPid.dGain = 0;
+  
+  //iPeltierPid.pGain = 112.5;
+  //iPeltierPid.iGain = 4;
+  //iPeltierPid.dGain = 0;
   iPeltierPid.iMin = -255.0 / iPeltierPid.iGain;
   iPeltierPid.iMax = 255.0 / iPeltierPid.iGain;
   
-  iLidPid.pGain = 100;
-  iLidPid.iGain = 0.5;
+  iLidPid.pGain = 255;
+  iLidPid.iGain = 0.0;
   iLidPid.dGain = 0.0;
   iLidPid.iMin = 0;
   iLidPid.iMax = 255.0 / iLidPid.iGain;
@@ -139,6 +168,9 @@ PcrStatus Thermocycler::Start() {
   iPeltierPwm = 0;
   
   ipProgram->BeginIteration();
+  iRamping = true;
+  iPeltierPid.iState = 0;
+  iPeltierPid.dState = 0;
   ipCurrentStep = ipProgram->GetNextStep();
   return ESuccess;
 }
@@ -146,9 +178,10 @@ PcrStatus Thermocycler::Start() {
 // internal
 void Thermocycler::Loop() {
   CheckPower();
+ 
   ReadPlateTemp();
-  ReadLidTemp();
-  
+  ReadLidTemp(); 
+
   //update program
   if (iProgramState == ERunning) {
     if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
@@ -164,20 +197,20 @@ void Thermocycler::Loop() {
         iRamping = true;
     }
   }
-  
+ 
   ControlPeltier();
   ControlLid();
   
   ipDisplay->Update();  
-  ipSerialControl->Process();
+//  ipSerialControl->Process();
 }
 
 void Thermocycler::CheckPower() {
   float voltage = analogRead(0) * 5.0 / 1024 * 10 / 3; // 10/3 is for voltage divider
   boolean externalPower = voltage > 7.0;
-  if (externalPower && iProgramState == EOff)
+  if (externalPower && iProgramState == EOff) {
     iProgramState = EStopped;
-  else if (!externalPower && iProgramState != EOff) {
+  } else if (!externalPower && iProgramState != EOff) {
     Stop();
     iProgramState = EOff;
   }
@@ -186,8 +219,10 @@ void Thermocycler::CheckPower() {
 //private
 
 void Thermocycler::ReadLidTemp() {
-  float voltage = analogRead(1) * 5.0 / 1024;
-  iLidTemp = (voltage - 0.5) * 100;  
+  unsigned long voltage_mv = (unsigned long)analogRead(1) * 5000 / 1024;
+  unsigned long resistance = voltage_mv * 2200 / (5000 - voltage_mv);
+  
+  iLidTemp = TableLookup(LID_RESISTANCE_TABLE, sizeof(LID_RESISTANCE_TABLE) / sizeof(LID_RESISTANCE_TABLE[0]), 0, resistance);
 }
 
 char spi_transfer(volatile char data)
@@ -231,19 +266,10 @@ void Thermocycler::ReadPlateTemp() {
   
   digitalWrite(SLAVESELECT, HIGH);
   
-  unsigned long r = 53; // hecto ohms
   unsigned long voltage_mv = voltage * 1000;
-  unsigned long resistance = voltage_mv * 5300 / (5000 - voltage_mv);
+  unsigned long resistance = voltage_mv * 22000 / (5000 - voltage_mv); // in hecto ohms
  
-  //simple linear search for now
-  int i;
-  for (i = 0; i < sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]); i++) {
-    if (resistance >= PLATE_RESISTANCE_TABLE[i])
-      break;
-  }
-  unsigned long high_res = PLATE_RESISTANCE_TABLE[i-1];
-  unsigned long low_res = PLATE_RESISTANCE_TABLE[i];
-  iPlateTemp = i - 20 - (float)(resistance - low_res) / (float)(high_res - low_res); 
+  iPlateTemp = TableLookup(PLATE_RESISTANCE_TABLE, sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]), -40, resistance);
 }
 
 void Thermocycler::ControlPeltier() {
@@ -261,6 +287,7 @@ void Thermocycler::ControlPeltier() {
     else if (drive < -255)
       drive = -255;
     
+    
     newPwm = abs(drive);
     if (drive > 0)
       newDirection = HEAT;
@@ -271,12 +298,14 @@ void Thermocycler::ControlPeltier() {
   }
 
   iPeltierPwm = newPwm;
+  Serial.println(newPwm);
+
   iThermalDirection = newDirection;
-  SetPeltier(newDirection, newPwm);
+  SetPeltier(newDirection, iPeltierPwm); //newPwm
 }
 
 void Thermocycler::ControlLid() {
-  float targetTemp = 105;
+  float targetTemp = 120;
   double drive = 0;
   
   if (iProgramState == ERunning) {
@@ -342,4 +371,28 @@ uint8_t Thermocycler::mcp342xWrite(uint8_t config)
   Wire.beginTransmission(MCP3422_ADDRESS);
   Wire.send(config);
   Wire.endTransmission();
+}
+//------------------------------------------------------------------------------
+float Thermocycler::TableLookup(const unsigned long lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue) {
+  //simple linear search for now
+  int i;
+  for (i = 0; i < tableSize; i++) {
+    if (searchValue >= pgm_read_dword_near(lookupTable + i))
+      break;
+  }
+  unsigned long high_val = pgm_read_dword_near(lookupTable + i - 1);
+  unsigned long low_val = pgm_read_dword_near(lookupTable + i);
+  return i + startValue - (float)(searchValue - low_val) / (float)(high_val - low_val);
+}
+//------------------------------------------------------------------------------
+float Thermocycler::TableLookup(const unsigned int lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue) {
+  //simple linear search for now
+  int i;
+  for (i = 0; i < tableSize; i++) {
+    if (searchValue >= pgm_read_word_near(lookupTable + i))
+      break;
+  }
+  unsigned long high_val = pgm_read_word_near(lookupTable + i - 1);
+  unsigned long low_val = pgm_read_word_near(lookupTable + i);
+  return i + startValue - (float)(searchValue - low_val) / (float)(high_val - low_val);
 }
