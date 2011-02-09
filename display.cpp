@@ -5,7 +5,7 @@
 #include "program.h"
 
 Display::Display(Thermocycler& thermocycler):
-  iLcd(6, 7, 8, 9, 16, 17),
+  iLcd(6, 7, 8, A5, 16, 17),
   iThermocycler(thermocycler),
   ipDisplayCycle(NULL),
   iLastState(Thermocycler::EOff) {
@@ -37,25 +37,27 @@ void Display::Update() {
     iLcd.setCursor(10, 2);
     iLcd.print(buf);
    
-    if (state == Thermocycler::ERunning) {
-      //state
-      char* stateStr;
-      if (iThermocycler.Ramping()) {
-        if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
-          stateStr = "Heating";
-        else
-          stateStr = "Cooling";
-      } else {
-        stateStr = iThermocycler.GetCurrentStep()->GetName();
-      }
-      iLcd.setCursor(0, 0);
-      sprintf(buf, "%-13s", stateStr);
-      iLcd.print(buf);
+    //state
+    char* stateStr;
+    if (iThermocycler.Ramping()) {
+      if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
+        stateStr = "Heating";
+      else
+        stateStr = "Cooling";
+    } else {
+      stateStr = iThermocycler.GetCurrentStep()->GetName();
+    }
+    iLcd.setCursor(0, 0);
+    sprintf(buf, "%-13s", stateStr);
+    iLcd.print(buf);
 
+    if (state == Thermocycler::ERunning && !iThermocycler.GetCurrentStep()->IsFinal()) {
       //Cycle
       if (ipDisplayCycle != NULL) {
         iLcd.setCursor(0, 3);
-        sprintf(buf, "%d of %d", ipDisplayCycle->GetCurrentCycle(), ipDisplayCycle->GetNumCycles());
+        int numCycles = ipDisplayCycle->GetNumCycles();
+        int currentCycle = ipDisplayCycle->GetCurrentCycle() > numCycles ? numCycles : ipDisplayCycle->GetCurrentCycle();
+        sprintf(buf, "%d of %d", currentCycle, numCycles);
         iLcd.print(buf);
       }
      

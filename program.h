@@ -29,6 +29,7 @@ public:
   float GetTemp() { return iTemp; }
   void SetTemp(float temp) { iTemp = temp; } //TEMP HACK
   virtual TType GetType() { return EStep; }
+  boolean IsFinal() { return iDuration == 0; }
   
   // iteration
   virtual void BeginIteration();

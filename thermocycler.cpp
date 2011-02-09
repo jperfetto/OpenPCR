@@ -76,7 +76,7 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define SPICLOCK  13//sck
 #define SLAVESELECT 10//ss
 
-#define CYCLE_START_TOLERANCE 0.5
+#define CYCLE_START_TOLERANCE 0.2
 #define LID_START_TOLERANCE 2.0
 
     
@@ -103,6 +103,7 @@ Thermocycler::Thermocycler():
   pinMode(2, OUTPUT);
   pinMode(3, OUTPUT);
   pinMode(4, OUTPUT);
+  pinMode(5, OUTPUT);
   
   //spi pins
   pinMode(DATAOUT, OUTPUT);
@@ -120,21 +121,32 @@ Thermocycler::Thermocycler():
   clr=SPDR;
   delay(10); 
 
-  iPeltierPid.pGain = 100;
-  iPeltierPid.iGain = 0.2;
-  iPeltierPid.dGain = 0;
+  iPeltierPid.pGain = 1200;
+  iPeltierPid.iGain = 0.45; //0.35 //0;//0.52;
+  iPeltierPid.dGain = 500; //1000;
   
   //iPeltierPid.pGain = 112.5;
   //iPeltierPid.iGain = 4;
   //iPeltierPid.dGain = 0;
-  iPeltierPid.iMin = -255.0 / iPeltierPid.iGain;
-  iPeltierPid.iMax = 255.0 / iPeltierPid.iGain;
+  iPeltierPid.iMin = -1023.0 / iPeltierPid.iGain;
+  iPeltierPid.iMax = 1023.0 / iPeltierPid.iGain;
   
   iLidPid.pGain = 255;
   iLidPid.iGain = 0.0;
   iLidPid.dGain = 0.0;
   iLidPid.iMin = 0;
   iLidPid.iMax = 255.0 / iLidPid.iGain;
+  
+  // Peltier PWM
+  TCCR1A |= (1<<WGM11) | (1<<WGM10);
+  TCCR1B = _BV(CS21);
+  
+  // Lid PWM
+  TCCR2A = _BV(COM2A1) | _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
+  TCCR2B = _BV(CS22);
+  
+  // Set contrast
+  analogWrite(5, 10);
 }
 
 Thermocycler::~Thermocycler() {
@@ -187,14 +199,22 @@ void Thermocycler::Loop() {
     if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
       iRamping = false;
       iCycleStartTime = millis();
-    } else if (!iRamping && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
+//      if (iThermalState == ECooling && ipCurrentStep->GetTemp() > 30) {
+//        iPeltierPid.iState *= -1;
+//        iPeltierPid.dState = 0;
+//      }
+    } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
+      float prevTemp = ipCurrentStep->GetTemp();
       ipCurrentStep = ipProgram->GetNextStep();
-      iPeltierPid.iState = 0;
-      iPeltierPid.dState = 0;
-      if (ipCurrentStep == NULL)
+      if (ipCurrentStep == NULL) {
         iProgramState = EFinished;
-      else
-        iRamping = true;
+      } else {
+        if (prevTemp != ipCurrentStep->GetTemp()) {
+          iPeltierPid.iState = 0;
+          iPeltierPid.dState = 0;
+          iRamping = true;
+        }
+      }
     }
   }
  
@@ -207,7 +227,7 @@ void Thermocycler::Loop() {
 
 void Thermocycler::CheckPower() {
   float voltage = analogRead(0) * 5.0 / 1024 * 10 / 3; // 10/3 is for voltage divider
-  boolean externalPower = voltage > 7.0;
+  boolean externalPower = digitalRead(A0); //voltage > 7.0;
   if (externalPower && iProgramState == EOff) {
     iProgramState = EStopped;
   } else if (!externalPower && iProgramState != EOff) {
@@ -282,10 +302,10 @@ void Thermocycler::ControlPeltier() {
     //PID
     double drive = UpdatePID(&iPeltierPid, targetTemp - iPlateTemp, iPlateTemp);
     char buf[32];
-    if (drive > 255)
-      drive = 255;
-    else if (drive < -255)
-      drive = -255;
+    if (drive > 1023)
+      drive = 1023;
+    else if (drive < -1023)
+      drive = -1023;
     
     
     newPwm = abs(drive);
@@ -298,7 +318,6 @@ void Thermocycler::ControlPeltier() {
   }
 
   iPeltierPwm = newPwm;
-  Serial.println(newPwm);
 
   iThermalDirection = newDirection;
   SetPeltier(newDirection, iPeltierPwm); //newPwm
@@ -317,7 +336,7 @@ void Thermocycler::ControlLid() {
       drive = 0;
   }
     
-  analogWrite(5, drive);
+  analogWrite(3, drive);
 }
 
 void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
@@ -332,7 +351,7 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
     digitalWrite(4, LOW);
   }
   
-  analogWrite(3, pwm);
+  analogWrite(9, pwm);
 }
 
 uint8_t Thermocycler::mcp342xRead(int32_t &data)
