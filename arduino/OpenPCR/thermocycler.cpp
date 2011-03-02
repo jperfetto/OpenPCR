@@ -368,7 +368,6 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
     digitalWrite(4, LOW);
   }
   
-  Serial.println(pwm);
   analogWrite(9, pwm);
 }
 
