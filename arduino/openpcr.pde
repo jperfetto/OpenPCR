@@ -31,6 +31,7 @@ void setup() {
   //create program
   Cycle* pMaster = new Cycle(1);
   Cycle* pMain = new Cycle(30);
+  pMaster->AddComponent(new Step("Holding", 0, -40));
   pMaster->AddComponent(new Step("Extract", 60, 65));
   pMaster->AddComponent(new Step("IDenaturing", 30, 95));
   pMain->AddComponent(new Step("Denaturing", 30, 95));

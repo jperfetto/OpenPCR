@@ -145,8 +145,8 @@ Thermocycler::Thermocycler():
   //iPeltierPid.pGain = 112.5;
   //iPeltierPid.iGain = 4;
   //iPeltierPid.dGain = 0;
-  iPeltierPid.iMin = -1023.0 / iPeltierPid.iGain;
-  iPeltierPid.iMax = 1023.0 / iPeltierPid.iGain;
+  iPeltierPid.iMin = -1023 / iPeltierPid.iGain;
+  iPeltierPid.iMax = 1023 / iPeltierPid.iGain;
   
   iLidPid.pGain = 255;
   iLidPid.iGain = 0.0;
@@ -352,22 +352,23 @@ void Thermocycler::ControlLid() {
     else if (drive < 0)
       drive = 0;
   }
-    
+   
   analogWrite(3, drive);
 }
 
 void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
   if (dir == COOL) {
-    digitalWrite(2, LOW);
-    digitalWrite(4, HIGH);
-  } else if (dir == HEAT) {
     digitalWrite(2, HIGH);
     digitalWrite(4, LOW);
+  } else if (dir == HEAT) {
+    digitalWrite(2, LOW);
+    digitalWrite(4, HIGH);
   } else {
     digitalWrite(2, LOW);
     digitalWrite(4, LOW);
   }
   
+  Serial.println(pwm);
   analogWrite(9, pwm);
 }
 
