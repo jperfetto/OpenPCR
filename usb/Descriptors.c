@@ -36,6 +36,7 @@
  */
 
 #include "Descriptors.h"
+#include "MassStorage.h"
 
 /* On some devices, there is a factory set internal serial number which can be automatically sent to the host as
  * the device's serial number when the Device Descriptor's .SerialNumStrIndex entry is set to USE_INTERNAL_SERIAL.
@@ -186,7 +187,7 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue,
 
 	switch (DescriptorType)
 	{
-		case DTYPE_Device:
+		case DTYPE_Device:		
 			Address = &DeviceDescriptor;
 			Size    = sizeof(USB_Descriptor_Device_t);
 			break;

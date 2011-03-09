@@ -91,11 +91,10 @@ SCSI_Request_Sense_Response_t SenseData =
 bool SCSI_DecodeSCSICommand(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
 {
 	bool CommandSuccess = false;
-
 	/* Run the appropriate SCSI command hander function based on the passed command */
 	switch (MSInterfaceInfo->State.CommandBlock.SCSICommandData[0])
 	{
-		case SCSI_CMD_INQUIRY:
+		case SCSI_CMD_INQUIRY:		
 			CommandSuccess = SCSI_Command_Inquiry(MSInterfaceInfo);
 			break;
 		case SCSI_CMD_REQUEST_SENSE:
@@ -148,6 +147,7 @@ bool SCSI_DecodeSCSICommand(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
  *
  *  \return Boolean true if the command completed successfully, false otherwise.
  */
+
 static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
 {
 	uint16_t AllocationLength  = SwapEndian_16(*(uint16_t*)&MSInterfaceInfo->State.CommandBlock.SCSICommandData[3]);
@@ -157,17 +157,17 @@ static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 	/* Only the standard INQUIRY data is supported, check if any optional INQUIRY bits set */
 	if ((MSInterfaceInfo->State.CommandBlock.SCSICommandData[1] & ((1 << 0) | (1 << 1))) ||
 	     MSInterfaceInfo->State.CommandBlock.SCSICommandData[2])
-	{
+	{		
 		/* Optional but unsupported bits set - update the SENSE key and fail the request */
 		SCSI_SET_SENSE(SCSI_SENSE_KEY_ILLEGAL_REQUEST,
 		               SCSI_ASENSE_INVALID_FIELD_IN_CDB,
 		               SCSI_ASENSEQ_NO_QUALIFIER);
-
+		
 		return false;
-	}
+	}	
 
 	Endpoint_Write_Stream_LE(&InquiryData, BytesTransferred, NO_STREAM_CALLBACK);
-
+	
 	uint8_t PadBytes[AllocationLength - BytesTransferred];
 
 	/* Pad out remaining bytes with 0x00 */
@@ -178,7 +178,7 @@ static bool SCSI_Command_Inquiry(USB_ClassInfo_MS_Device_t* const MSInterfaceInf
 
 	/* Succeed the command and update the bytes transferred counter */
 	MSInterfaceInfo->State.CommandBlock.DataTransferLength -= BytesTransferred;
-
+	
 	return true;
 }
 

@@ -65,13 +65,12 @@ int main(void)
 {
 	SetupHardware();
 
-	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
 	sei();
-
+	
 	for (;;)
 	{
-		MS_Device_USBTask(&Disk_MS_Interface);
-		USB_USBTask();
+		MS_Device_USBTask(&Disk_MS_Interface);		
+		USB_USBTask();		
 	}
 }
 
@@ -83,7 +82,7 @@ void SetupHardware(void)
 	wdt_disable();
 
 	/* Disable clock division */
-//	clock_prescale_set(clock_div_1);
+	clock_prescale_set(clock_div_1);
 
 	/* Hardware Initialization */
 	LEDs_Init();
@@ -94,13 +93,13 @@ void SetupHardware(void)
 /** Event handler for the library USB Connection event. */
 void EVENT_USB_Device_Connect(void)
 {
-	LEDs_SetAllLEDs(LEDMASK_USB_ENUMERATING);
+
 }
 
 /** Event handler for the library USB Disconnection event. */
 void EVENT_USB_Device_Disconnect(void)
 {
-	LEDs_SetAllLEDs(LEDMASK_USB_NOTREADY);
+
 }
 
 /** Event handler for the library USB Configuration Changed event. */
@@ -109,13 +108,11 @@ void EVENT_USB_Device_ConfigurationChanged(void)
 	bool ConfigSuccess = true;
 
 	ConfigSuccess &= MS_Device_ConfigureEndpoints(&Disk_MS_Interface);
-
-	LEDs_SetAllLEDs(ConfigSuccess ? LEDMASK_USB_READY : LEDMASK_USB_ERROR);
 }
 
 /** Event handler for the library USB Control Request reception event. */
 void EVENT_USB_Device_ControlRequest(void)
-{
+{	
 	MS_Device_ProcessControlRequest(&Disk_MS_Interface);
 }
 
@@ -124,12 +121,10 @@ void EVENT_USB_Device_ControlRequest(void)
  *  \param[in] MSInterfaceInfo  Pointer to the Mass Storage class interface configuration structure being referenced
  */
 bool CALLBACK_MS_Device_SCSICommandReceived(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo)
-{
+{		
 	bool CommandSuccess;
 
-	LEDs_SetAllLEDs(LEDMASK_USB_BUSY);
 	CommandSuccess = SCSI_DecodeSCSICommand(MSInterfaceInfo);
-	LEDs_SetAllLEDs(LEDMASK_USB_READY);
 
 	return CommandSuccess;
 }
