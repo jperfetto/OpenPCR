@@ -19,6 +19,8 @@
 #ifndef _THERMOCYCLER_H_
 #define _THERMOCYCLER_H_
 
+#include "PID_v1.h"
+
 class Display;
 class Cycle;
 class Step;
@@ -74,12 +76,12 @@ private:
   void ControlLid();
  
   //util functions
+  void SetPlateTarget(double target);
   void SetPeltier(ThermalDirection dir, int pwm);
   uint8_t mcp342xWrite(uint8_t config);
   uint8_t mcp342xRead(int32_t &data);
   float TableLookup(const unsigned long lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
-    float TableLookup(const unsigned int lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
-  
+  float TableLookup(const unsigned int lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
   
 private:
   // constants
@@ -92,18 +94,21 @@ private:
   // state
   ProgramState iProgramState;
   ThermalState iThermalState;
-  float iPlateTemp;
-  float iLidTemp;
+  double iPlateTemp;
+  double iTargetPlateTemp;
+  double iLidTemp;
+  double iTargetLidTemp;
   Cycle* ipProgram;
   Step* ipCurrentStep;
   unsigned long iCycleStartTime;
   boolean iRamping;
   
   // peltier control
+  PID iPlatePid;
+  PID iLidPid;
   ThermalDirection iThermalDirection;
-  int iPeltierPwm;
-  SPid iPeltierPid;
-  SPid iLidPid;
+  double iPeltierPwm;
+  double iLidPwm;
 };
 
 #endif

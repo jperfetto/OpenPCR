@@ -20,7 +20,7 @@
 
 void sprintFloat(char* str, float val, int decimalDigits) {
   int number = (int)val;
-  int decimal = (abs(val) - abs(number)) * pow(10, decimalDigits);
+  int decimal = (abs(val) - abs(number)) * pow(10, decimalDigits) + 0.5;
   sprintf(str, "%3d.%d", number, decimal);
 }
 

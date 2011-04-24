@@ -96,7 +96,14 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define CYCLE_START_TOLERANCE 0.2
 #define LID_START_TOLERANCE 2.0
 
-    
+#define PLATE_PID_FAR_P 800
+#define PLATE_PID_FAR_I 2
+#define PLATE_PID_FAR_D 5
+
+#define PLATE_PID_NEAR_P 800
+#define PLATE_PID_NEAR_I 100
+#define PLATE_PID_NEAR_D 10
+
 //public
 Thermocycler::Thermocycler():
   ipDisplay(NULL),
@@ -107,10 +114,14 @@ Thermocycler::Thermocycler():
   ipCurrentStep(NULL),
   iThermalDirection(OFF),
   iPeltierPwm(0),
+  iLidPwm(0),
   iPlateTemp(0.0),
   iLidTemp(0.0),
   iCycleStartTime(0),
-  iRamping(true) {
+  iRamping(true),
+  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_FAR_P, PLATE_PID_FAR_I, PLATE_PID_FAR_D, DIRECT),
+  iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, 200, 0.2, 60, DIRECT),
+  iTargetLidTemp(110) {
     
   ipDisplay = new Display(*this);
   ipSerialControl = new SerialControl(*this);
@@ -138,21 +149,10 @@ Thermocycler::Thermocycler():
   clr=SPDR;
   delay(10); 
 
-  iPeltierPid.pGain = 1200;
-  iPeltierPid.iGain = 0.45; //0.35 //0;//0.52;
-  iPeltierPid.dGain = 500; //1000;
-
-  //iPeltierPid.pGain = 112.5;
-  //iPeltierPid.iGain = 4;
-  //iPeltierPid.dGain = 0;
-  iPeltierPid.iMin = -1023 / iPeltierPid.iGain;
-  iPeltierPid.iMax = 1023 / iPeltierPid.iGain;
-  
-  iLidPid.pGain = 255;
-  iLidPid.iGain = 0.0;
-  iLidPid.dGain = 0.0;
-  iLidPid.iMin = 0;
-  iLidPid.iMax = 255.0 / iLidPid.iGain;
+  iPlatePid.SetOutputLimits(-1023, 1023);
+  iPlatePid.SetMode(AUTOMATIC);
+  iLidPid.SetOutputLimits(0, 255);
+  iLidPid.SetMode(AUTOMATIC);
   
   // Peltier PWM
   TCCR1A |= (1<<WGM11) | (1<<WGM10);
@@ -198,9 +198,8 @@ PcrStatus Thermocycler::Start() {
   
   ipProgram->BeginIteration();
   iRamping = true;
-  iPeltierPid.iState = 0;
-  iPeltierPid.dState = 0;
   ipCurrentStep = ipProgram->GetNextStep();
+  SetPlateTarget(ipCurrentStep->GetTemp());
   return ESuccess;
 }
 
@@ -216,21 +215,21 @@ void Thermocycler::Loop() {
     if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
       iRamping = false;
       iCycleStartTime = millis();
-//      if (iThermalState == ECooling && ipCurrentStep->GetTemp() > 30) {
-//        iPeltierPid.iState *= -1;
-//        iPeltierPid.dState = 0;
-//      }
+      if (iThermalDirection == COOL && iTargetPlateTemp > 20) {
+        iPlatePid.ResetI();
+        SetPlateTarget(ipCurrentStep->GetTemp());
+      }
+      
     } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
       float prevTemp = ipCurrentStep->GetTemp();
       ipCurrentStep = ipProgram->GetNextStep();
+
       if (ipCurrentStep == NULL) {
         iProgramState = EFinished;
       } else {
-        if (prevTemp != ipCurrentStep->GetTemp()) {
-          iPeltierPid.iState = 0;
-          iPeltierPid.dState = 0;
+        SetPlateTarget(ipCurrentStep->GetTemp());
+        if (prevTemp != ipCurrentStep->GetTemp())
           iRamping = true;
-        }
       }
     }
   }
@@ -239,7 +238,6 @@ void Thermocycler::Loop() {
   ControlLid();
   
   ipDisplay->Update();  
-//  ipSerialControl->Process();
 }
 
 void Thermocycler::CheckPower() {
@@ -310,48 +308,43 @@ void Thermocycler::ReadPlateTemp() {
 }
 
 void Thermocycler::ControlPeltier() {
-  int newPwm = 0;
   ThermalDirection newDirection = HEAT;
+  int newPwm = 0;
   
   if (iProgramState == ERunning) {
-    float targetTemp = GetCurrentStep()->GetTemp();
-    
     //PID
-    double drive = UpdatePID(&iPeltierPid, targetTemp - iPlateTemp, iPlateTemp);
-    char buf[32];
-    if (drive > 1023)
-      drive = 1023;
-    else if (drive < -1023)
-      drive = -1023;
+    iPlatePid.Compute();
     
-    
-    newPwm = abs(drive);
-    if (drive > 0)
+    newPwm = abs(iPeltierPwm);
+    if (iPeltierPwm > 0)
       newDirection = HEAT;
-    else if (drive < 0)
+    else if (iPeltierPwm < 0)
       newDirection = COOL; 
     else
       newDirection = OFF;
   }
 
-  iPeltierPwm = newPwm;
-
+//  Serial.println(iPeltierPwm);
   iThermalDirection = newDirection;
-  SetPeltier(newDirection, iPeltierPwm); //newPwm
+  SetPeltier(newDirection, newPwm);
+}
+
+void Thermocycler::SetPlateTarget(double target) {
+  iTargetPlateTemp = target;
+  if (abs(iPlateTemp - iTargetPlateTemp) > 3)
+    iPlatePid.SetTunings(PLATE_PID_FAR_P, PLATE_PID_FAR_I, PLATE_PID_FAR_D);
+  else
+    iPlatePid.SetTunings(PLATE_PID_NEAR_P, PLATE_PID_NEAR_I, PLATE_PID_NEAR_D);
 }
 
 void Thermocycler::ControlLid() {
-  float targetTemp = 120;
   double drive = 0;
   
   if (iProgramState == ERunning) {
-    drive = UpdatePID(&iLidPid, targetTemp - iLidTemp, iLidTemp);
-   
-    if (drive > 255)
-      drive = 255;
-    else if (drive < 0)
-      drive = 0;
+    iLidPid.Compute();
+    drive = iLidPwm;   
   }
+  Serial.println(drive);
    
   analogWrite(3, drive);
 }
