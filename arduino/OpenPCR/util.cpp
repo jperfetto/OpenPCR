@@ -19,8 +19,11 @@
 #include "pcr_includes.h"
 
 void sprintFloat(char* str, float val, int decimalDigits) {
-  int number = (int)val;
-  int decimal = (abs(val) - abs(number)) * pow(10, decimalDigits) + 0.5;
+  long factor = pow(10, decimalDigits);
+  long intVal = val * factor + 0.5;
+  int decimal = intVal % factor;
+  int number = intVal / factor;
+
   sprintf(str, "%3d.%d", number, decimal);
 }
 
