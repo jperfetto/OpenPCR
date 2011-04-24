@@ -324,7 +324,6 @@ void Thermocycler::ControlPeltier() {
       newDirection = OFF;
   }
 
-//  Serial.println(iPeltierPwm);
   iThermalDirection = newDirection;
   SetPeltier(newDirection, newPwm);
 }
@@ -344,7 +343,6 @@ void Thermocycler::ControlLid() {
     iLidPid.Compute();
     drive = iLidPwm;   
   }
-  Serial.println(drive);
    
   analogWrite(3, drive);
 }

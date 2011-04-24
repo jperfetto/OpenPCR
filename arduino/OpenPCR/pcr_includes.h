@@ -40,20 +40,7 @@ enum PcrStatus {
 
 #define SUCCEEDED(status) (status == ESuccess)
 
-typedef struct {
-  double dState; // Last position input
-  double iState; // Integrator state
-  double iMax, iMin; 
-
-  // Maximum and minimum allowable integrator state
-  double iGain, // integral gain
-    pGain, // proportional gain
-    dGain; // derivative gain
-} SPid;
-
 unsigned short htons(unsigned short val);
-
-double UpdatePID(SPid * pid, double error, double position);
 
 #endif
 
