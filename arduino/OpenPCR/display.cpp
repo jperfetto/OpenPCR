@@ -40,7 +40,7 @@ void Display::Update() {
   if (state != Thermocycler::EOff) {
     //heat/cool status
     iLcd.setCursor(0, 1);
-    iLcd.print("SNParty");
+    iLcd.print("Power Supply Test");
     
     char floatStr[32];
     sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1);
@@ -51,7 +51,7 @@ void Display::Update() {
     iLcd.print(buf);
         
     //lid temp
-    sprintf(buf, "Lid: %3d C", (int)iThermocycler.GetLidTemp());
+    sprintf(buf, "Lid: %3d C", (int)(iThermocycler.GetLidTemp() + 0.5));
     iLcd.setCursor(10, 2);
     iLcd.print(buf);
    
