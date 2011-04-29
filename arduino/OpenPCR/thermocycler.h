@@ -59,6 +59,7 @@ public:
   int GetPeltierPwm() { return iPeltierPwm; }
   float GetPlateTemp() { return iPlateTemp; }
   float GetLidTemp() { return iLidTemp; }
+  unsigned long GetTimeRemainingS() { return iEstimatedTimeRemainingS; }
   
   // control
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle); //takes ownership
@@ -74,6 +75,7 @@ private:
   void ReadPlateTemp();
   void ControlPeltier();
   void ControlLid();
+  void UpdateEta();
  
   //util functions
   void SetPlateTarget(double target);
@@ -118,6 +120,16 @@ private:
   ThermalDirection iThermalDirection;
   double iPeltierPwm;
   double iLidPwm;
+  
+  // program eta calculation
+  unsigned long iProgramStartTimeMs;
+  unsigned long iProgramHoldDurationS;
+  double iProgramRampDegrees;
+  double iElapsedRampDegrees;
+  unsigned long iElapsedRampDurationMs;
+  double iRampStartTemp;
+  unsigned long iRampStartTime;
+  unsigned long iEstimatedTimeRemainingS;
 };
 
 #endif

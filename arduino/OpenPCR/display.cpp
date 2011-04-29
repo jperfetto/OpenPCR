@@ -89,8 +89,19 @@ void Display::Update() {
       }
      
       //Time Remaining
+      unsigned long timeRemaining = iThermocycler.GetTimeRemainingS();
+      int hours = timeRemaining / 3600;
+      int mins = (timeRemaining % 3600) / 60;
+      int secs = timeRemaining % 60;
+      char timeString[32];
+      if (hours >= 10)
+        strcpy(timeString, "ETA: >10h");
+      else if (mins >= 1)
+        sprintf(timeString, "ETA: %d:%02d", hours, mins);
+      else if (secs > 0)
+        sprintf(timeString, "ETA:  %2ds", secs);
       iLcd.setCursor(11, 3);
-      iLcd.print("ETA: 1:32");
+      iLcd.print(timeString);
       
     } else {
       iLcd.setCursor(0, 3);

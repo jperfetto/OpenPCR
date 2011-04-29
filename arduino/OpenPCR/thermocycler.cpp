@@ -206,6 +206,24 @@ PcrStatus Thermocycler::Start() {
   //temp
   SetLidTarget(110);
   
+  //calculate program time params
+  ipProgram->BeginIteration();
+  Step* pStep;
+  double lastTemp = iPlateTemp;
+  
+  iProgramHoldDurationS = 0;
+  iProgramRampDegrees = 0;
+  iElapsedRampDurationMs = 0;
+  iElapsedRampDegrees = 0;
+  iEstimatedTimeRemainingS = 0;
+  
+  while ((pStep = ipProgram->GetNextStep()) && !pStep->IsFinal()) {
+    iProgramHoldDurationS += pStep->GetDuration();
+    if (lastTemp != pStep->GetTemp())
+      iProgramRampDegrees += absf(lastTemp - pStep->GetTemp()) - CYCLE_START_TOLERANCE;
+    lastTemp = pStep->GetTemp();
+  }
+  
   iProgramState = ERunning;
   iThermalState = EHolding;
   iThermalDirection = OFF;
@@ -215,6 +233,9 @@ PcrStatus Thermocycler::Start() {
   ipCurrentStep = ipProgram->GetNextStep();
   SetPlateTarget(ipCurrentStep->GetTemp());
   iRamping = true;
+  
+  iProgramStartTimeMs = millis();
+  
   return ESuccess;
 }
 
@@ -228,6 +249,9 @@ void Thermocycler::Loop() {
   //update program
   if (iProgramState == ERunning) {
     if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
+      //eta updates
+      iElapsedRampDegrees += absf(iPlateTemp - iRampStartTemp);
+      iElapsedRampDurationMs += millis() - iRampStartTime;
       iRamping = false;
       iCycleStartTime = millis();
 /*      if (iThermalDirection == COOL && iTargetPlateTemp > 20) {
@@ -249,6 +273,7 @@ void Thermocycler::Loop() {
  
   ControlPeltier();
   ControlLid();
+  UpdateEta();
   
   ipDisplay->Update();  
 }
@@ -321,7 +346,14 @@ void Thermocycler::ReadPlateTemp() {
 }
 
 void Thermocycler::SetPlateTarget(double target) {
-  iRamping = iTargetPlateTemp != target;
+  if (iTargetPlateTemp != target) {
+    iRamping = true;
+    iRampStartTime = millis();
+    iRampStartTemp = iPlateTemp;
+  } else {
+    iCycleStartTime = millis(); //next step starts immediately
+  }
+  
   iTargetPlateTemp = target;
   if (absf(iTargetPlateTemp - iPlateTemp) >= PLATE_BANGBANG_THRESHOLD) {
     iPlateControlMode = EBangBang;
@@ -409,6 +441,18 @@ void Thermocycler::ControlLid() {
   }
    
   analogWrite(3, drive);
+}
+
+void Thermocycler::UpdateEta() {
+  double secondPerDegree;
+  if (iElapsedRampDegrees == 0)
+    secondPerDegree = 0.8;
+  else
+    secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
+    
+  unsigned long estimatedDurationS = iProgramHoldDurationS + iProgramRampDegrees * secondPerDegree;
+  unsigned long elapsedTimeS = (millis() - iProgramStartTimeMs) / 1000;
+  iEstimatedTimeRemainingS = estimatedDurationS - elapsedTimeS > 0 ? estimatedDurationS - elapsedTimeS : 0;
 }
 
 void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {

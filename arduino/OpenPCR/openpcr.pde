@@ -32,12 +32,12 @@ void setup() {
   Cycle* pMaster = new Cycle(1);
 //  pMaster->AddComponent(new Step("Hold", 0, 55));
   pMaster->AddComponent(new Step("IDenaturing", 30, 95));
-  Cycle* pMain = new Cycle(30);
+  Cycle* pMain = new Cycle(1);
   pMain->AddComponent(new Step("Denaturing", 30, 95));
-  pMain->AddComponent(new Step("Annealing", 60, 55));
-  pMain->AddComponent(new Step("Extending", 60, 72));
+  pMain->AddComponent(new Step("Annealing", 30, 55));
+  pMain->AddComponent(new Step("Extending", 30, 72));
   pMaster->AddComponent(pMain);
-  pMaster->AddComponent(new Step("FExtending", 300, 72));
+  pMaster->AddComponent(new Step("FExtending", 30, 72));
   pMaster->AddComponent(new Step("Holding", 0, 4));
   
 //
