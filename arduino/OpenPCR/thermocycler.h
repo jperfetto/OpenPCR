@@ -77,6 +77,7 @@ private:
  
   //util functions
   void SetPlateTarget(double target);
+  void SetLidTarget(double target);
   void SetPeltier(ThermalDirection dir, int pwm);
   uint8_t mcp342xWrite(uint8_t config);
   uint8_t mcp342xRead(int32_t &data);
@@ -106,7 +107,10 @@ private:
   enum ControlMode {
     EBangBang,
     EPID
-  } iControlMode;
+  };
+  
+  ControlMode iPlateControlMode;
+  ControlMode iLidControlMode;
   
   // peltier control
   PID iPlatePid;

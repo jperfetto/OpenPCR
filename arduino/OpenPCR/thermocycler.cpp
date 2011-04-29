@@ -104,10 +104,18 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define PLATE_PID_DEC_I 400
 #define PLATE_PID_DEC_D 200
 
+#define LID_PID_P 100
+#define LID_PID_I 50
+#define LID_PID_D 50
+
 #define PLATE_BANGBANG_THRESHOLD 2.0
+#define LID_BANGBANG_THRESHOLD 2.0
 
 #define MIN_PELTIER_PWM -1023
 #define MAX_PELTIER_PWM 1023
+
+#define MAX_LID_PWM 255
+#define MIN_LID_PWM 0
 
 //public
 Thermocycler::Thermocycler():
@@ -125,7 +133,7 @@ Thermocycler::Thermocycler():
   iCycleStartTime(0),
   iRamping(true),
   iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_P, PLATE_PID_I, PLATE_PID_D, DIRECT),
-  iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, 200, 0.2, 60, DIRECT),
+  iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, LID_PID_P, LID_PID_I, LID_PID_D, DIRECT),
   iTargetLidTemp(110) {
     
   ipDisplay = new Display(*this);
@@ -155,7 +163,7 @@ Thermocycler::Thermocycler():
   delay(10); 
 
   iPlatePid.SetOutputLimits(MIN_PELTIER_PWM, MAX_PELTIER_PWM);
-  iLidPid.SetOutputLimits(0, 255);
+  iLidPid.SetOutputLimits(MIN_LID_PWM, MAX_LID_PWM);
   iLidPid.SetMode(AUTOMATIC);
   
   // Peltier PWM
@@ -194,6 +202,9 @@ PcrStatus Thermocycler::Start() {
     return ENoProgram;
 //  if (iProgramState == EOff) // DANGEROUS TEMP HACK, REMOVE ONCE SERIAL CONTROL IN PLACE
   //  return ENoPower;
+  
+  //temp
+  SetLidTarget(110);
   
   iProgramState = ERunning;
   iThermalState = EHolding;
@@ -313,10 +324,10 @@ void Thermocycler::SetPlateTarget(double target) {
   iRamping = iTargetPlateTemp != target;
   iTargetPlateTemp = target;
   if (absf(iTargetPlateTemp - iPlateTemp) >= PLATE_BANGBANG_THRESHOLD) {
-    iControlMode = EBangBang;
+    iPlateControlMode = EBangBang;
     iPlatePid.SetMode(MANUAL);
   } else {
-    iControlMode = EPID;
+    iPlateControlMode = EPID;
     iPlatePid.SetMode(AUTOMATIC);
   }
   
@@ -329,19 +340,30 @@ void Thermocycler::SetPlateTarget(double target) {
   }
 }
 
+void Thermocycler::SetLidTarget(double target) {
+  iTargetLidTemp = target;
+  if (absf(iTargetLidTemp - iLidTemp) >= LID_BANGBANG_THRESHOLD) {
+    iLidControlMode = EBangBang;
+    iLidPid.SetMode(MANUAL);
+  } else {
+    iLidControlMode = EPID;
+    iLidPid.SetMode(AUTOMATIC);
+  }
+}
+
 void Thermocycler::ControlPeltier() {
   ThermalDirection newDirection = OFF;
       
   if (iProgramState == ERunning) {
     // Check whether we should switch to PID control
-    if (iControlMode == EBangBang && absf(iTargetPlateTemp - iPlateTemp) < PLATE_BANGBANG_THRESHOLD) {
-      iControlMode = EPID;
+    if (iPlateControlMode == EBangBang && absf(iTargetPlateTemp - iPlateTemp) < PLATE_BANGBANG_THRESHOLD) {
+      iPlateControlMode = EPID;
       iPlatePid.SetMode(AUTOMATIC);
       iPlatePid.ResetI();
     }
  
     // Apply control mode
-    if (iControlMode == EBangBang) {
+    if (iPlateControlMode == EBangBang) {
       iPeltierPwm = iTargetPlateTemp > iPlateTemp ? MAX_PELTIER_PWM : MIN_PELTIER_PWM;
     }
     iPlatePid.Compute();
@@ -371,7 +393,18 @@ void Thermocycler::ControlLid() {
   double drive = 0;
   
   if (iProgramState == ERunning) {
+    // Check whether we should switch to PID control
+    if (iLidControlMode == EBangBang && absf(iTargetLidTemp - iLidTemp) < LID_BANGBANG_THRESHOLD) {
+      iLidControlMode = EPID;
+      iLidPid.SetMode(AUTOMATIC);
+      iLidPid.ResetI();
+    }
+    
+    if (iLidControlMode == EBangBang) {
+      iLidPwm = iTargetLidTemp > iLidTemp ? MAX_LID_PWM : MIN_LID_PWM;
+    }
     iLidPid.Compute();
+    
     drive = iLidPwm;   
   }
    
