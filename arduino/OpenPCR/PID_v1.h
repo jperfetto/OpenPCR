@@ -29,6 +29,7 @@ class PID
 										  //it's likely the user will want to change this depending on
 										  //the application
     void ResetI() { ITerm = 0; }
+    double GetI() { return ITerm; }
 	
 
 

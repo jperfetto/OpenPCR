@@ -102,6 +102,11 @@ private:
   Step* ipCurrentStep;
   unsigned long iCycleStartTime;
   boolean iRamping;
+  boolean iDecreasing;
+  enum ControlMode {
+    EBangBang,
+    EPID
+  } iControlMode;
   
   // peltier control
   PID iPlatePid;

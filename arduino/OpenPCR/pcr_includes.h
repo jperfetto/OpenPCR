@@ -41,6 +41,7 @@ enum PcrStatus {
 #define SUCCEEDED(status) (status == ESuccess)
 
 unsigned short htons(unsigned short val);
+double absf(double val);
 
 #endif
 

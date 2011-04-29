@@ -96,13 +96,18 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define CYCLE_START_TOLERANCE 0.2
 #define LID_START_TOLERANCE 2.0
 
-#define PLATE_PID_FAR_P 800
-#define PLATE_PID_FAR_I 2
-#define PLATE_PID_FAR_D 5
+#define PLATE_PID_P 1000
+#define PLATE_PID_I 250
+#define PLATE_PID_D 250
 
-#define PLATE_PID_NEAR_P 800
-#define PLATE_PID_NEAR_I 100
-#define PLATE_PID_NEAR_D 10
+#define PLATE_PID_DEC_P 500
+#define PLATE_PID_DEC_I 400
+#define PLATE_PID_DEC_D 200
+
+#define PLATE_BANGBANG_THRESHOLD 2.0
+
+#define MIN_PELTIER_PWM -1023
+#define MAX_PELTIER_PWM 1023
 
 //public
 Thermocycler::Thermocycler():
@@ -119,7 +124,7 @@ Thermocycler::Thermocycler():
   iLidTemp(0.0),
   iCycleStartTime(0),
   iRamping(true),
-  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_FAR_P, PLATE_PID_FAR_I, PLATE_PID_FAR_D, DIRECT),
+  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_P, PLATE_PID_I, PLATE_PID_D, DIRECT),
   iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, 200, 0.2, 60, DIRECT),
   iTargetLidTemp(110) {
     
@@ -149,8 +154,7 @@ Thermocycler::Thermocycler():
   clr=SPDR;
   delay(10); 
 
-  iPlatePid.SetOutputLimits(-1023, 1023);
-  iPlatePid.SetMode(AUTOMATIC);
+  iPlatePid.SetOutputLimits(MIN_PELTIER_PWM, MAX_PELTIER_PWM);
   iLidPid.SetOutputLimits(0, 255);
   iLidPid.SetMode(AUTOMATIC);
   
@@ -197,9 +201,9 @@ PcrStatus Thermocycler::Start() {
   iPeltierPwm = 0;
   
   ipProgram->BeginIteration();
-  iRamping = true;
   ipCurrentStep = ipProgram->GetNextStep();
   SetPlateTarget(ipCurrentStep->GetTemp());
+  iRamping = true;
   return ESuccess;
 }
 
@@ -215,10 +219,10 @@ void Thermocycler::Loop() {
     if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
       iRamping = false;
       iCycleStartTime = millis();
-      if (iThermalDirection == COOL && iTargetPlateTemp > 20) {
+/*      if (iThermalDirection == COOL && iTargetPlateTemp > 20) {
         iPlatePid.ResetI();
-        SetPlateTarget(ipCurrentStep->GetTemp());
-      }
+        iTargetPlateTemp = ipCurrentStep->GetTemp();
+      }*/
       
     } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
       float prevTemp = ipCurrentStep->GetTemp();
@@ -228,8 +232,6 @@ void Thermocycler::Loop() {
         iProgramState = EFinished;
       } else {
         SetPlateTarget(ipCurrentStep->GetTemp());
-        if (prevTemp != ipCurrentStep->GetTemp())
-          iRamping = true;
       }
     }
   }
@@ -307,33 +309,62 @@ void Thermocycler::ReadPlateTemp() {
   iPlateTemp = TableLookup(PLATE_RESISTANCE_TABLE, sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]), -40, resistance);
 }
 
-void Thermocycler::ControlPeltier() {
-  ThermalDirection newDirection = HEAT;
-  int newPwm = 0;
+void Thermocycler::SetPlateTarget(double target) {
+  iRamping = iTargetPlateTemp != target;
+  iTargetPlateTemp = target;
+  if (absf(iTargetPlateTemp - iPlateTemp) >= PLATE_BANGBANG_THRESHOLD) {
+    iControlMode = EBangBang;
+    iPlatePid.SetMode(MANUAL);
+  } else {
+    iControlMode = EPID;
+    iPlatePid.SetMode(AUTOMATIC);
+  }
   
+  if (iTargetPlateTemp >= iPlateTemp) {
+    iDecreasing = false;
+    iPlatePid.SetTunings(PLATE_PID_P, PLATE_PID_I, PLATE_PID_D);
+  } else {
+    iDecreasing = true;
+    iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
+  }
+}
+
+void Thermocycler::ControlPeltier() {
+  ThermalDirection newDirection = OFF;
+      
   if (iProgramState == ERunning) {
-    //PID
+    // Check whether we should switch to PID control
+    if (iControlMode == EBangBang && absf(iTargetPlateTemp - iPlateTemp) < PLATE_BANGBANG_THRESHOLD) {
+      iControlMode = EPID;
+      iPlatePid.SetMode(AUTOMATIC);
+      iPlatePid.ResetI();
+    }
+ 
+    // Apply control mode
+    if (iControlMode == EBangBang) {
+      iPeltierPwm = iTargetPlateTemp > iPlateTemp ? MAX_PELTIER_PWM : MIN_PELTIER_PWM;
+    }
     iPlatePid.Compute();
     
-    newPwm = abs(iPeltierPwm);
+    if (iDecreasing && iTargetPlateTemp > 20) {
+      if (iTargetPlateTemp < iPlateTemp)
+        iPlatePid.ResetI();
+      else
+        iDecreasing = false;
+    }
+    
     if (iPeltierPwm > 0)
       newDirection = HEAT;
     else if (iPeltierPwm < 0)
       newDirection = COOL; 
     else
       newDirection = OFF;
+  } else {
+    iPeltierPwm = 0;
   }
-
+  
   iThermalDirection = newDirection;
-  SetPeltier(newDirection, newPwm);
-}
-
-void Thermocycler::SetPlateTarget(double target) {
-  iTargetPlateTemp = target;
-  if (abs(iPlateTemp - iTargetPlateTemp) > 3)
-    iPlatePid.SetTunings(PLATE_PID_FAR_P, PLATE_PID_FAR_I, PLATE_PID_FAR_D);
-  else
-    iPlatePid.SetTunings(PLATE_PID_NEAR_P, PLATE_PID_NEAR_I, PLATE_PID_NEAR_D);
+  SetPeltier(newDirection, abs(iPeltierPwm));
 }
 
 void Thermocycler::ControlLid() {

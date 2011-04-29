@@ -40,3 +40,10 @@ void __cxa_pure_virtual(void) {};
 unsigned short htons(unsigned short val) {
   return val << 8 + (byte)val;
 }
+
+double absf(double val) {
+  if (val < 0)
+    return val * -1;
+  else
+    return val;
+}

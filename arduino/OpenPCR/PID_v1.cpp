@@ -157,6 +157,7 @@ void PID::Initialize()
 {
    ITerm = *myOutput;
    lastInput = *myInput;
+   lastTime = millis() -SampleTime;
    if(ITerm > outMax) ITerm = outMax;
    else if(ITerm < outMin) ITerm = outMin;
 }
