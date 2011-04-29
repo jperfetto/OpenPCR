@@ -22,6 +22,8 @@
 #include "thermocycler.h"
 #include "program.h"
 
+#define RESET_INTERVAL 60000 //ms
+
 Display::Display(Thermocycler& thermocycler):
   iLcd(6, 7, 8, A5, 16, 17),
   iThermocycler(thermocycler),
@@ -29,6 +31,7 @@ Display::Display(Thermocycler& thermocycler):
   iLastState(Thermocycler::EOff) {
 
   iLcd.begin(20, 4);
+  iLastReset = millis();
 }
 
 void Display::Update() {
@@ -36,6 +39,12 @@ void Display::Update() {
   if (iLastState != state)
     iLcd.clear();
   iLastState = state;
+  
+  // check for reset
+  if (millis() - iLastReset > RESET_INTERVAL) {  
+    iLcd.begin(20, 4);
+    iLastReset = millis();
+  }
   
   if (state != Thermocycler::EOff) {
     //heat/cool status

@@ -39,6 +39,7 @@ private:
   Thermocycler& iThermocycler;
   Cycle* ipDisplayCycle;
   Thermocycler::ProgramState iLastState;
+  unsigned long iLastReset;
 };
 
 #endif

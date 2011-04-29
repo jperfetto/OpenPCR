@@ -31,13 +31,13 @@ void setup() {
   //create program
   Cycle* pMaster = new Cycle(1);
 //  pMaster->AddComponent(new Step("Hold", 0, 55));
+  pMaster->AddComponent(new Step("IDenaturing", 30, 95));
   Cycle* pMain = new Cycle(30);
-    pMain->AddComponent(new Step("30", 20, 10));
-      pMain->AddComponent(new Step("80", 20, 80));
-//  pMain->AddComponent(new Step("Denaturing", 20, 95));
-//  pMain->AddComponent(new Step("Annealing", 20, 55));
-//  pMain->AddComponent(new Step("Extending", 20, 72));
+  pMain->AddComponent(new Step("Denaturing", 30, 95));
+  pMain->AddComponent(new Step("Annealing", 60, 55));
+  pMain->AddComponent(new Step("Extending", 60, 72));
   pMaster->AddComponent(pMain);
+  pMaster->AddComponent(new Step("FExtending", 300, 72));
   pMaster->AddComponent(new Step("Holding", 0, 4));
   
 //
