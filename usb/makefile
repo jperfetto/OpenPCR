@@ -60,8 +60,8 @@
 
 
 # MCU name
-MCU = atmega8u2
-MCU_DFU = at90usb82
+MCU = at90usb82
+
 
 # Target board (see library "Board Types" documentation, NONE for projects not requiring
 # LUFA board drivers). If USER is selected, put custom board drivers in a directory called
@@ -80,7 +80,8 @@ BOARD = UNO
 #     does not *change* the processor frequency - it should merely be updated to
 #     reflect the processor speed set externally so that the code can use accurate
 #     software delays.
-F_CPU = 16000000
+F_CPU = 8000000
+
 
 # Input clock frequency.
 #     This will define a symbol, F_CLOCK, in all source code files equal to the
@@ -521,9 +522,9 @@ flip: $(TARGET).hex
 	batchisp -hardware usb -device $(MCU) -operation start reset 0
 
 dfu: $(TARGET).hex
-	dfu-programmer $(MCU_DFU) erase
-	dfu-programmer $(MCU_DFU) flash --suppress-bootloader-mem $(TARGET).hex
-	dfu-programmer $(MCU_DFU) reset
+	dfu-programmer $(MCU) erase
+	dfu-programmer $(MCU) flash $(TARGET).hex
+	dfu-programmer $(MCU) reset
 
 flip-ee: $(TARGET).hex $(TARGET).eep
 	$(COPY) $(TARGET).eep $(TARGET)eep.hex
