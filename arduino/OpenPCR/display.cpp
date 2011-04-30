@@ -106,7 +106,6 @@ void Display::Update() {
     } else {
       iLcd.setCursor(0, 3);
       iLcd.print("*** Run Complete ***");
-      
     }
     
   } else {
