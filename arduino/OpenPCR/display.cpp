@@ -98,7 +98,7 @@ void Display::Update() {
         strcpy(timeString, "ETA: >10h");
       else if (mins >= 1)
         sprintf(timeString, "ETA: %d:%02d", hours, mins);
-      else if (secs > 0)
+      else
         sprintf(timeString, "ETA:  %2ds", secs);
       iLcd.setCursor(11, 3);
       iLcd.print(timeString);

@@ -130,6 +130,7 @@ private:
   double iRampStartTemp;
   unsigned long iRampStartTime;
   unsigned long iEstimatedTimeRemainingS;
+  boolean iHasCooled;
 };
 
 #endif

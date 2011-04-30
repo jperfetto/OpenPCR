@@ -216,6 +216,7 @@ PcrStatus Thermocycler::Start() {
   iElapsedRampDurationMs = 0;
   iElapsedRampDegrees = 0;
   iEstimatedTimeRemainingS = 0;
+  iHasCooled = false;
   
   while ((pStep = ipProgram->GetNextStep()) && !pStep->IsFinal()) {
     iProgramHoldDurationS += pStep->GetDuration();
@@ -252,6 +253,8 @@ void Thermocycler::Loop() {
       //eta updates
       iElapsedRampDegrees += absf(iPlateTemp - iRampStartTemp);
       iElapsedRampDurationMs += millis() - iRampStartTime;
+      if (iRampStartTemp > iPlateTemp)
+        iHasCooled = true;
       iRamping = false;
       iCycleStartTime = millis();
 /*      if (iThermalDirection == COOL && iTargetPlateTemp > 20) {
@@ -445,14 +448,14 @@ void Thermocycler::ControlLid() {
 
 void Thermocycler::UpdateEta() {
   double secondPerDegree;
-  if (iElapsedRampDegrees == 0)
+  if (iElapsedRampDegrees == 0 || !iHasCooled)
     secondPerDegree = 0.8;
   else
     secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
     
   unsigned long estimatedDurationS = iProgramHoldDurationS + iProgramRampDegrees * secondPerDegree;
   unsigned long elapsedTimeS = (millis() - iProgramStartTimeMs) / 1000;
-  iEstimatedTimeRemainingS = estimatedDurationS - elapsedTimeS > 0 ? estimatedDurationS - elapsedTimeS : 0;
+  iEstimatedTimeRemainingS = estimatedDurationS > elapsedTimeS ? estimatedDurationS - elapsedTimeS : 0;
 }
 
 void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
