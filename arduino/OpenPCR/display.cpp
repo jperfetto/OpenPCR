@@ -49,7 +49,7 @@ void Display::Update() {
   if (state != Thermocycler::EOff) {
     //heat/cool status
     iLcd.setCursor(0, 1);
-    iLcd.print("Power Supply Test");
+    iLcd.print("DNA Barcoding");
     
     char floatStr[32];
     sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1);
@@ -96,7 +96,7 @@ void Display::Update() {
       char timeString[32];
       if (hours >= 10)
         strcpy(timeString, "ETA: >10h");
-      else if (mins >= 1)
+      else if (mins >= 1 || hours >= 1)
         sprintf(timeString, "ETA: %d:%02d", hours, mins);
       else
         sprintf(timeString, "ETA:  %2ds", secs);
