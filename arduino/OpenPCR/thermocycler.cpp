@@ -518,9 +518,14 @@ float Thermocycler::TableLookup(const unsigned long lookupTable[], unsigned int 
     if (searchValue >= pgm_read_dword_near(lookupTable + i))
       break;
   }
-  unsigned long high_val = pgm_read_dword_near(lookupTable + i - 1);
-  unsigned long low_val = pgm_read_dword_near(lookupTable + i);
-  return i + startValue - (float)(searchValue - low_val) / (float)(high_val - low_val);
+  
+  if (i > 0) {
+    unsigned long high_val = pgm_read_dword_near(lookupTable + i - 1);
+    unsigned long low_val = pgm_read_dword_near(lookupTable + i);
+    return i + startValue - (float)(searchValue - low_val) / (float)(high_val - low_val);
+  } else {
+    return startValue;
+  }
 }
 //------------------------------------------------------------------------------
 float Thermocycler::TableLookup(const unsigned int lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue) {
@@ -530,7 +535,12 @@ float Thermocycler::TableLookup(const unsigned int lookupTable[], unsigned int t
     if (searchValue >= pgm_read_word_near(lookupTable + i))
       break;
   }
-  unsigned long high_val = pgm_read_word_near(lookupTable + i - 1);
-  unsigned long low_val = pgm_read_word_near(lookupTable + i);
-  return i + startValue - (float)(searchValue - low_val) / (float)(high_val - low_val);
+  
+  if (i > 0) {
+    unsigned long high_val = pgm_read_word_near(lookupTable + i - 1);
+    unsigned long low_val = pgm_read_word_near(lookupTable + i);
+    return i + startValue - (float)(searchValue - low_val) / (float)(high_val - low_val);
+  } else {
+    return startValue;
+  }
 }

@@ -20,11 +20,17 @@
 
 void sprintFloat(char* str, float val, int decimalDigits) {
   long factor = pow(10, decimalDigits);
-  long intVal = val * factor + 0.5;
+  long intVal;
+
+  if (val > 0)
+    intVal = val * factor + 0.5;
+  else
+    intVal = val * factor - 0.5;
+    
   int decimal = intVal % factor;
   int number = intVal / factor;
 
-  sprintf(str, "%3d.%d", number, decimal);
+  sprintf(str, "%3d.%d", number, abs(decimal));
 }
 
 void* operator new(size_t size) {
