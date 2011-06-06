@@ -45,7 +45,7 @@
 
 		#include "Descriptors.h"
 
-		#include "Lib/SCSI.h"
+		#include "SCSI.h"
 
 		#include <LUFA/Version.h>
 		#include <LUFA/Drivers/Board/LEDs.h>

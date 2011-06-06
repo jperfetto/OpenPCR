@@ -82,10 +82,10 @@ void SetupHardware(void)
 	wdt_disable();
 
 	/* Disable clock division */
-	clock_prescale_set(clock_div_1);
+//	clock_prescale_set(clock_div_1);
 
 	/* Hardware Initialization */
-	LEDs_Init();
+//	LEDs_Init();
 //	SPI_Init(SPI_SPEED_FCPU_DIV_2 | SPI_ORDER_MSB_FIRST | SPI_SCK_LEAD_FALLING | SPI_SAMPLE_TRAILING | SPI_MODE_MASTER);
 	USB_Init();
 }
@@ -128,4 +128,3 @@ bool CALLBACK_MS_Device_SCSICommandReceived(USB_ClassInfo_MS_Device_t* const MSI
 
 	return CommandSuccess;
 }
-
