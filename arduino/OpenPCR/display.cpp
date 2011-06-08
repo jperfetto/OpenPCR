@@ -22,7 +22,9 @@
 #include "thermocycler.h"
 #include "program.h"
 
-#define RESET_INTERVAL 60000 //ms
+#define RESET_INTERVAL 30000 //ms
+
+#define DEBUG_DISPLAY
 
 Display::Display(Thermocycler& thermocycler):
   iLcd(6, 7, 8, A5, 16, 17),
@@ -32,6 +34,11 @@ Display::Display(Thermocycler& thermocycler):
 
   iLcd.begin(20, 4);
   iLastReset = millis();
+  iszDebugMsg[0] = '\0';
+}
+
+void Display::SetDebugMsg(char* szDebugMsg) {
+  strcpy(iszDebugMsg, szDebugMsg);
 }
 
 void Display::Update() {
@@ -49,7 +56,11 @@ void Display::Update() {
   if (state != Thermocycler::EOff) {
     //heat/cool status
     iLcd.setCursor(0, 1);
-    iLcd.print("DNA Barcoding");
+ #ifdef DEBUG_DISPLAY
+    iLcd.print(iszDebugMsg);
+ #else
+   iLcd.print("DNA Barcoding");
+ #endif
     
     char floatStr[32];
     sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1);

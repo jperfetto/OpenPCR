@@ -137,7 +137,7 @@ Thermocycler::Thermocycler():
   iTargetLidTemp(110) {
     
   ipDisplay = new Display(*this);
-  ipSerialControl = new SerialControl(*this);
+  ipSerialControl = new SerialControl(*this, ipDisplay);
   
   //init pins
   pinMode(15, INPUT);
@@ -278,7 +278,8 @@ void Thermocycler::Loop() {
   ControlLid();
   UpdateEta();
   
-  ipDisplay->Update();  
+  ipDisplay->Update();
+  ipSerialControl->Process();
 }
 
 void Thermocycler::CheckPower() {

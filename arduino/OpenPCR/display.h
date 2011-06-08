@@ -29,6 +29,7 @@ public:
   Display(Thermocycler& thermocycler);
   
   void SetDisplayCycle(Cycle* pDisplayCycle) { ipDisplayCycle = pDisplayCycle; }
+  void SetDebugMsg(char* szDebugMsg);
   void Update();
   
 private:
@@ -36,6 +37,7 @@ private:
   
 private:
   LiquidCrystal iLcd;
+  char iszDebugMsg[21];
   Thermocycler& iThermocycler;
   Cycle* ipDisplayCycle;
   Thermocycler::ProgramState iLastState;
