@@ -28,9 +28,8 @@
 typedef enum {
     PROGRAM_RUN    = 0x10,
     PROGRAM_STOP   = 0x20,
-    ACK            = 0x30,
-    STATUS         = 0x40,
-    DEBUG          = 0x50
+    STATUS_REQ     = 0x40,
+    STATUS_RESP    = 0x80
 }PACKET_TYPE;
   
 //packet header
@@ -46,35 +45,20 @@ struct PCPPacket {
   uint8_t eType; //lower 4 bits are used for seq
 };
 
-//packet payload
-struct PCPStatusPacket : PCPPacket {
-  PCPStatusPacket(): PCPPacket(STATUS) {}
-  
-  uint8_t iProgramState; //Thermocycler::ProgramState
-  uint16_t iPlateTemp; //C x 10^-1
-  uint16_t iLidTemp; //C x 10^-1
-};
-
-struct PCPAckPacket : PCPPacket {
-  PCPAckPacket(): PCPPacket(ACK) {}
-  
-  uint8_t iResult;
-};
-
 class Thermocycler;
+class Display;
 
 class SerialControl {
 public:
-  SerialControl(Thermocycler& thermocycler);
+  SerialControl(Thermocycler& thermocycler, Display* pDisplay);
   ~SerialControl();
   
   void Process();
-  void Debug(char* debugStr);
+  
 private:
   void ReadPacket();
   void WritePacket(byte* data, int datasize, byte* header=NULL);
   void ProcessPacket(byte* data, int datasize);
-  void SendAck(uint8_t result);
   void SendStatus();
   
 private:
@@ -83,7 +67,7 @@ private:
   boolean bStartCodeFound, bEscapeCodeFound;
   
   Thermocycler& iThermocycler;
-  unsigned long iLastStatusTime;
+  Display* ipDisplay;
 };
 
 #endif
