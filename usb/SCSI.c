@@ -37,6 +37,8 @@
 
 #define  INCLUDE_FROM_SCSI_C
 #include "SCSI.h"
+#include "DataManager.h"
+
 
 /** Structure to hold the SCSI response data to a SCSI INQUIRY command. This gives information about the device's
  *  features and capabilities.
@@ -278,125 +280,6 @@ static bool SCSI_Command_Send_Diagnostic(USB_ClassInfo_MS_Device_t* const MSInte
  *
  *  \return Boolean true if the command completed successfully, false otherwise.
  */
- typedef PROGMEM struct
-	{
-		uint8_t		bootstrap[3];			//eb 3c 90
-		uint8_t		OEM[8];
-		uint16_t	iBytesPerSector;		//512
-		uint8_t		iSectorsPerCluster;		//1
-		uint16_t	iReservedSectors;		//1
-		uint8_t		iFATs;					//2
-		uint16_t	iRootEntries;
-		uint16_t 	iTotalSectors;
-		uint8_t		iMediaDescr;
-		uint16_t	iSectorsPerFAT;
-		uint16_t	iSectorsPerTrack;
-		uint16_t	iHeads;
-		uint32_t	iHiddenSectors;
-		uint32_t	iTotalSectorsEx;
-		uint16_t	iLogicDriveNumber;
-		uint8_t		extSignature;			//29 (hex)
-		uint32_t	serialNumber;
-		uint8_t		volumeLabel[11];
-		uint8_t		fatName[8];				//FAT16
-		//uint8_t		exeCode[448];
-		//uint8_t		exeEndMarker[2];		//55 aa
-	} FAT_BOOT_RECORD; //total 512 bytes
-
-	//Boot Record: 1 sector; FAT1: 1 sector; FAT2: 1 sector; Root Directory: 1 sector
-	FAT_BOOT_RECORD PROGMEM fatBootData = 
-	{
-		.bootstrap          = {0xeb, 0x3c, 0x90},
-		.OEM				= "OpenPCR ",
-		.iBytesPerSector 	= 512,
-		.iSectorsPerCluster = 1,
-		.iReservedSectors	= 1,
-		.iFATs				= 2,
-		.iRootEntries		= 512,
-		.iTotalSectors		= 4352,
-		.iMediaDescr		= 0xf0,
-		.iSectorsPerFAT		= 17,
-		.iSectorsPerTrack	= 0,
-		.iHeads				= 0,
-		.iHiddenSectors		= 0,
-		.iTotalSectorsEx	= 0,
-		.iLogicDriveNumber	= 0x00, //0x80,
-		.extSignature		= 0x29,
-		.serialNumber		= USE_INTERNAL_SERIAL,
-		.volumeLabel        = "OpenPCR    ",
-		.fatName			= "FAT16   ",
-	//	.exeCode			= {},
-	//	.exeEndMarker		= {0x55, 0xaa}
-	};
-
- typedef PROGMEM struct
-	{
-		uint8_t		filename[8];
-		uint8_t		ext[3];
-		uint8_t		attribute;
-		uint8_t		reserved;
-		uint8_t		create_time_ms;
-		uint16_t	create_time;
-		uint16_t	create_date;
-		uint16_t	access_date;
-		uint16_t	first_cluster_highorder;
-		uint16_t	modified_time;
-		uint16_t	modified_date;
-		uint16_t	first_cluster_loworder;
-		uint32_t	size;
-	} FAT_ROOT_DIRECTORY; //total 512 bytes
-
-/*date format: bits 0-4: day of month 1-31; bits 5-8: month of year 1-12; bits 9-15: years since 1980 0-127
-  time format: bits 0-4: 2 second count 0-29; bits 5-10: minutes 0-59; bits 11-15: hours 0-23  */
-	FAT_ROOT_DIRECTORY PROGMEM rootDir = 
-	{
-		.filename          			= "TEST    ",
-		.ext						= "TXT",
-		.attribute 					= 0,
-		.reserved 					= 0,
-		.create_time_ms				= 0,
-		.create_time				= 0x8800,
-		.create_date				= 0x3ea1,
-		.access_date				= 0x3ea1,
-		.first_cluster_highorder	= 0,
-		.modified_time				= 0x8800,
-		.modified_date				= 0x3ea1,
-		.first_cluster_loworder		= 2,
-		.size						= 3
-	};
-
-static char file_var = 0x41;
-
-bool DoReadFlowControl() {
-	/* Check if the endpoint is currently full */
-	if (!(Endpoint_IsReadWriteAllowed()))
-	{
-		/* Clear the endpoint bank to send its contents to the host */
-		Endpoint_ClearIN();
-
-		/* Wait until the endpoint is ready for more data */
-		if (Endpoint_WaitUntilReady())
-		  return false;
-	}
-
-	return true;
-}
-
-bool DoWriteFlowControl() {
-	/* Check if the endpoint is currently full */
-	if (!(Endpoint_IsReadWriteAllowed()))
-	{
-		/* Clear the endpoint bank to send its contents to the host */
-		Endpoint_ClearOUT();
-
-		/* Wait until the endpoint is ready for more data */
-		if (Endpoint_WaitUntilReady())
-		  return false;
-	}
-
-	return true;
-}
-
 static int SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfaceInfo,
                                       const bool IsDataRead)
 {
@@ -426,107 +309,12 @@ static int SCSI_Command_ReadWrite_10(USB_ClassInfo_MS_Device_t* const MSInterfac
 	#endif
 
 	/* Determine if the packet is a READ (10) or WRITE (10) command, call appropriate function */
-	if (IsDataRead == DATA_READ){
-		uint16_t block_index = 0;
 
-		while (TotalBlocks){
-			if (BlockAddress == 0){ //BOOT Record
-				for (block_index=0; block_index<62; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(pgm_read_byte(((char*)&fatBootData)+block_index));
-				}
-				for (block_index=0; block_index<448; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(0x00);
-				}
-				
-				DoReadFlowControl();
-				Endpoint_Write_Byte(0x55);
-				Endpoint_Write_Byte(0xaa);				
-			}
-			else if (BlockAddress == 1 || BlockAddress == 18){ //FAT TABLE 1 and 2 (15 blocks)
-				//first two sectors are not used
-				DoReadFlowControl();
-				Endpoint_Write_Byte(0xf0);
-				Endpoint_Write_Byte(0xff);
-				Endpoint_Write_Byte(0xff);
-				Endpoint_Write_Byte(0xff);
-				//sector 2 where data start
-				/*
-				for (block_index=2; block_index<10; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(0x00);
-					Endpoint_Write_Byte(0x00);
-				}
-				*/
-				Endpoint_Write_Byte(0xff);
-				Endpoint_Write_Byte(0xff);
-				for (block_index=6; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(0x00);
-				}
-				
-			}
-			else if (BlockAddress == 35){	//Root Directory
-				for (block_index=0;block_index<32; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(pgm_read_byte(((char*)&rootDir)+block_index));
-				}
-				for (block_index=32; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(0x00);
-				}
-			}
-			else if (BlockAddress == 67){	//test.txt
-				DoReadFlowControl();
-				Endpoint_Write_Byte(file_var++);
-				Endpoint_Write_Byte(0x0a);
-				Endpoint_Write_Byte(0x0d);
-				for (block_index=3; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(0x00);
-				}
-			}
-			else{
-				DoReadFlowControl();
-				for (block_index=0; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
-					DoReadFlowControl();
-					Endpoint_Write_Byte(0x00);
-				}
-			}
-	
-			BlockAddress++;
-			TotalBlocks--;
-		}
-
-		if (!(Endpoint_IsReadWriteAllowed()))
-			Endpoint_ClearIN();
-	} else {
-		if (Endpoint_WaitUntilReady())
-		  return;
-		
-		while(TotalBlocks){
-			uint16_t block_index, blockdiv16_index;
-			for(blockdiv16_index=0; blockdiv16_index<(VIRTUAL_MEMORY_BLOCK_SIZE>>4); blockdiv16_index++){
-	    		for (block_index=0; block_index<16; block_index++){
-					Endpoint_Read_Byte();
-				}
-				DoWriteFlowControl();
-			}
-			TotalBlocks--;
-		}
-
-		if (!(Endpoint_IsReadWriteAllowed()))
-			Endpoint_ClearOUT();	
-	}
-
-	/* Determine if the packet is a READ (10) or WRITE (10) command, call appropriate function */
-
-/*	if (IsDataRead == DATA_READ)
-	  DataflashManager_ReadBlocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
+	if (IsDataRead == DATA_READ)
+	  DataManager_ReadBlocks(BlockAddress, TotalBlocks);
 	else
-	  DataflashManager_WriteBlocks(MSInterfaceInfo, BlockAddress, TotalBlocks);
-*/
+	  DataManager_WriteBlocks(BlockAddress, TotalBlocks);
+
 	/* Update the bytes transferred counter and succeed the command */
 	MSInterfaceInfo->State.CommandBlock.DataTransferLength -= ((uint32_t)TotalBlocks * (uint32_t)VIRTUAL_MEMORY_BLOCK_SIZE);
 

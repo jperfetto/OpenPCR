@@ -34,6 +34,7 @@
  *  the demo and is responsible for the initial application hardware configuration.
  */
 
+#include <LUFA/Drivers/Peripheral/Serial.h>
 #include "MassStorage.h"
 
 /** LUFA Mass Storage Class driver interface configuration and state information. This structure is
@@ -87,6 +88,7 @@ void SetupHardware(void)
 	/* Hardware Initialization */
 //	LEDs_Init();
 //	SPI_Init(SPI_SPEED_FCPU_DIV_2 | SPI_ORDER_MSB_FIRST | SPI_SCK_LEAD_FALLING | SPI_SAMPLE_TRAILING | SPI_MODE_MASTER);
+	Serial_Init(9600, false);
 	USB_Init();
 }
 
