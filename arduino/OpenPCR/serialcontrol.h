@@ -23,15 +23,25 @@
 #define ESCAPE_CODE   0xFE
 #define PACKET_HEADER_LENGTH  3
 
-#define MAX_BUFSIZE   128
+#define MAX_BUFSIZE   128 //516
 
 typedef enum {
-    PROGRAM_RUN    = 0x10,
-    PROGRAM_STOP   = 0x20,
+    SEND_CMD       = 0x10,
     STATUS_REQ     = 0x40,
     STATUS_RESP    = 0x80
-}PACKET_TYPE;
+} PACKET_TYPE;
   
+struct SCommand {
+  char name[21];
+  uint16_t commandId;
+  enum TCommandType {
+    ENone = 0,
+    EStart,
+    EStop
+  } command;
+  int lidTemp;
+};
+
 //packet header
 struct PCPPacket {
   PCPPacket(PACKET_TYPE type)
@@ -41,7 +51,7 @@ struct PCPPacket {
   {}
 
   uint8_t startCode;
-  uint8_t length;
+  uint16_t length;
   uint8_t eType; //lower 4 bits are used for seq
 };
 
@@ -60,11 +70,24 @@ private:
   void WritePacket(byte* data, int datasize, byte* header=NULL);
   void ProcessPacket(byte* data, int datasize);
   void SendStatus();
+  void ParseCommand(char* pCommandBuf);
+  void AddCommand(SCommand* pCommand, char key, const char* szValue);
+  void ProcessCommand(SCommand* pCommand);
   
 private:
   byte buf[MAX_BUFSIZE]; //read or write buffer
-  uint8_t readDataLen, lastPacketSeq;
-  boolean bStartCodeFound, bEscapeCodeFound;
+  
+  typedef enum{
+    STATE_START,
+    STATE_STARTCODE_FOUND,
+    STATE_PACKETLEN_LOW,
+    STATE_PACKETHEADER_DONE
+  }PACKET_STATE;
+  
+  PACKET_STATE packetState;
+  uint8_t lastPacketSeq;
+  uint16_t packetLen, iCommandId;
+  boolean bEscapeCodeFound;
   
   Thermocycler& iThermocycler;
   Display* ipDisplay;

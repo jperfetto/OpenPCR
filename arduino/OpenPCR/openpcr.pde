@@ -57,7 +57,7 @@ void setup() {
   pMaster->AddComponent(new Step("FExtending", 300, 69));
   pMaster->AddComponent(new Step("Holding", 0, 4));
  */
-  gpThermocycler->SetProgram(pMaster, pMain);
+  gpThermocycler->SetProgram(pMaster, pMain, "Test Name", 110);
   delay(1000);
   
   gpThermocycler->Start();

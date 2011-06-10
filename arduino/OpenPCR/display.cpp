@@ -30,13 +30,23 @@ Display::Display(Thermocycler& thermocycler):
   iLcd(6, 7, 8, A5, 16, 17),
   iThermocycler(thermocycler),
   ipDisplayCycle(NULL),
-  iLastState(Thermocycler::EOff) {
+  iLastState(Thermocycler::EOff),
+  iContrast(10) {
 
   iLcd.begin(20, 4);
   iLastReset = millis();
   iszDebugMsg[0] = '\0';
+  
+  // Set contrast
+  analogWrite(5, iContrast);
 }
 
+void Display::SetContrast(uint8_t contrast) {
+  iContrast = contrast;
+  analogWrite(5, iContrast);
+  iLcd.begin(20, 4);
+}
+  
 void Display::SetDebugMsg(char* szDebugMsg) {
   strcpy(iszDebugMsg, szDebugMsg);
 }
@@ -59,11 +69,11 @@ void Display::Update() {
  #ifdef DEBUG_DISPLAY
     iLcd.print(iszDebugMsg);
  #else
-   iLcd.print("DNA Barcoding");
+   iLcd.print(iThermocycler.GetProgName());
  #endif
     
     char floatStr[32];
-    sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1);
+    sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1, true);
     char buf[32];
     sprintf(buf, "%s C", floatStr);
    
@@ -93,9 +103,7 @@ void Display::Update() {
       //Cycle
       if (ipDisplayCycle != NULL) {
         iLcd.setCursor(0, 3);
-        int numCycles = ipDisplayCycle->GetNumCycles();
-        int currentCycle = ipDisplayCycle->GetCurrentCycle() > numCycles ? numCycles : ipDisplayCycle->GetCurrentCycle();
-        sprintf(buf, "%d of %d", currentCycle, numCycles);
+        sprintf(buf, "%d of %d", iThermocycler.GetCurrentCycleNum(), iThermocycler.GetNumCycles());
         iLcd.print(buf);
       }
      

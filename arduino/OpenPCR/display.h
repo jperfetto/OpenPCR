@@ -28,6 +28,7 @@ class Display {
 public:
   Display(Thermocycler& thermocycler);
   
+  void SetContrast(uint8_t contrast);
   void SetDisplayCycle(Cycle* pDisplayCycle) { ipDisplayCycle = pDisplayCycle; }
   void SetDebugMsg(char* szDebugMsg);
   void Update();
@@ -42,6 +43,7 @@ private:
   Cycle* ipDisplayCycle;
   Thermocycler::ProgramState iLastState;
   unsigned long iLastReset;
+  uint8_t iContrast;
 };
 
 #endif

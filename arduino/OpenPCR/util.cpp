@@ -18,7 +18,7 @@
 
 #include "pcr_includes.h"
 
-void sprintFloat(char* str, float val, int decimalDigits) {
+void sprintFloat(char* str, float val, int decimalDigits, boolean pad) {
   long factor = pow(10, decimalDigits);
   long intVal;
 
@@ -30,7 +30,10 @@ void sprintFloat(char* str, float val, int decimalDigits) {
   int decimal = intVal % factor;
   int number = intVal / factor;
 
-  sprintf(str, "%3d.%d", number, abs(decimal));
+  if (pad)
+    sprintf(str, "%3d.%d", number, abs(decimal));
+  else
+    sprintf(str, "%d.%d", number, abs(decimal));
 }
 
 void* operator new(size_t size) {

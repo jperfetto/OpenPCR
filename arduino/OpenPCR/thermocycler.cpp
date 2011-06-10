@@ -121,6 +121,7 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 Thermocycler::Thermocycler():
   ipDisplay(NULL),
   ipProgram(NULL),
+  ipDisplayCycle(NULL),
   ipSerialControl(NULL),
   iProgramState(EOff),
   iThermalState(EHolding),
@@ -134,7 +135,7 @@ Thermocycler::Thermocycler():
   iRamping(true),
   iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_P, PLATE_PID_I, PLATE_PID_D, DIRECT),
   iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, LID_PID_P, LID_PID_I, LID_PID_D, DIRECT),
-  iTargetLidTemp(110) {
+  iTargetLidTemp(0) {
     
   ipDisplay = new Display(*this);
   ipSerialControl = new SerialControl(*this, ipDisplay);
@@ -173,9 +174,6 @@ Thermocycler::Thermocycler():
   // Lid PWM
   TCCR2A = _BV(COM2A1) | _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
   TCCR2B = _BV(CS22);
-  
-  // Set contrast
-  analogWrite(5, 10);
 }
 
 Thermocycler::~Thermocycler() {
@@ -183,13 +181,26 @@ Thermocycler::~Thermocycler() {
   delete ipDisplay;
 }
 
+// accessors
+int Thermocycler::GetNumCycles() {
+  return ipDisplayCycle->GetNumCycles();
+}
+
+int Thermocycler::GetCurrentCycleNum() {
+  int numCycles = GetNumCycles();
+  return ipDisplayCycle->GetCurrentCycle() > numCycles ? numCycles : ipDisplayCycle->GetCurrentCycle();
+}
+ 
 // control
-void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle) {
+void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp) {
   Stop();
   
   delete ipProgram;
   ipProgram = pProgram;
+  ipDisplayCycle = pDisplayCycle;
   ipDisplay->SetDisplayCycle(pDisplayCycle);
+  strncpy(iszProgName, szProgName, sizeof(iszProgName));
+  SetLidTarget(lidTemp);
 }
 
 void Thermocycler::Stop() {
@@ -202,10 +213,7 @@ PcrStatus Thermocycler::Start() {
     return ENoProgram;
 //  if (iProgramState == EOff) // DANGEROUS TEMP HACK, REMOVE ONCE SERIAL CONTROL IN PLACE
   //  return ENoPower;
-  
-  //temp
-  SetLidTarget(110);
-  
+    
   //calculate program time params
   ipProgram->BeginIteration();
   Step* pStep;
@@ -267,7 +275,7 @@ void Thermocycler::Loop() {
       ipCurrentStep = ipProgram->GetNextStep();
 
       if (ipCurrentStep == NULL) {
-        iProgramState = EFinished;
+        iProgramState = EComplete;
       } else {
         SetPlateTarget(ipCurrentStep->GetTemp());
       }
@@ -455,7 +463,7 @@ void Thermocycler::UpdateEta() {
     secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
     
   unsigned long estimatedDurationS = iProgramHoldDurationS + iProgramRampDegrees * secondPerDegree;
-  unsigned long elapsedTimeS = (millis() - iProgramStartTimeMs) / 1000;
+  unsigned long elapsedTimeS = GetElapsedTimeS();
   iEstimatedTimeRemainingS = estimatedDurationS > elapsedTimeS ? estimatedDurationS - elapsedTimeS : 0;
 }
 

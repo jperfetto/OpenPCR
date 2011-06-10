@@ -32,7 +32,8 @@ public:
     EOff = 0,
     EStopped,
     ERunning,
-    EFinished
+    EComplete,
+    EError
   };
   
   enum ThermalState {
@@ -54,15 +55,21 @@ public:
   ProgramState GetProgramState() { return iProgramState; }
   ThermalState GetThermalState() { return iThermalState; }
   Step* GetCurrentStep() { return ipCurrentStep; }
+  Cycle* GetDisplayCycle() { return ipDisplayCycle; }
+  int GetNumCycles();
+  int GetCurrentCycleNum();
+  const char* GetProgName() { return iszProgName; }
+  
   ThermalDirection GetThermalDirection() { return iThermalDirection; }
   boolean Ramping() { return iRamping; }
   int GetPeltierPwm() { return iPeltierPwm; }
   float GetPlateTemp() { return iPlateTemp; }
   float GetLidTemp() { return iLidTemp; }
   unsigned long GetTimeRemainingS() { return iEstimatedTimeRemainingS; }
+  unsigned long GetElapsedTimeS() { return (millis() - iProgramStartTimeMs) / 1000; }
   
   // control
-  void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle); //takes ownership
+  void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp); //takes ownership of cycles
   void Stop();
   PcrStatus Start();
   
@@ -102,6 +109,8 @@ private:
   double iLidTemp;
   double iTargetLidTemp;
   Cycle* ipProgram;
+  Cycle* ipDisplayCycle;
+  char iszProgName[21];
   Step* ipCurrentStep;
   unsigned long iCycleStartTime;
   boolean iRamping;
