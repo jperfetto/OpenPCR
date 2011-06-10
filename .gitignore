@@ -8,5 +8,6 @@
 *.eep
 *.elf
 *.aws
+*.s
 .dep
 usb/default
