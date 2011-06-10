@@ -46,7 +46,7 @@ FAT_BOOT_RECORD PROGMEM fatBootData =
 		.iLogicDriveNumber	= 0x00, //0x80,
 		.extSignature		= 0x29,
 		.serialNumber		= USE_INTERNAL_SERIAL,
-		.volumeLabel        = "OpenPCR    ",
+		.volumeLabel        = "OPENPCR    ",
 		.fatName			= "FAT16   ",
 	//	.exeCode			= {},
 	//	.exeEndMarker		= {0x55, 0xaa}
@@ -71,7 +71,24 @@ FAT_BOOT_RECORD PROGMEM fatBootData =
 
 /*date format: bits 0-4: day of month 1-31; bits 5-8: month of year 1-12; bits 9-15: years since 1980 0-127
   time format: bits 0-4: 2 second count 0-29; bits 5-10: minutes 0-59; bits 11-15: hours 0-23  */
-FAT_ROOT_DIRECTORY PROGMEM rootDir = 
+FAT_ROOT_DIRECTORY PROGMEM volumeLabel = 
+{
+		.filename          			= "OPENPCR ",
+		.ext						= "   ",
+		.attribute 					= 0x08,
+		.reserved 					= 0,
+		.create_time_ms				= 0,
+		.create_time				= 0,
+		.create_date				= 0,
+		.access_date				= 0,
+		.first_cluster_highorder	= 0,
+		.modified_time				= 0,
+		.modified_date				= 0,
+		.first_cluster_loworder		= 0,
+		.size						= 0
+};
+
+FAT_ROOT_DIRECTORY PROGMEM fileName = 
 {
 		.filename          			= "STATUS  ",
 		.ext						= "TXT",
@@ -89,7 +106,7 @@ FAT_ROOT_DIRECTORY PROGMEM rootDir =
 };
 
 #define START_CODE				0xFF
-#define PACKET_HEADER_LENGTH	3
+#define PACKET_HEADER_LENGTH	4
 
 typedef enum{
 	SEND_CMD		= 0x10,
@@ -97,9 +114,9 @@ typedef enum{
 	STATUS_RESP		= 0x80	
 }PACKET_TYPE;
 
-#define FILE_SIGNATURE		"T67k0gh"
+#define FILE_SIGNATURE		"s=ACGTC"
 #define FILE_SIGNATURE_LEN	7
-#define FILE_MAX_LENGTH		300
+#define FILE_MAX_LENGTH		100
 
 bool DoReadFlowControl() {
 	/* Check if the endpoint is currently full */
@@ -132,9 +149,20 @@ bool DoWriteFlowControl() {
 }
 
 bool SerialWaitUntilReady(){
-	//??? need timeout
-	while (!Serial_IsCharReceived());
-	return true;
+	//timeout in 50000*60/16M (clock frequency) = 0.1875 secs
+	uint16_t timeout = 60;
+	
+	TCNT1 = 0;
+	while(timeout){
+		if (Serial_IsCharReceived())
+			return true;
+		if (TCNT1 >= 50000){ 
+			TCNT1 = 0;
+			timeout--;
+		}
+	}
+
+	return false;
 }
 
 /*
@@ -199,9 +227,13 @@ bool DataManager_ReadBlocks(uint32_t BlockAddress, uint16_t TotalBlocks)
 		else if (BlockAddress == 35){	//Root Directory
 			for (block_index=0;block_index<32; block_index++){
 				DoReadFlowControl();
-				Endpoint_Write_Byte(pgm_read_byte(((char*)&rootDir)+block_index));
+				Endpoint_Write_Byte(pgm_read_byte(((char*)&volumeLabel)+block_index));
 			}
-			for (block_index=32; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
+			for (block_index=0;block_index<32; block_index++){
+				DoReadFlowControl();
+				Endpoint_Write_Byte(pgm_read_byte(((char*)&fileName)+block_index));
+			}
+			for (block_index=64; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
 				DoReadFlowControl();
 				Endpoint_Write_Byte(0x00);
 			}
@@ -209,29 +241,38 @@ bool DataManager_ReadBlocks(uint32_t BlockAddress, uint16_t TotalBlocks)
 		else if (BlockAddress == 67){	//STATUS.TXT
 			Serial_TxByte(START_CODE);
 			Serial_TxByte(PACKET_HEADER_LENGTH);
+			Serial_TxByte(0);
 			Serial_TxByte(STATUS_REQ);
 
-			uint8_t length, packet_type;
+			uint16_t length = 0;
+			uint8_t  packet_type;
+			bool success = true;
 			while(true){
-				while (SerialWaitUntilReady() && Serial_RxByte() != START_CODE);
-				SerialWaitUntilReady();
+				while ((success = SerialWaitUntilReady()) && Serial_RxByte() != START_CODE);
+				if (!success) break;
+				if (!(success = SerialWaitUntilReady())) break;
 				length = Serial_RxByte();
+				if (!(success = SerialWaitUntilReady())) break;
+				length |= (Serial_RxByte() << 8);
 				if (length > PACKET_HEADER_LENGTH){
 					length -= PACKET_HEADER_LENGTH;
-					SerialWaitUntilReady();
+					if (!(success = SerialWaitUntilReady())) break;
 					packet_type = Serial_RxByte();
 					if (packet_type == STATUS_RESP)
 						break;
 				}
 			}
 
-			for (block_index=0; block_index<length; block_index++){
-				SerialWaitUntilReady();
-				DoReadFlowControl();
-				Endpoint_Write_Byte(Serial_RxByte());
+			block_index = 0;
+			if (success){
+				for (; block_index<length; block_index++){
+					if (!SerialWaitUntilReady()) break;
+					DoReadFlowControl();
+					Endpoint_Write_Byte(Serial_RxByte());
+				}
 			}
 
-			for (block_index=length; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
+			for (; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
 				DoReadFlowControl();
 				Endpoint_Write_Byte(0x00);
 			}
@@ -269,8 +310,10 @@ bool DataManager_WriteBlocks(uint32_t BlockAddress, uint16_t TotalBlocks)
 				}
 			}
 			if (bSignatureFound){
+				uint16_t length = PACKET_HEADER_LENGTH+FILE_MAX_LENGTH;
 				Serial_TxByte(START_CODE);
-				Serial_TxByte(PACKET_HEADER_LENGTH+FILE_MAX_LENGTH);
+				Serial_TxByte(length & 0xff);
+				Serial_TxByte((length & 0xff00) >> 8);
 				Serial_TxByte(SEND_CMD);
 				for (block_index=0; block_index<FILE_MAX_LENGTH; block_index++){
 					DoWriteFlowControl();

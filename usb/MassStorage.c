@@ -90,6 +90,8 @@ void SetupHardware(void)
 //	SPI_Init(SPI_SPEED_FCPU_DIV_2 | SPI_ORDER_MSB_FIRST | SPI_SCK_LEAD_FALLING | SPI_SAMPLE_TRAILING | SPI_MODE_MASTER);
 	Serial_Init(9600, false);
 	USB_Init();
+
+	TCCR1B |= (1 << CS10); // set up timer for serial 
 }
 
 /** Event handler for the library USB Connection event. */
