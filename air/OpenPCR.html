@@ -6,7 +6,7 @@
   <script src="js/jquery-1.4.4.min.js"></script>
   <script type="text/javascript" src="js/jquery.validate.js"></script>
   <script type="text/javascript" src="js/jquery-ui-1.8.7.custom.min.js"></script>
-  <link type="text/css" href="css/smoothness/jquery-ui-1.8.7.custom.css" rel="stylesheet" />	
+  <link type="text/css" href="css/redmond/jquery-ui-1.8.13.custom.css" rel="stylesheet" />	
   <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
   <link href="css/SprySlidingPanels.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="js/sprypanels.js"></script>
@@ -66,6 +66,9 @@ hr, .clearAll {
 				
 				<!--<a id="singleTemp" class="edit small_button" href="#">Heat Block mode</a>-->
 				
+				<div id="lidContainer" style="display:none;">
+					<div id="lidTemp"></div>
+					</div>
 				<div id="preContainer" style="display:none;">
 					<div id="preSteps"></div>
 					<a id="initialStep" class="edit" onclick="addInitialStep();" href="#"><img src="images/plus.png" height="30"> Initial Step</a>
@@ -135,7 +138,7 @@ hr, .clearAll {
 						<table id="statsTable">
 							<tr>
 								<td width="50%">
-								<span class="runningHeaders">Status</span><br />
+								<span class="runningHeaders">Status</span><br /><br />
 								<span class="runningNums">
 									<div id="cycleNumOfNum">Cycle <span id="cycleNumber"></span> of <span id="totalCycles"></span><br /></div>
 									<span id="currentStep"></span><span id="stepRemaining"> for <span id="stepSecondsRemaining"></span> sec<br /></span>
@@ -143,10 +146,10 @@ hr, .clearAll {
 								</td>
 								
 								<td>
-								<span class="runningHeaders">Current Temperature</span><br />
+								<span class="runningHeaders">Current Temperature</span><br /><br />
 								<span class="runningNums">
 									Block: <span id="blockTemp"></span> C <br />
-									Lid: <span id="lidTemp"></span> C
+									Lid: <span id="lidTemperature"></span> C
 								</td>
 							</tr>
 						</table>
@@ -159,7 +162,7 @@ hr, .clearAll {
 				<br />Plug in your OpenPCR to get updated information on your run.
 				<br />
 				</div>
-	<span><a id="Home" class="button">home</a></span>
+	<div id="homeButton"><a id="Home" class="button start">Home</a></div>
 			<!-- stop-dialog -->
 			<div id="stop_dialog" title="Stop">
 				Stop PCR?<br />

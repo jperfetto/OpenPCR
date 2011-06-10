@@ -18,6 +18,14 @@ text-align:center;
 
 /* The main containers for the OpenPCR Form ------------------------------------------ */
 
+#lidContainer
+	{
+	border-top: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+	}
+	
 #preContainer
 	{
 	border-top: 1px solid grey;

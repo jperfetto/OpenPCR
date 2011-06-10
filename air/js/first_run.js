@@ -11,7 +11,7 @@
 // if the "Experiments" folder doesn't exist, copy the "Experiments" folder from the app directory into the user's application storage dir
 
 // files from the app folder
-source = air.File.applicationDirectory.resolvePath("Experiments");
+source = air.File.applicationDirectory.resolvePath("Default Experiments");
 // into the user's storage folder
 destination = air.File.applicationStorageDirectory.resolvePath("Experiments");
 // copy

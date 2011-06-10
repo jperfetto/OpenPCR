@@ -9,7 +9,7 @@
  * 1. Home screen and initialization
  * 2. Form screen, entering the PCR protocol
  * 3. Running screen, displaying live information from OpenPCR
- * 4. Buttons
+ * Extra. Buttons
  */
 
 /**************
@@ -50,7 +50,6 @@
 			listExperiments();
 		// get ready to validate the OpenPCR form
 			$("#pcrForm").validate();
-		
 		}
 	
 	/* listExperiments()
@@ -121,7 +120,7 @@
 		// wait for a USB device to be plugged in
 		volInfo.addEventListener(air.StorageVolumeChangeEvent.STORAGE_VOLUME_MOUNT, function(e){
 				// if the name is OpenPCR, then set the window variable pluggedIn to "true". otherwise do nothing
-				var pattern = /OpenPCR/;
+				var pattern = /OPENPCR/;
 				// if the nativePath contains "OpenPCR"
 				if (pattern.test(e.rootDirectory.nativePath))
 					{
@@ -155,7 +154,7 @@
 				// air doesn't store the name of what was unplugged, so does the nativePath match OpenPCR
 				nativePath = e.rootDirectory.nativePath
 				// if the device unplugged contained "OpenPCR"
-				var pattern = /OpenPCR/i;
+				var pattern = /OPENPCR/;
 				if (pattern.test(nativePath))
 					{
 						if($("#Start").is(':visible'))
@@ -180,7 +179,7 @@
 		// get a list of the current Volumes mounted on the computer
 			var volumesList = air.StorageVolumeInfo.storageVolumeInfo.getStorageVolumes();
 		// look in the list for a Volume named "OpenPCR"
-			var pattern = /OpenPCR/i;
+			var pattern = /OPENPCR/;
 			for (var i = 0; i < volumesList.length; i++)
 				{
 					
@@ -217,7 +216,7 @@
 			clearForm();
 			// given an experiment ID, get the path for that ID
 			experimentPath = window.experimentList[experimentID];
-			// if the experiment id doesn't exist, exit and do nothing
+			// if the experiment id doesn't exist, exit and do nothing (why would this happen?)
 			if (experimentPath == null) { return 0; }
 			// read in the file
 			experimentJSON = JSON.parse(readFile(experimentPath));
@@ -267,7 +266,8 @@
 								"temp": "4",
 							    "time": 0
 							}
-						]
+						],
+						"lidtemp": 110
 				};
 		experimentToHTML(experimentJSON);
 		
@@ -324,6 +324,8 @@
 			$("#editButton").show();
 		// Start with the edit buttons hidden
 			$(".edit").hide();
+		// hide the lid temp fields
+			$("#lidContainer").hide();
 		// all fields locked
 			$("input").attr("readonly","readonly");
 		// and 'More options' hidden
@@ -351,6 +353,8 @@
 			$("#editButton").hide();
 		// Start with the edit buttons hidden
 			$(".edit").hide();
+		// lid temp hidden
+			$("#lidContainer").hide();
 		// all fields editable
 			$("input").attr("readonly","");
 		// and 'More options' shown
@@ -368,11 +372,12 @@
 		$('#OptionsButton').html("More options");
 		}
 
-	/* readoutExperiment
+	/* writeoutExperiment
 	* Reads out all the variables from the OpenPCR form.
-	* Stored in JSON format either to "Save" the experiment or send it to OpenPCR
+	* Stored in JSON format to "Save" the experiment
+	* Separate function is used to write out the experiment to the device
 	*/
-	function readoutExperiment()
+	function writeoutExperiment()
 	{
 		// grab the Experiment Name
 		experimentName = document.getElementById("ExperimentName").innerHTML;
@@ -407,13 +412,18 @@
 					//just throw them in an array for now
 					holdArray.push($(this).val());
 					});
-			
+		// grab the lid temp
+			$("#lidContainer .textinput").each(function(index, elem)
+					{
+					lidTemp = $(this).val();
+					});	
 		
 		// Push variables into an experiment JSON object
 		var experimentJSON = new Object();
 		// Experiment name
 		experimentJSON.name = experimentName;
 		experimentJSON.steps = [];
+		experimentJSON.lidtemp = lidTemp;
 		// Pre Steps
 		// every step will have 2 elements in preArray (temp,time)
 		preLength = (preArray.length)/2;
@@ -429,17 +439,18 @@
 		
 		// Cycle and cycle steps
 		// the cycle will be a # of cycles as the first element, then temp/time pairs after that
-			if (cycleArray.length > 0)
+			count = cycleArray.shift(),
+			if ( cycleArray.length > 0 && count > 0 )
 			{
 				experimentJSON.steps.push(
 					{  
 					"type": "cycle",
 					// add the number of cycles
-					"count": cycleArray.shift(),
+					"count": count,
 					"steps": [] 
 					});
 				
-				// then add the cylces
+				// then add the cycles
 				current = experimentJSON.steps.length-1;
 				
 				// every step will have 2 elements in cycleArray (Time and temp)
@@ -495,7 +506,7 @@
 		// create the filename
 			fileName = name + ".pcr";
 		// grab the current experiment and update window.experiment
-			pcrProgram = readoutExperiment();
+			pcrProgram = writeoutExperiment();
 		// update the name of the experiment
 			pcrProgram.name = name;
 		// turn the pcrProgram into a string
@@ -534,14 +545,18 @@
 			var experimentHTML = "";
 			// break the rest of the experiment up into "pre cycle" (0), "cycle" (1), and "post cycle" (2) sections
 			var count = 0;
+			// add the lid temperature div but hide it
+			$('#lidContainer').hide();
+			// max temp 120, min temp 0 (off)
+			$('#lidTemp').html('<span class="title">Heated Lid</span>' + '<input type="text" name="lid_temp" id="lid_temp" class="required number textinput" maxlength="3" min="0" max="120"  value="' + inputJSON.lidtemp + '">');
 			// 4 possibile DIVs
 			// pre-steps, cycle steps, post-steps, and final hold step
-				// Add the experiment to the page	
-						for (i=0; i < inputJSON.steps.length; i++)
-				{
+			// Add the experiment to the page	
+			for (i=0; i < inputJSON.steps.length; i++)
+					{
 					// pre-cycle to start
-					if (count==0 & inputJSON.steps[i].type == "step")
-					// if it's for pre-cycle
+					if (count==0 & inputJSON.steps[i].type == "step" && inputJSON.steps[i].time != 0)
+					// if it's for pre-cycle, and not a final hold (0 time)
 						{
 						// show the preContainer div
 						$('#preContainer').show();
@@ -563,7 +578,7 @@
 						$('#postSteps').append(stepToHTML(inputJSON.steps[i]));
 					}
 					
-					else if (count==1 && inputJSON.steps[i].type == "step" && inputJSON.steps[i].time == 0)
+					else if (inputJSON.steps[i].type == "step" && inputJSON.steps[i].time == 0)
 					// if it's the final hold (time = 0), put it in the final hold container
 					{
 						$('#holdContainer').show();
@@ -586,7 +601,8 @@
 		if (step.type=="cycle")
 		 {
 			// printhe "Number of Cycles" div
-			stepHTML += '<label for="number_of_cycles"></label><div><span class="title">Number of Cycles:</span><input type="text" name="number_of_cycles" id="number_of_cycles" class="required number textinput" maxlength="4" min="0" max="1000"  value="' + step.count + '"></div><br />';
+			// max 99 cycles
+			stepHTML += '<label for="number_of_cycles"></label><div><span class="title">Number of Cycles:</span><input type="text" name="number_of_cycles" id="number_of_cycles" class="required number textinput" maxlength="2" min="0" max="99"  value="' + step.count + '"></div><br />';
 			// steps container
 			// print each individual step
 			for (a=0; a<step.steps.length; a++)
@@ -598,7 +614,9 @@
 					step_time = step.steps[a].time;
 					
 					// print HTML for the step
-					stepHTML += '<div class="step"><span id="step' + step_number + '_name" class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a><table><tr><th><label for="step' + step_number + '_temp">temp:</label> <div class="step' + step_number + '_temp"><input type="text" style="font-weight:normal;" class="required number textinput" name="step' + step_number + '_temp" id="step' + step_number + '_temp" value="' + step_temp + '" maxlength="4" min="-20" max="150" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th><th><label for="step' + step_number + '_time">time:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step' + step_number + '_time" id="step' + step_number + '_time" value="' + step_time + '" maxlength="4" min="0" max="1000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th></tr></table></div>';
+					// min,max temp = -20, 105
+					// min,max time = 0, 6000, 1 decimal point
+					stepHTML += '<div class="step"><span id="step' + step_number + '_name" class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a><table><tr><th><label for="step' + step_number + '_temp">temp:</label> <div class="step' + step_number + '_temp"><input type="text" style="font-weight:normal;" class="required number textinput" name="step' + step_number + '_temp" id="step' + step_number + '_temp" value="' + step_temp + '" maxlength="4" min="-20" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th><th><label for="step' + step_number + '_time">time:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step' + step_number + '_time" id="step' + step_number + '_time" value="' + step_time + '" maxlength="4" min="0" max="6000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th></tr></table></div>';
 			
 					}
 		 }
@@ -617,8 +635,7 @@
 		 // if the individual step has 0 time (or blank?) time, then it is a "hold" step and doesn't have a "time" component
 		if (step_time != 0)	
 				{
-				stepHTML += '<th><label>time:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="' + step_time + '" name="time_' + step_number + '" maxlength="4" min="0" max="1000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>';
-				//stepHTML += '<label for="step' + step_name + '_time">time:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step' + step_number + '_time" id="step' + step_number + '_time" value="' + step_time + '" min="-20" max="150" ><span htmlfor="openpcr_time" generated="true" class="units">sec</span></div>';
+				stepHTML += '<th><label>time:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="' + step_time + '" name="time_' + step_number + '" maxlength="4" min="0" max="6000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>';
 				}
 		 }
 		else alert("Error #1986");
@@ -636,11 +653,13 @@
 	$('#cycleSteps').empty();
 	$('#postSteps').empty();
 	$('#holdSteps').empty();
+	$('#lidTemp').empty();
 	// hide everything
 	$('#preContainer').hide();
 	$('#cycleContainer').hide();
 	$('#postContainer').hide();
 	$('#holdContainer').hide();
+	$('#lidContainer').hide();
 	
 	// reset the size of the DIV to 700 px
 	//defaultHeight = "700";
@@ -673,20 +692,16 @@ function disableEnterKey(e)
 		{
 		// Listen for VolumeChangeEvents so we can know if OpenPCR gets unplugged?
 			
-		// Find the running file containing the current OpenPCR data
+		// Find the STATUS.TXT file containing the current OpenPCR data
 			window.runningFile = path;
-			window.runningFile = window.runningFile.resolvePath("running.pcr");
+			window.runningFile = window.runningFile.resolvePath("STATUS.TXT");
 		
 		// check the running file exists
 		// if so
 		// update the running page once
-			updateRunning();
+			//updateRunning();
 		// refresh the running page every 250 ms
 			setInterval(updateRunning,250);
-		
-		// otherwise, re-check continuously for the next 10 seconds
-		// after 10 seconds, throw an error
-		//alert("There has been a problem starting OpenPCR");
 		}
 	
 	/* updateRunning
@@ -694,105 +709,196 @@ function disableEnterKey(e)
 	*/
 	function updateRunning()
 		{
-		// does the running file exist? if not, return
-		if (!window.runningFile.exists) { return 0; }
-		// otherwise, update the running page
-		updateFile = readFile(window.runningFile);
-		var status = JSON.parse(updateFile);
-		
-		// if command id in the running file doesn't match, say so and then quit
-					if (status["command_id"]!=window.command_id)
-						{
-						alert("OpenPCR command_id does not match running file. This error should not appear");
-				// quit
-						air.NativeApplication.nativeApplication.exit();
-						}
-				
-				if (status["status"]=="running")
+		updateFile = readDevice(window.runningFile);
+		if (updateFile==null || updateFile=="")
+			{
+			// don't do anything, updateRunning will be re-run
+			//air.trace("updatefile's null");
+			}
+		else
+			{
+			// split on &
+			var splitonAmp = updateFile.split("&");
+			// split on =
+			var status = new Array();
+			for(i=0;i<splitonAmp.length;i++) {
+       			var data = splitonAmp[i].split("=");
+       			if(isNaN(parseFloat(data[1])))
 					{
-					// preset name
-						var prog_name = status["prog_name"];
-						$("#runningHeader").html(prog_name);
-						
-					// set variable for percentComplete
-						var percentComplete = 100 * status["seconds_elapsed"]/(status["seconds_elapsed"]+status["seconds_remaining"]);
-					// Progress bar
-						$("#progressbar").progressbar({ value: percentComplete});
+					// not a number
+					status[data[0]]=data[1];
+					}
+       			else
+					{
+					// a number
+					status[data[0]]=parseFloat(data[1]);
+					}
+  			
+			// if command id in the running file doesn't match, say so and then quit
+						if (status["cmdId"]!=window.command_id)
+							{
+							alert("about to crash. status:"+status[0]);
+							alert("OpenPCR command_id does not match running file. This error should not appear\nstatus"+status["cmdId"]+"\nwindow:"+window.command_id);
+					// quit
+							air.NativeApplication.nativeApplication.exit();
+							}
 					
-					// Time Remaining
-						var secondsRemaining = parseInt(status["seconds_remaining"]);
-						if (secondsRemaining == 0) 
-								{
-									timeRemaining='<span style="color:#04B109;">Done!</span>';
-								}
-							else
-								{
-									var timeRemaining = humanTime(secondsRemaining);
-								}
-						$("#minutesRemaining").html(timeRemaining);
+					if (status["status"]=="running")
+						{
+						// preset name
+							var prog_name = status["progName"];
+							$("#runningHeader").html(prog_name);
+							
+						// set variable for percentComplete
+							var percentComplete = 100 * status["timeElapsed"]/(status["timeElapsed"]+status["timeRemaining"]);
+						// Progress bar
+							$("#progressbar").progressbar({ value: percentComplete});
 						
-					// Current step name
-						var current_step = status["state"];
-						$("#currentStep").html(current_step);
-				
-					// Current step time remaining
-						var step_seconds_remaining = status["step_seconds_remaining"];
-						$("#stepSecondsRemaining").html(step_seconds_remaining);
-					// Current cycle #
-						var current_cycle = status["cycle_number"];
-						$("#cycleNumber").html(current_cycle);
-						
-					// Total # of cycles
-						var total_cycles = status["num_cycles"];
-						$("#totalCycles").html(total_cycles);
-						
-					// Current temp
-						var block_temp = status["block_temp"];
-						$("#blockTemp").html(block_temp);
-						
-					// Current lid temp
-						var lid_temp = status["lid_temp"];
-						$("#lidTemp").html(lid_temp);
-					}
-				else if (status["status"]=="complete")
-					{
-					// if the status of OpenPCR comes back as "complete"
-					// hide the cancel button
-					$("#cancelButton").hide();
-					// show the completed message
-					timeRemaining='<span style="color:#04B109;">Done!</span>';
-					// hide "Time remaining" span
-					$("#timeRemaining").hide();
-					// update the "current temp"
-					var block_temp = status["block_temp"];
-						$("#blockTemp").html(block_temp);
-					// update the lid temp
-					var lid_temp = status["lid_temp"];
-					$("#lidTemp").html(lid_temp);
-					// replace the "cycle # of total#" span with "PCR took..."
-					$("#cycleNumOfNum").html("PCR took " + humanTime(status["seconds_elapsed"]));
-					// i.e. hide the "Holding for 10 sec", just show "Holding"
-					$("#stepRemaining").hide();
-					// Current step name
-							var current_step = status["state"];
+						// Time Remaining
+							var secondsRemaining = status["timeRemaining"];
+							if (secondsRemaining == 0) 
+									{
+										timeRemaining='<span style="color:#04B109;">Done!</span>';
+									}
+								else
+									{
+										var timeRemaining = humanTime(secondsRemaining);
+									}
+							$("#minutesRemaining").html(timeRemaining);
+							
+						// Current step name
+							var current_step = status["stepName"];
 							$("#currentStep").html(current_step);
-					//and "elapsed time" (elapsed time could be static)
-					//status["seconds_elapsed"]
-//					$("#minutesRemaining") = "PCR took" + humanTime(100);
-					}
-				else if (status["status"]=="stopped")
-					{
-					// nothing, this shouldn't be a status that is read in
-					}
-				else if (status["status"]=="error")
-					{
-					// error
-					alert("Error");
-					}
+					
+						// Current step time remaining
+							var step_seconds_remaining = status["step_seconds_remaining"];
+							$("#stepSecondsRemaining").html(step_seconds_remaining);
+						// Current cycle #
+							var current_cycle = status["curCycle"];
+							$("#cycleNumber").html(current_cycle);
+							
+						// Total # of cycles
+							var total_cycles = status["numCycles"];
+							$("#totalCycles").html(total_cycles);
+							
+						// Current temp
+							var block_temp = status["blockTemp"];
+							$("#blockTemp").html(block_temp);
+							
+						// Current lid temp
+							var lid_temp = status["lidTemp"];
+							$("#lidTemperature").html(lid_temp);
+						}
+					else if (status["status"]=="complete")
+						{
+						// if the status of OpenPCR comes back as "complete"
+						// show the "Home" button
+						$("#homeButton").show();
+						// hide the cancel button
+						$("#cancelButton").hide();
+						// show the completed message
+						timeRemaining='<span style="color:#04B109;">Done!</span>';
+						// hide "Time remaining" span
+						$("#timeRemaining").hide();
+						// update the "current temp"
+						var block_temp = status["blockTemp"];
+							$("#blockTemp").html(block_temp);
+						// update the lid temp
+						var lid_temp = status["lidTemp"];
+						$("#lidTemp").html(lid_temp);
+						// replace the "cycle # of total#" span with "PCR took..."
+						$("#cycleNumOfNum").html("PCR took " + humanTime(status["timeElapsed"]));
+						// i.e. hide the "Holding for 10 sec", just show "Holding"
+						$("#stepRemaining").hide();
+						// Current step name
+								var current_step = status["stepName"];
+								$("#currentStep").html(current_step);
+						//and "elapsed time" (elapsed time could be static)
+						//status["timeElapsed"]
+						//$("#minutesRemaining") = "PCR took" + humanTime(100);
+						}
+					else if (status["status"]=="stopped")
+						{
+						// nothing, this shouldn't be a status that is read in
+						}
+					else if (status["status"]=="error")
+						{
+						// error
+						alert("Error");
+						}
+				}
+		}
 		}
 		
 
-		/* readFile()
+		/* readDevice()
+		* Checks the OS (Mac or PC) and runs the appropriate middleman app to grab info off the USB drive
+		*/
+		function readDevice(filePath)
+		{
+			if (filePath.exists)
+			{   
+				// are native processes supported?
+				if (air.NativeProcess.isSupported)
+				 {
+					var nativeProcessStartup = new air.NativeProcessStartupInfo();
+					nativeProcess = new air.NativeProcess();
+					// setup arguments
+					var args = new air.Vector["<String>"]();
+					// PC or Mac?
+					if (air.Capabilities.os.toLowerCase().indexOf("win") > -1)
+						{
+						processName = air.File.applicationDirectory.resolvePath("ncc.exe");
+						alert("win");
+						}
+					else if (air.Capabilities.os.toLowerCase().indexOf("mac") > -1)
+						{
+						// in application directory
+						processName = air.File.applicationDirectory.resolvePath("ncc");
+						//processName = new air.File("/bin/cat");
+						//alert("mac");
+						}  
+					else
+						{
+						alert("neither Mac or PC");
+						}
+
+					nativeProcessStartup.executable = processName;
+					
+					// add the path as an argument
+					args.push(filePath.nativePath);
+					nativeProcessStartup.arguments = args;
+					nativeProcess.addEventListener(air.ProgressEvent.STANDARD_OUTPUT_DATA,outputHandler);
+					// start the process
+					nativeProcess.start(nativeProcessStartup);
+				 }
+				else
+				{
+				alert("NativeProcess not supported");
+				}
+				// will return the value of the outputHandler if it's NULL or blank
+				if (window.deviceFile!=null || window.deviceFile!="")
+				{	return window.deviceFile;	}
+			}
+			else
+			{
+				// otherwise do nothing if the file doesn't exist
+				alert("File doesn't exist");
+			}
+ 		}
+ 		
+		/* outputHandler()
+		* Grabs stdout from the middleman USB app, used in readDevice()
+		*/
+		function outputHandler()
+		{
+		var deviceInfo = nativeProcess.standardOutput.readUTFBytes(nativeProcess.standardOutput.bytesAvailable);
+		window.deviceFile = deviceInfo;
+		//alert(deviceInfo);
+		}
+	
+	
+ 		/* readFile()
 		* Opens a given filestream and reads it into a varaiable
 		* (If the file does not exist, should be an error!) 
 		*/
@@ -881,41 +987,48 @@ function disableEnterKey(e)
 	$('#Start').live('click', function(){
 			// go to the Running dashboard
 			sp2.showPanel(2);
+			//hide the home button on the running page
+			$("#homeButton").hide();
 			$('#starting').dialog('open');
 		// then close it after 1 second
-		setTimeout(function(){$('#starting').dialog('close');}, 750);
+		setTimeout(function(){$('#starting').dialog('close');}, 1000);
 			// check if the form is validated
 			if (false == ($("#pcrForm").validate().form()))
 				{ return 0;} // if the form is not valid, show the errors
 			// grab the current timestamp
 			var currentTime = new Date();
 			// command_id will be the timestamp (currentTime), stored to the window for later use
-	///// set to 1111 for testing purposes, should be currentTime in the future
-			window.command_id = 1111;
+	///// set to 1111 for testing purposes
+	//// document.write(Math.floor(Math.random()*65534));
+			window.command_id = 65535;
 			// where is OpenPCR
 				var devicePath =  window.path;
 			// name of the output file written to OpenPCR
-				var controlFile = devicePath.resolvePath("control.pcr"); 
+				var controlFile = devicePath.resolvePath("CONTROL.TXT"); 
 			// grab all the variables, command id + PCR settings, in JSON format.
-			// Start with the command id, which 
-				var pcrProgram = "{\n\t\"command_id\": " + window.command_id + ",\n";
-			// add on the experiment
-			// not funtional yet
+			// Start with the signature
+			var pcrProgram = "s=ACGTC";
+			// Command
+			pcrProgram += "&c=start";
+			// Contrast
+			pcrProgram += "&t=50";
+			// Command id 
+			pcrProgram += "&d=" + window.command_id;
+			// Lid Temp
+			pcrProgram += "&l=105";
+			// Name
+			pcrProgram += "&n=Bio on the Bay";
 
 			// get all the variables from the pre-cycle, cycle, and post-cycle steps
-			pcrProgram += "\t\"protocol\": " + JSON.stringify(readoutExperiment(), null, '\t\t');
-			pcrProgram += "\n";
-			pcrProgram += "\"contrast\": 50\n}";
+			//pcrProgram += "\t\"protocol\": " + JSON.stringify(writeoutExperiment(), null, '\t\t');
 			
-			// write out the file.  This file will then be read by the OpenPCR device
-				var fileStream = new window.runtime.flash.filesystem.FileStream();
-				fileStream.open(controlFile, window.runtime.flash.filesystem.FileMode.WRITE); 
-				fileStream.writeUTFBytes(pcrProgram); 
-				fileStream.close();
+			// write out the file to the OpenPCR device
+			var fileStream = new window.runtime.flash.filesystem.FileStream();
+			fileStream.open(controlFile, window.runtime.flash.filesystem.FileMode.WRITE); 
+			fileStream.writeUTFBytes(pcrProgram);
+			fileStream.close();
 			// load the OpenPCR Running page
 			running(path);
-			
-	//// is this boolean necessary
 		});
 					
 	/*  "Save" button on the OpenPCR Form
@@ -1000,6 +1113,7 @@ function disableEnterKey(e)
 		$(".edit").toggle();
 		$("#preContainer").show();
 		$("#postContainer").show();
+		$("#lidContainer").show();
 		// get current state
 		buttonText = document.getElementById("OptionsButton").innerHTML;
 		// if we're hiding the options and there are no pre-steps or post-steps, hide those sections appropriately
@@ -1033,6 +1147,8 @@ function disableEnterKey(e)
 			$("#editButton").hide();
 		// show the edit buttons
 			$(".edit").show();
+		// show the lid temp fields
+			$("#lidContainer").show();
 		// all fields editable
 			$("input").attr("readonly","");
 		// and 'More options' hidden
@@ -1124,7 +1240,7 @@ function disableEnterKey(e)
 		/* StopPCR()
 		* This function is called when the STOP button (Running page) is clicked and confirmed
 		* Or when the "Return to home screen" button is clicked
-		* The state "stop" is written out to OpenPCR's control.pcr file
+		* The state "stop" is written out to OpenPCR's CONTROL.TXT file
 		* Returns: boolean
 		*/
 		function stopPCR() {	
@@ -1133,10 +1249,11 @@ function disableEnterKey(e)
 			// command_id will match the current command ID
 			
 			// name of the output file
-				var file = window.path.resolvePath("control.pcr"); 
+				var file = window.path.resolvePath("CONTROL.TXT"); 
 			// write out all the variables, command id + PCR settings
-				var pcrProgram = "{\n\t\"command_id\":" + command_id + ",\n" +
-					"\t\"state\": stop\n}";
+				
+				//var pcrProgram = "{\n\t\"command_id\":" + command_id + ",\n" +	"\t\"state\": stop\n}";
+				var pcrProgram = 's=ACGTC&c=stop&t=50&l=120&n="Bio on the Bay"&d=65535';
 			// write out the file
 				var fileStream = new window.runtime.flash.filesystem.FileStream();
 				fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE); 

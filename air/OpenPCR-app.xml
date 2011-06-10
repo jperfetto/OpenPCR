@@ -20,5 +20,7 @@
         <resizable>false</resizable>
         <y>0</y>
          <x>0</x>
-    </initialWindow> 
+    </initialWindow>
+<supportedProfiles>extendedDesktop
+desktop</supportedProfiles>
 </application>
