@@ -116,7 +116,7 @@ typedef enum{
 
 #define FILE_SIGNATURE		"s=ACGTC"
 #define FILE_SIGNATURE_LEN	7
-#define FILE_MAX_LENGTH		100
+#define FILE_MAX_LENGTH		252
 
 bool DoReadFlowControl() {
 	/* Check if the endpoint is currently full */
