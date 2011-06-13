@@ -24,12 +24,11 @@
 
 #define RESET_INTERVAL 30000 //ms
 
-#define DEBUG_DISPLAY
+// #define DEBUG_DISPLAY
 
 Display::Display(Thermocycler& thermocycler):
   iLcd(6, 7, 8, A5, 16, 17),
   iThermocycler(thermocycler),
-  ipDisplayCycle(NULL),
   iLastState(Thermocycler::EOff),
   iContrast(10) {
 
@@ -41,6 +40,10 @@ Display::Display(Thermocycler& thermocycler):
   analogWrite(5, iContrast);
 }
 
+void Display::Clear() {
+  iLastState = Thermocycler::EClear;
+}
+
 void Display::SetContrast(uint8_t contrast) {
   iContrast = contrast;
   analogWrite(5, iContrast);
@@ -49,9 +52,16 @@ void Display::SetContrast(uint8_t contrast) {
   
 void Display::SetDebugMsg(char* szDebugMsg) {
   strcpy(iszDebugMsg, szDebugMsg);
+  iLcd.clear();
+  Update();
 }
 
+const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";
+const char HEATING_STR[] PROGMEM = "Heating";
+const char COOLING_STR[] PROGMEM = "Cooling";
+
 void Display::Update() {
+  char pbuf[32];
   Thermocycler::ProgramState state = iThermocycler.GetProgramState();
   if (iLastState != state)
     iLcd.clear();
@@ -63,7 +73,7 @@ void Display::Update() {
     iLastReset = millis();
   }
   
-  if (state != Thermocycler::EOff) {
+  if (state == Thermocycler::ERunning || state == Thermocycler::EComplete) {
     //heat/cool status
     iLcd.setCursor(0, 1);
  #ifdef DEBUG_DISPLAY
@@ -81,7 +91,8 @@ void Display::Update() {
     iLcd.print(buf);
         
     //lid temp
-    sprintf(buf, "Lid: %3d C", (int)(iThermocycler.GetLidTemp() + 0.5));
+    strcpy_P(pbuf, LID_FORM_STR);
+    sprintf(buf, pbuf, (int)(iThermocycler.GetLidTemp() + 0.5));
     iLcd.setCursor(10, 2);
     iLcd.print(buf);
    
@@ -89,9 +100,9 @@ void Display::Update() {
     char* stateStr;
     if (iThermocycler.Ramping()) {
       if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
-        stateStr = "Heating";
+        stateStr = rps(HEATING_STR);
       else
-        stateStr = "Cooling";
+        stateStr = rps(COOLING_STR);
     } else {
       stateStr = iThermocycler.GetCurrentStep()->GetName();
     }
@@ -101,11 +112,9 @@ void Display::Update() {
 
     if (state == Thermocycler::ERunning && !iThermocycler.GetCurrentStep()->IsFinal()) {
       //Cycle
-      if (ipDisplayCycle != NULL) {
-        iLcd.setCursor(0, 3);
-        sprintf(buf, "%d of %d", iThermocycler.GetCurrentCycleNum(), iThermocycler.GetNumCycles());
-        iLcd.print(buf);
-      }
+      iLcd.setCursor(0, 3);
+      sprintf(buf, "%d of %d", iThermocycler.GetCurrentCycleNum(), iThermocycler.GetNumCycles());
+      iLcd.print(buf);
      
       //Time Remaining
       unsigned long timeRemaining = iThermocycler.GetTimeRemainingS();
@@ -131,20 +140,12 @@ void Display::Update() {
     iLcd.setCursor(6, 1);
     iLcd.print("OpenPCR");
     
-    iLcd.setCursor(4, 2);
-    iLcd.print("Powered Off");
-  }
-}
-
-char* Display::ThermalStateString(Thermocycler::ThermalState state) {
-  switch (state) {
-  case Thermocycler::EHolding:
-    return "Holding";
-  case Thermocycler::EHeating:
-    return "Heating";
-  case Thermocycler::ECooling:
-    return "Cooling";
-  default:
-    return "Error";
+    if (state == Thermocycler::EOff) {
+      iLcd.setCursor(4, 2);
+      iLcd.print("Powered Off");
+    } else if (state == Thermocycler::EStopped) {
+      iLcd.setCursor(4, 2);
+      iLcd.print("Standing By");
+    }
   }
 }

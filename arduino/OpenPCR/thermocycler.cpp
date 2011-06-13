@@ -193,19 +193,25 @@ int Thermocycler::GetCurrentCycleNum() {
  
 // control
 void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp) {
-  Stop();
-  
+  Stop();  
   delete ipProgram;
+
   ipProgram = pProgram;
   ipDisplayCycle = pDisplayCycle;
-  ipDisplay->SetDisplayCycle(pDisplayCycle);
-  strncpy(iszProgName, szProgName, sizeof(iszProgName));
+
+  strcpy(iszProgName, szProgName);
   SetLidTarget(lidTemp);
 }
 
 void Thermocycler::Stop() {
   if (iProgramState != EOff)
     iProgramState = EStopped;
+    
+  delete ipProgram;
+  ipProgram = NULL;
+  ipCurrentStep = NULL;
+  
+  ipDisplay->Clear();
 }
 
 PcrStatus Thermocycler::Start() {
@@ -216,9 +222,9 @@ PcrStatus Thermocycler::Start() {
     
   //calculate program time params
   ipProgram->BeginIteration();
+
   Step* pStep;
-  double lastTemp = iPlateTemp;
-  
+  double lastTemp = iPlateTemp;  
   iProgramHoldDurationS = 0;
   iProgramRampDegrees = 0;
   iElapsedRampDurationMs = 0;
@@ -239,12 +245,13 @@ PcrStatus Thermocycler::Start() {
   iPeltierPwm = 0;
   
   ipProgram->BeginIteration();
+
   ipCurrentStep = ipProgram->GetNextStep();
   SetPlateTarget(ipCurrentStep->GetTemp());
   iRamping = true;
   
   iProgramStartTimeMs = millis();
-  
+
   return ESuccess;
 }
 
@@ -448,23 +455,26 @@ void Thermocycler::ControlLid() {
       iLidPwm = iTargetLidTemp > iLidTemp ? MAX_LID_PWM : MIN_LID_PWM;
     }
     iLidPid.Compute();
-    
     drive = iLidPwm;   
+  } else {
+    iLidPwm = 0;
   }
    
   analogWrite(3, drive);
 }
 
 void Thermocycler::UpdateEta() {
-  double secondPerDegree;
-  if (iElapsedRampDegrees == 0 || !iHasCooled)
-    secondPerDegree = 0.8;
-  else
-    secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
-    
-  unsigned long estimatedDurationS = iProgramHoldDurationS + iProgramRampDegrees * secondPerDegree;
-  unsigned long elapsedTimeS = GetElapsedTimeS();
-  iEstimatedTimeRemainingS = estimatedDurationS > elapsedTimeS ? estimatedDurationS - elapsedTimeS : 0;
+  if (iProgramState == ERunning) {
+    double secondPerDegree;
+    if (iElapsedRampDegrees == 0 || !iHasCooled)
+      secondPerDegree = 0.8;
+    else
+      secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
+      
+    unsigned long estimatedDurationS = iProgramHoldDurationS + iProgramRampDegrees * secondPerDegree;
+    unsigned long elapsedTimeS = GetElapsedTimeS();
+    iEstimatedTimeRemainingS = estimatedDurationS > elapsedTimeS ? estimatedDurationS - elapsedTimeS : 0;
+  }
 }
 
 void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {

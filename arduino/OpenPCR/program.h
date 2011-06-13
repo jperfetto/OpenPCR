@@ -71,6 +71,8 @@ public:
   virtual TType GetType() { return ECycle; }
   int GetCurrentCycle() { return iCurrentCycle + 1; } //add 1 because cycles start at 0
   int GetNumCycles() { return iNumCycles; }
+  int GetNumComponents() { return iNumComponents; }
+  ProgramComponent* GetComponent(int index);
   
   // mutators
   PcrStatus AddComponent(ProgramComponent* pComponent); //takes ownership

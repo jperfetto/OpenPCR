@@ -40,8 +40,36 @@ void* operator new(size_t size) {
   return malloc(size);
 }
 
+struct __freelist
+{
+ size_t sz;
+ struct __freelist *nx;
+};
+
+extern struct __freelist *__flp;
+extern uint8_t* __brkval;
+
+void fix28135_malloc_bug()
+ {
+   for (__freelist *fp = __flp, *lfp = 0; fp; fp = fp->nx)
+   {
+     if (((uint8_t*)fp + fp->sz + 2) == __brkval)
+     {
+       __brkval = (uint8_t*)fp;
+       if (lfp)
+         lfp->nx = 0;
+       else
+         __flp = 0;
+       break;
+     }
+     lfp = fp;
+   }
+ }
+
+
 void operator delete(void * ptr) {
   free(ptr);
+  fix28135_malloc_bug();
 }
 
 void __cxa_pure_virtual(void) {};
@@ -55,4 +83,10 @@ double absf(double val) {
     return val * -1;
   else
     return val;
+}
+
+char* rps(const char* progString) {
+  static char buf[32];
+  strcpy_P(buf, progString);
+  return buf;
 }

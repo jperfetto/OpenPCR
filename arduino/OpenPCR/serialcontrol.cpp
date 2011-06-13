@@ -30,8 +30,10 @@ SerialControl::SerialControl(Thermocycler& thermocycler, Display* pDisplay)
 , ipDisplay(pDisplay)
 , packetState(STATE_START)
 , packetLen(0)
+, packetRealLen(0)
 , lastPacketSeq(0xff)
 , bEscapeCodeFound(false)
+, iCommandId(0)
 {  
   Serial.begin(BAUD_RATE);
 }
@@ -47,7 +49,7 @@ void SerialControl::Process() {
 // Private
 void SerialControl::ReadPacket()
 {
-  char strBuf[10];
+  char dbuf[10];
   int availableBytes = Serial.available();
  
   if (packetState < STATE_PACKETHEADER_DONE){ //new packet
@@ -61,7 +63,21 @@ void SerialControl::ReadPacket()
       } 
       else if (packetState == STATE_PACKETLEN_LOW) {
         packetLen |= incomingByte << 8;
-        packetState = STATE_PACKETHEADER_DONE;
+        if (packetLen > MAX_BUFSIZE)
+          packetLen = MAX_BUFSIZE;
+        if (packetLen >= sizeof(struct PCPPacket) && packetLen <= MAX_BUFSIZE){
+          packetState = STATE_PACKETHEADER_DONE;
+          buf[0] = START_CODE;
+          buf[1] = packetLen & 0xff;
+          buf[2] = (packetLen & 0xff00)>>8;
+          bEscapeCodeFound = false;
+          checksum = 0;
+          packetRealLen = 3;
+          packetLen -= 3;
+        }
+        else{
+          packetState = STATE_START; //reset
+        }
         break;
       } 
       else if (incomingByte == START_CODE && bEscapeCodeFound == false)
@@ -73,74 +89,31 @@ void SerialControl::ReadPacket()
     }
   }
   
-  if (packetState == STATE_PACKETHEADER_DONE && packetLen > 0 && (packetLen - 3) <= availableBytes){ //read entire packet payload at once
-    boolean bEscapeCode = false;
-    byte incomingByte;
-    int payload_size = 3;
-    uint8_t checksum = 0;
-    
-    buf[0] = START_CODE;
-    buf[1] = packetLen & 0xff;
-    buf[2] = (packetLen & 0xff00)>>8;
-    for (int i = 3; i < packetLen; i++){
-      incomingByte = Serial.read();
+  if (packetState == STATE_PACKETHEADER_DONE){
+    while(availableBytes > 0 && packetLen > 0){
+      byte incomingByte = Serial.read();
+      availableBytes--;
+      packetLen--;
       checksum ^= incomingByte;
       if (incomingByte == ESCAPE_CODE)
-        bEscapeCode = true;
-      else if (bEscapeCode && incomingByte == START_CODE)
-        payload_size--; //erase the escape char
+        bEscapeCodeFound = true;
+      else if (bEscapeCodeFound && incomingByte == START_CODE)
+        packetRealLen--; //erase the escape char
       else
-        bEscapeCode = false;
-      buf[payload_size++] = incomingByte; 
+        bEscapeCodeFound = false;
+      buf[packetRealLen++] = incomingByte; 
     }
-    //checksum
-  //  incomingByte = Serial.read();
-  //  if (incomingByte == checksum){
-      ProcessPacket(buf, payload_size);
-  //  }
+    
+    if (packetLen == 0){
+      //checksum
+      //if (incomingByte == checksum){
+        ProcessPacket(buf, packetRealLen);
+      //  }
   
-    //reset, to find START_CODE again
-    packetState = STATE_START;
-  }
-}
-void SerialControl::WritePacket(byte* data, int datasize, byte* header)
-{
-  int j=0;
-  uint8_t checksum = 0;
-  
-  if (header == NULL){
-    header = data;
-    data = &data[PACKET_HEADER_LENGTH];
-    datasize -= PACKET_HEADER_LENGTH;
-  }
-  
-  //checksum the header
-  for(int i=0; i<PACKET_HEADER_LENGTH; i++){
-    buf[j] = header[i];
-    if (i != 0) //don't checksum START_CODE
-      checksum ^= buf[j];
-    j++;
-  }
-  //escape the payload and checksum the payload
-  for(int i=0; i<datasize; i++){
-    if (data[i] == START_CODE){
-      buf[j] = ESCAPE_CODE;
-      checksum ^= buf[j];
-      j++;
+      //reset, to find START_CODE again
+      packetState = STATE_START;
     }
-    buf[j] = data[i]; 
-    checksum ^= buf[j];
-    j++;
   }
-  //check sum
-  buf[j] = checksum;
-  j++;
-  //set datasize
-  datasize = j;
-  //set length
-  buf[1] = datasize-PACKET_HEADER_LENGTH+1;
-  
-  Serial.write(buf, datasize);
 }
 
 void SerialControl::ProcessPacket(byte* data, int datasize)
@@ -154,12 +127,10 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
 //  if (packetSeq != lastPacketSeq){ //not retransmission
     switch(packetType){
     case SEND_CMD:
-      ipDisplay->SetDebugMsg("Got Command");
-      data[datasize - sizeof(PCPPacket)] = '\0';
+      data[datasize] = '\0';
       ParseCommand((char*)(data + sizeof(PCPPacket)));
       break;
     case STATUS_REQ:
-      ipDisplay->SetDebugMsg("Got Status");
       SendStatus();
       break;
     default:
@@ -173,13 +144,9 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
 
 void SerialControl::SendStatus()
 {
- // ipDisplay->SetDebugMsg("Sending Status");
-  
-  // temp
-  iCommandId = 65535;
-  
   char* szStatus;
-  switch (iThermocycler.GetProgramState()) {
+  Thermocycler::ProgramState state = iThermocycler.GetProgramState();
+  switch (state) {
   case Thermocycler::EOff:
   case Thermocycler::EStopped:
     szStatus = "stopped";
@@ -207,22 +174,24 @@ void SerialControl::SendStatus()
   
   char blockTempStr[8];
   sprintFloat(blockTempStr, iThermocycler.GetPlateTemp(), 1, false);
-  char progName[32] = "No Name";
     
-  char statusBuf[256];
+  char statusBuf[128];
   char* statusPtr = statusBuf;
   int lidTemp = iThermocycler.GetLidTemp();
-  statusPtr += sprintf(statusPtr, "cmdId=%u", iCommandId);
-  statusPtr += sprintf(statusPtr, "&status=%s", szStatus);
-  statusPtr += sprintf(statusPtr, "&timeElapsed=%u", iThermocycler.GetElapsedTimeS());
-  statusPtr += sprintf(statusPtr, "&timeRemaining=%u", iThermocycler.GetTimeRemainingS());
-  statusPtr += sprintf(statusPtr, "&lidTemp=%d", lidTemp);
-  statusPtr += sprintf(statusPtr, "&blockTemp=%s", blockTempStr);
-  statusPtr += sprintf(statusPtr, "&numCycle=%d", iThermocycler.GetNumCycles());
-  statusPtr += sprintf(statusPtr, "&curCycles=%d", iThermocycler.GetCurrentCycleNum());
-  statusPtr += sprintf(statusPtr, "&progName=%s", iThermocycler.GetProgName());
-  statusPtr += sprintf(statusPtr, "&stepName=%s", iThermocycler.GetCurrentStep()->GetName());
-  statusPtr += sprintf(statusPtr, "&thermState=%s", szThermState);
+  statusPtr += sprintf(statusPtr, "d=%u", iCommandId);
+  statusPtr += sprintf(statusPtr, "&s=%s", szStatus);
+  statusPtr += sprintf(statusPtr, "&l=%d", lidTemp);
+  statusPtr += sprintf(statusPtr, "&b=%s", blockTempStr);
+  statusPtr += sprintf(statusPtr, "&t=%s", szThermState);
+
+  if (state == Thermocycler::ERunning || Thermocycler::EComplete) {
+    statusPtr += sprintf(statusPtr, "&e=%u", iThermocycler.GetElapsedTimeS());
+    statusPtr += sprintf(statusPtr, "&r=%u", iThermocycler.GetTimeRemainingS());
+    statusPtr += sprintf(statusPtr, "&u=%d", iThermocycler.GetNumCycles());
+    statusPtr += sprintf(statusPtr, "&c=%d", iThermocycler.GetCurrentCycleNum());
+    statusPtr += sprintf(statusPtr, "&n=%s", iThermocycler.GetProgName());
+    statusPtr += sprintf(statusPtr, "&p=%s", iThermocycler.GetCurrentStep()->GetName());
+  }
   
   //send packet
   PCPPacket packet(STATUS_RESP);
@@ -237,9 +206,11 @@ void SerialControl::ParseCommand(char* pCommandBuf) {
   char* pValue;
   SCommand command;
   memset(&command, NULL, sizeof(command));
-
+  
+  char buf[32];
+    
   char* pParam = strtok(pCommandBuf, "&");
-  while (pParam) {
+  while (pParam) {  
     pValue = strchr(pParam, '=');
     *pValue++ = '\0';
     AddCommand(&command, pParam[0], pValue);
@@ -251,29 +222,35 @@ void SerialControl::ParseCommand(char* pCommandBuf) {
 
 void SerialControl::ProcessCommand(SCommand* pCommand) {
   if (pCommand->command == SCommand::EStart) {
-    //create program
-    Cycle* pMaster = new Cycle(1);
-    pMaster->AddComponent(new Step("IDenaturing", 30, 95));
-    Cycle* pMain = new Cycle(35);
-    pMain->AddComponent(new Step("Denaturing", 30, 95));
-    pMain->AddComponent(new Step("Annealing", 30, 55));
-    pMain->AddComponent(new Step("Extending", 30, 72));
-    pMaster->AddComponent(pMain);
-    pMaster->AddComponent(new Step("FExtending", 30, 72));
-    pMaster->AddComponent(new Step("Holding", 0, 4));
-  
+    iThermocycler.Stop();
+    
+    //find display cycle
+    Cycle* pProgram = pCommand->pProgram;
+    Cycle* pDisplayCycle = pProgram;
+    
+    for (int i = 0; i < pProgram->GetNumComponents(); i++) {
+      ProgramComponent* pComp = pProgram->GetComponent(i);
+      if (pComp->GetType() == ProgramComponent::ECycle) {
+        pDisplayCycle = (Cycle*)pComp;
+        break;
+      }
+    }
+    
+    //start program
+    iThermocycler.SetProgram(pProgram, pDisplayCycle, pCommand->name, pCommand->lidTemp);
     iCommandId = pCommand->commandId;
-    iThermocycler.SetProgram(pMaster, pMain, pCommand->name, pCommand->lidTemp);
+    iThermocycler.Start();
+    
   } else if (pCommand->command == SCommand::EStop) {
     iThermocycler.Stop();
   }
 }
 
-void SerialControl::AddCommand(SCommand* pCommand, char key, const char* szValue) {
+void SerialControl::AddCommand(SCommand* pCommand, char key, char* szValue) {
   switch(key) {
   case 'n':
-    strncpy(pCommand->name, szValue, sizeof(pCommand->name));
-    pCommand->name[sizeof(pCommand->name)] = '\0';
+    strncpy(pCommand->name, szValue, sizeof(pCommand->name) - 1);
+    pCommand->name[sizeof(pCommand->name) - 1] = '\0';
     break;
   case 'c':
     if (strcmp(szValue, "start") == 0)
@@ -291,5 +268,68 @@ void SerialControl::AddCommand(SCommand* pCommand, char key, const char* szValue
   case 'd':
     pCommand->commandId = atoi(szValue);
     break;
+  case 'p':
+    pCommand->pProgram = ParseProgram(szValue);
+    break;
   }
+}
+
+Cycle* SerialControl::ParseProgram(char* pBuffer) {
+  Cycle* pProgram = new Cycle(1);
+	
+  char* pCycBuf = strtok(pBuffer, "()");
+  while (pCycBuf != NULL) {
+    pProgram->AddComponent(ParseCycle(pCycBuf));
+    pCycBuf = strtok(NULL, "()");
+  }
+  
+  return pProgram;
+}
+
+//(1[300|95|IDenaturing])
+ProgramComponent* SerialControl::ParseCycle(char* pBuffer) {
+  char countBuf[5];
+	
+  //find first step
+  char* pStep = strchr(pBuffer, '[');
+	
+  //get cycle count
+  int countLen = pStep - pBuffer;
+  strncpy(countBuf, pBuffer, countLen);
+  countBuf[countLen] = '\0';
+  int cycCount = atoi(countBuf);
+  
+  Cycle* pCycle = NULL;
+  if (cycCount > 1)	
+    pCycle = new Cycle(cycCount);
+	
+  //add steps
+  while (pStep != NULL) {
+    *pStep++ = '\0';
+    char* pStepEnd = strchr(pStep, ']');
+    *pStepEnd++ = '\0';
+
+    Step* pNewStep = ParseStep(pStep);
+    if (pCycle != NULL)
+      pCycle->AddComponent(pNewStep);
+    else
+      return pNewStep;
+    pStep = strchr(pStepEnd, '[');
+  }
+  
+  return pCycle;
+}
+
+Step* SerialControl::ParseStep(char* pBuffer) {
+  char* pTemp = strchr(pBuffer, '|');
+  *pTemp++ = '\0';
+  char* pName = strchr(pTemp, '|');
+  *pName++ = '\0';
+  char* pEnd = strchr(pName, ']');
+  *pEnd = '\0';
+	
+  int duration = atoi(pBuffer);
+  float temp = atof(pTemp);
+	
+  return new Step(pName, duration, temp);
 }

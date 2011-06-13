@@ -21,9 +21,14 @@
 
 #define START_CODE    0xFF
 #define ESCAPE_CODE   0xFE
-#define PACKET_HEADER_LENGTH  3
 
-#define MAX_BUFSIZE   128 //516
+#define MAX_BUFSIZE     256
+
+class Thermocycler;
+class Display;
+class ProgramComponent;
+class Cycle;
+class Step;
 
 typedef enum {
     SEND_CMD       = 0x10,
@@ -40,6 +45,7 @@ struct SCommand {
     EStop
   } command;
   int lidTemp;
+  Cycle* pProgram;
 };
 
 //packet header
@@ -55,9 +61,6 @@ struct PCPPacket {
   uint8_t eType; //lower 4 bits are used for seq
 };
 
-class Thermocycler;
-class Display;
-
 class SerialControl {
 public:
   SerialControl(Thermocycler& thermocycler, Display* pDisplay);
@@ -67,15 +70,17 @@ public:
   
 private:
   void ReadPacket();
-  void WritePacket(byte* data, int datasize, byte* header=NULL);
   void ProcessPacket(byte* data, int datasize);
   void SendStatus();
   void ParseCommand(char* pCommandBuf);
-  void AddCommand(SCommand* pCommand, char key, const char* szValue);
+  void AddCommand(SCommand* pCommand, char key, char* szValue);
   void ProcessCommand(SCommand* pCommand);
+  Cycle* ParseProgram(char* pBuffer);
+  ProgramComponent* ParseCycle(char* pBuffer);
+  Step* ParseStep(char* pBuffer);
   
 private:
-  byte buf[MAX_BUFSIZE]; //read or write buffer
+  byte buf[MAX_BUFSIZE + 1]; //read or write buffer
   
   typedef enum{
     STATE_START,
@@ -85,8 +90,8 @@ private:
   }PACKET_STATE;
   
   PACKET_STATE packetState;
-  uint8_t lastPacketSeq;
-  uint16_t packetLen, iCommandId;
+  uint8_t lastPacketSeq, checksum;
+  uint16_t packetLen, packetRealLen, iCommandId;
   boolean bEscapeCodeFound;
   
   Thermocycler& iThermocycler;

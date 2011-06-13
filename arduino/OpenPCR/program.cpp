@@ -19,6 +19,8 @@
 #include "pcr_includes.h"
 #include "program.h"
 
+#include "display.h"
+
 ////////////////////////////////////////////////////////////////////
 // Class Step
 Step::Step(char* name, int duration, float temp):
@@ -57,10 +59,19 @@ Cycle::~Cycle() {
     delete iComponents[i];
 }
 
+ProgramComponent* Cycle::GetComponent(int index) {
+  return iComponents[index];
+}
+  
 PcrStatus Cycle::AddComponent(ProgramComponent* pComponent) {
   if (iNumComponents >= MAX_CYCLE_ITEMS)
     return ETooManySteps;
     
+  if (pComponent == NULL) {
+    gpThermocycler->GetDisplay()->SetDebugMsg("Add component: got NULL");  
+    delay(5000);
+  }
+  
   iComponents[iNumComponents++] = pComponent;
   return ESuccess;
 }

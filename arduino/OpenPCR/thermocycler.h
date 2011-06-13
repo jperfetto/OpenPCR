@@ -33,7 +33,8 @@ public:
     EStopped,
     ERunning,
     EComplete,
-    EError
+    EError,
+    EClear //for Display clearing only
   };
   
   enum ThermalState {
@@ -59,6 +60,7 @@ public:
   int GetNumCycles();
   int GetCurrentCycleNum();
   const char* GetProgName() { return iszProgName; }
+  Display* GetDisplay() { return ipDisplay; }
   
   ThermalDirection GetThermalDirection() { return iThermalDirection; }
   boolean Ramping() { return iRamping; }

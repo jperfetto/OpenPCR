@@ -29,18 +29,17 @@ public:
   Display(Thermocycler& thermocycler);
   
   void SetContrast(uint8_t contrast);
-  void SetDisplayCycle(Cycle* pDisplayCycle) { ipDisplayCycle = pDisplayCycle; }
+  void Clear();
   void SetDebugMsg(char* szDebugMsg);
   void Update();
   
 private:
-  char* ThermalStateString(Thermocycler::ThermalState state);
+
   
 private:
   LiquidCrystal iLcd;
   char iszDebugMsg[21];
   Thermocycler& iThermocycler;
-  Cycle* ipDisplayCycle;
   Thermocycler::ProgramState iLastState;
   unsigned long iLastReset;
   uint8_t iContrast;

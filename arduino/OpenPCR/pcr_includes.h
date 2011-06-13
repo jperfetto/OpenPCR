@@ -20,6 +20,10 @@
 #define _PCR_INCLUDES_H_
 
 #include "WProgram.h"
+#include <avr/pgmspace.h>
+
+class Thermocycler;
+extern Thermocycler* gpThermocycler;
 
 //fixes for incomplete C++ implementation, defined in util.cpp
 void* operator new(size_t size);
@@ -42,6 +46,7 @@ enum PcrStatus {
 
 unsigned short htons(unsigned short val);
 double absf(double val);
+char* rps(const char* progString);
 
 #endif
 
