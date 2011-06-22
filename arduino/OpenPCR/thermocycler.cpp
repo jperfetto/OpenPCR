@@ -308,6 +308,11 @@ void Thermocycler::Loop() {
       }
     }
     break;
+    
+  case EComplete:
+    if (iRamping && ipCurrentStep != NULL && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE)
+      iRamping = false;
+    break;
   }
  
   ControlPeltier();
@@ -346,7 +351,6 @@ char spi_transfer(volatile char data)
   };
   return SPDR;                    // return the received byte
 }
-
 
 void Thermocycler::ReadPlateTemp() {
   byte eeprom_output_data;
