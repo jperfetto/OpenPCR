@@ -31,7 +31,7 @@ void setup() {
   //create program
   Cycle* pMaster = new Cycle(1);
   pMaster->AddComponent(new Step("IDenaturing", 10, 95));
-  Cycle* pMain = new Cycle(2);
+  Cycle* pMain = new Cycle(1);
   pMain->AddComponent(new Step("Denaturing", 10, 95));
   pMain->AddComponent(new Step("Annealing", 10, 55));
   pMain->AddComponent(new Step("Extending", 10, 72));

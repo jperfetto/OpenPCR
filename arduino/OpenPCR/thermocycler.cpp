@@ -285,13 +285,14 @@ void Thermocycler::Loop() {
         
       } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
         float prevTemp = ipCurrentStep->GetTemp();
+        
         ipCurrentStep = ipProgram->GetNextStep();
-  
-        if (ipCurrentStep == NULL) {
-          iProgramState = EComplete;
-        } else {
+        if (ipCurrentStep != NULL)
           SetPlateTarget(ipCurrentStep->GetTemp());
-        }
+
+        //check for program completion
+        if (ipCurrentStep == NULL || ipCurrentStep->GetDuration() == 0)
+          iProgramState = EComplete;        
       }
     }
     break;
@@ -412,8 +413,8 @@ void Thermocycler::SetLidTarget(double target) {
 
 void Thermocycler::ControlPeltier() {
   ThermalDirection newDirection = OFF;
-      
-  if (iProgramState == ERunning) {
+  
+  if (iProgramState == ERunning || (iProgramState == EComplete && ipCurrentStep != NULL)) {
     // Check whether we should switch to PID control
     if (iPlateControlMode == EBangBang && absf(iTargetPlateTemp - iPlateTemp) < PLATE_BANGBANG_THRESHOLD) {
       iPlateControlMode = EPID;
