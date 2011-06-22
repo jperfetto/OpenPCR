@@ -165,14 +165,17 @@ void SerialControl::SendStatus()
     szStatus = "error";
   }
   
-  char* szThermState;
-  if (iThermocycler.Ramping()) {
-    if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
-      szThermState = "heating";
-    else
-      szThermState = "cooling";
-  } else {
+  char* szThermState = "\0";
+  switch (iThermocycler.GetThermalState()) {
+  case Thermocycler::EHeating:
+    szThermState = "heating";
+    break;
+  case Thermocycler::ECooling:
+    szThermState = "cooling";
+    break;
+  case Thermocycler::EHolding:
     szThermState = "holding";
+    break;
   }
   
   char blockTempStr[8];

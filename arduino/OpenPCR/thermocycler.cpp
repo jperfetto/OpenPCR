@@ -124,7 +124,6 @@ Thermocycler::Thermocycler():
   ipDisplayCycle(NULL),
   ipSerialControl(NULL),
   iProgramState(EOff),
-  iThermalState(EHolding),
   ipCurrentStep(NULL),
   iThermalDirection(OFF),
   iPeltierPwm(0),
@@ -189,6 +188,20 @@ int Thermocycler::GetNumCycles() {
 int Thermocycler::GetCurrentCycleNum() {
   int numCycles = GetNumCycles();
   return ipDisplayCycle->GetCurrentCycle() > numCycles ? numCycles : ipDisplayCycle->GetCurrentCycle();
+}
+
+Thermocycler::ThermalState Thermocycler::GetThermalState() {
+  if (iThermalDirection == EOff)
+    return EIdle;
+  
+  if (iRamping) {
+    if (iThermalDirection == HEAT)
+      return EHeating;
+    else
+      return ECooling;
+  } else {
+    return EHolding;
+  }
 }
  
 // control
@@ -257,7 +270,6 @@ void Thermocycler::Loop() {
       }
       
       iProgramState = ERunning;
-      iThermalState = EHolding;
       iThermalDirection = OFF;
       iPeltierPwm = 0;
       
@@ -391,12 +403,14 @@ void Thermocycler::SetPlateTarget(double target) {
     iPlatePid.SetMode(AUTOMATIC);
   }
   
-  if (iTargetPlateTemp >= iPlateTemp) {
-    iDecreasing = false;
-    iPlatePid.SetTunings(PLATE_PID_P, PLATE_PID_I, PLATE_PID_D);
-  } else {
-    iDecreasing = true;
-    iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
+  if (iRamping) {
+    if (iTargetPlateTemp >= iPlateTemp) {
+      iDecreasing = false;
+      iPlatePid.SetTunings(PLATE_PID_P, PLATE_PID_I, PLATE_PID_D);
+    } else {
+      iDecreasing = true;
+      iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
+    }
   }
 }
 

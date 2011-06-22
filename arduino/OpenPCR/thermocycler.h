@@ -41,7 +41,8 @@ public:
   enum ThermalState {
     EHolding = 0,
     EHeating,
-    ECooling
+    ECooling,
+    EIdle
   };
   
   enum ThermalDirection {
@@ -55,7 +56,7 @@ public:
   
   // accessors
   ProgramState GetProgramState() { return iProgramState; }
-  ThermalState GetThermalState() { return iThermalState; }
+  ThermalState GetThermalState();
   Step* GetCurrentStep() { return ipCurrentStep; }
   Cycle* GetDisplayCycle() { return ipDisplayCycle; }
   int GetNumCycles();
@@ -63,7 +64,6 @@ public:
   const char* GetProgName() { return iszProgName; }
   Display* GetDisplay() { return ipDisplay; }
   
-  ThermalDirection GetThermalDirection() { return iThermalDirection; }
   boolean Ramping() { return iRamping; }
   int GetPeltierPwm() { return iPeltierPwm; }
   float GetPlateTemp() { return iPlateTemp; }
@@ -106,7 +106,6 @@ private:
   
   // state
   ProgramState iProgramState;
-  ThermalState iThermalState;
   double iPlateTemp;
   double iTargetPlateTemp;
   double iLidTemp;
@@ -129,7 +128,7 @@ private:
   // peltier control
   PID iPlatePid;
   PID iLidPid;
-  ThermalDirection iThermalDirection;
+  ThermalDirection iThermalDirection; //holds actual real-time state
   double iPeltierPwm;
   double iLidPwm;
   

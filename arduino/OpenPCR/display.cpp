@@ -168,13 +168,16 @@ void Display::DisplayState() {
     
   case Thermocycler::ERunning:
   case Thermocycler::EComplete:
-    if (iThermocycler.Ramping()) {
-      if (iThermocycler.GetThermalDirection() == Thermocycler::HEAT)
-        stateStr = rps(HEATING_STR);
-      else
-        stateStr = rps(COOLING_STR);
-    } else {
+    switch (iThermocycler.GetThermalState()) {
+    case Thermocycler::EHeating:
+      stateStr = rps(HEATING_STR);
+      break;
+    case Thermocycler::ECooling:
+      stateStr = rps(COOLING_STR);
+      break;
+    case Thermocycler::EHolding:
       stateStr = iThermocycler.GetCurrentStep()->GetName();
+      break;
     }
     break;
     
