@@ -28,7 +28,7 @@
 const char HEATING_STR[] PROGMEM = "Heating";
 const char COOLING_STR[] PROGMEM = "Cooling";
 const char LIDWAIT_STR[] PROGMEM = "Heating Lid";
-const char STOPPED_STR[] PROGMEM = "Standing By";
+const char STOPPED_STR[] PROGMEM = "Ready";
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";  
 
 // #define DEBUG_DISPLAY
