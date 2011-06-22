@@ -30,14 +30,13 @@ void setup() {
   
   //create program
   Cycle* pMaster = new Cycle(1);
-//  pMaster->AddComponent(new Step("Hold", 0, 55));
-  pMaster->AddComponent(new Step("IDenaturing", 30, 95));
-  Cycle* pMain = new Cycle(35);
-  pMain->AddComponent(new Step("Denaturing", 30, 95));
-  pMain->AddComponent(new Step("Annealing", 30, 55));
-  pMain->AddComponent(new Step("Extending", 30, 72));
+  pMaster->AddComponent(new Step("IDenaturing", 10, 95));
+  Cycle* pMain = new Cycle(2);
+  pMain->AddComponent(new Step("Denaturing", 10, 95));
+  pMain->AddComponent(new Step("Annealing", 10, 55));
+  pMain->AddComponent(new Step("Extending", 10, 72));
   pMaster->AddComponent(pMain);
-  pMaster->AddComponent(new Step("FExtending", 30, 72));
+  pMaster->AddComponent(new Step("FExtending", 10, 72));
   pMaster->AddComponent(new Step("Holding", 0, 4));
  
   gpThermocycler->SetProgram(pMaster, pMain, "Test Name", 110);

@@ -94,7 +94,7 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define SLAVESELECT 10//ss
 
 #define CYCLE_START_TOLERANCE 0.2
-#define LID_START_TOLERANCE 2.0
+#define LID_START_TOLERANCE 1.0
 
 #define PLATE_PID_P 1000
 #define PLATE_PID_I 250
@@ -219,39 +219,10 @@ PcrStatus Thermocycler::Start() {
     return ENoProgram;
 //  if (iProgramState == EOff) // DANGEROUS TEMP HACK, REMOVE ONCE SERIAL CONTROL IN PLACE
   //  return ENoPower;
-    
-  //calculate program time params
-  ipProgram->BeginIteration();
-
-  Step* pStep;
-  double lastTemp = iPlateTemp;  
-  iProgramHoldDurationS = 0;
-  iProgramRampDegrees = 0;
-  iElapsedRampDurationMs = 0;
-  iElapsedRampDegrees = 0;
-  iEstimatedTimeRemainingS = 0;
-  iHasCooled = false;
   
-  while ((pStep = ipProgram->GetNextStep()) && !pStep->IsFinal()) {
-    iProgramHoldDurationS += pStep->GetDuration();
-    if (lastTemp != pStep->GetTemp())
-      iProgramRampDegrees += absf(lastTemp - pStep->GetTemp()) - CYCLE_START_TOLERANCE;
-    lastTemp = pStep->GetTemp();
-  }
+  //advance to lid wait state
+  iProgramState = ELidWait;
   
-  iProgramState = ERunning;
-  iThermalState = EHolding;
-  iThermalDirection = OFF;
-  iPeltierPwm = 0;
-  
-  ipProgram->BeginIteration();
-
-  ipCurrentStep = ipProgram->GetNextStep();
-  SetPlateTarget(ipCurrentStep->GetTemp());
-  iRamping = true;
-  
-  iProgramStartTimeMs = millis();
-
   return ESuccess;
 }
 
@@ -262,31 +233,68 @@ void Thermocycler::Loop() {
   ReadPlateTemp();
   ReadLidTemp(); 
 
-  //update program
-  if (iProgramState == ERunning) {
-    if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
-      //eta updates
-      iElapsedRampDegrees += absf(iPlateTemp - iRampStartTemp);
-      iElapsedRampDurationMs += millis() - iRampStartTime;
-      if (iRampStartTemp > iPlateTemp)
-        iHasCooled = true;
-      iRamping = false;
-      iCycleStartTime = millis();
-/*      if (iThermalDirection == COOL && iTargetPlateTemp > 20) {
-        iPlatePid.ResetI();
-        iTargetPlateTemp = ipCurrentStep->GetTemp();
-      }*/
+  switch (iProgramState) {
+  case ELidWait:
+    if (iLidTemp >= iTargetLidTemp - LID_START_TOLERANCE) {
+      //advance to running state
+      //calculate program time params
+      ipProgram->BeginIteration();
+    
+      Step* pStep;
+      double lastTemp = iPlateTemp;  
+      iProgramHoldDurationS = 0;
+      iProgramRampDegrees = 0;
+      iElapsedRampDurationMs = 0;
+      iElapsedRampDegrees = 0;
+      iEstimatedTimeRemainingS = 0;
+      iHasCooled = false;
       
-    } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
-      float prevTemp = ipCurrentStep->GetTemp();
+      while ((pStep = ipProgram->GetNextStep()) && !pStep->IsFinal()) {
+        iProgramHoldDurationS += pStep->GetDuration();
+        if (lastTemp != pStep->GetTemp())
+          iProgramRampDegrees += absf(lastTemp - pStep->GetTemp()) - CYCLE_START_TOLERANCE;
+        lastTemp = pStep->GetTemp();
+      }
+      
+      iProgramState = ERunning;
+      iThermalState = EHolding;
+      iThermalDirection = OFF;
+      iPeltierPwm = 0;
+      
+      ipProgram->BeginIteration();
+    
       ipCurrentStep = ipProgram->GetNextStep();
-
-      if (ipCurrentStep == NULL) {
-        iProgramState = EComplete;
-      } else {
-        SetPlateTarget(ipCurrentStep->GetTemp());
+      SetPlateTarget(ipCurrentStep->GetTemp());
+      iRamping = true;
+      
+      iProgramStartTimeMs = millis();
+    }
+    break;
+  
+  case ERunning:
+    //update program
+    if (iProgramState == ERunning) {
+      if (iRamping && abs(ipCurrentStep->GetTemp() - iPlateTemp) <= CYCLE_START_TOLERANCE) {
+        //eta updates
+        iElapsedRampDegrees += absf(iPlateTemp - iRampStartTemp);
+        iElapsedRampDurationMs += millis() - iRampStartTime;
+        if (iRampStartTemp > iPlateTemp)
+          iHasCooled = true;
+        iRamping = false;
+        iCycleStartTime = millis();
+        
+      } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetDuration() * 1000) {
+        float prevTemp = ipCurrentStep->GetTemp();
+        ipCurrentStep = ipProgram->GetNextStep();
+  
+        if (ipCurrentStep == NULL) {
+          iProgramState = EComplete;
+        } else {
+          SetPlateTarget(ipCurrentStep->GetTemp());
+        }
       }
     }
+    break;
   }
  
   ControlPeltier();
@@ -443,7 +451,7 @@ void Thermocycler::ControlPeltier() {
 void Thermocycler::ControlLid() {
   double drive = 0;
   
-  if (iProgramState == ERunning) {
+  if (iProgramState == ERunning || iProgramState == ELidWait) {
     // Check whether we should switch to PID control
     if (iLidControlMode == EBangBang && absf(iTargetLidTemp - iLidTemp) < LID_BANGBANG_THRESHOLD) {
       iLidControlMode = EPID;

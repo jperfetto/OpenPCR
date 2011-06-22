@@ -31,6 +31,7 @@ public:
   enum ProgramState {
     EOff = 0,
     EStopped,
+    ELidWait,
     ERunning,
     EComplete,
     EError,

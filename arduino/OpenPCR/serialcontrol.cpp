@@ -151,6 +151,9 @@ void SerialControl::SendStatus()
   case Thermocycler::EStopped:
     szStatus = "stopped";
     break;
+  case Thermocycler::ELidWait:
+    szStatus = "lidwait";
+    break;
   case Thermocycler::ERunning:
     szStatus = "running";
     break;
