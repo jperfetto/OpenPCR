@@ -17,6 +17,8 @@
  */
 
 #include "pcr_includes.h"
+#include "thermocycler.h"
+#include "display.h"
 
 void sprintFloat(char* str, float val, int decimalDigits, boolean pad) {
   long factor = pow(10, decimalDigits);
@@ -37,7 +39,16 @@ void sprintFloat(char* str, float val, int decimalDigits, boolean pad) {
 }
 
 void* operator new(size_t size) {
-  return malloc(size);
+  void* pMem = malloc(size);
+
+#ifdef DEBUG_DISPLAY
+  if (pMem == NULL) {
+    gpThermocycler->GetDisplay()->SetDebugMsg("Out of Memory");  
+    delay(5000);
+  }
+#endif
+
+  return pMem;
 }
 
 struct __freelist

@@ -34,7 +34,11 @@ public:
   void Update();
   
 private:
-
+  void DisplayEta();
+  void DisplayLidTemp();
+  void DisplayBlockTemp();
+  void DisplayCycle();
+  void DisplayState();
   
 private:
   LiquidCrystal iLcd;
