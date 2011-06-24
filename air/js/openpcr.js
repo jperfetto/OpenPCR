@@ -768,6 +768,10 @@ function disableEnterKey(e)
 						}
 				}		
   			
+				// make sure the status isn't blank
+				
+						
+				
 				// if command id in the running file doesn't match, check again 50 times and then quit if there is still no match
 					if (status["d"]!=window.command_id)
 						{
@@ -785,9 +789,12 @@ function disableEnterKey(e)
 					window.command_id_counter = 0;
 					air.trace(window.command_id_counter);
 					}
-				
-					if (status["s"]=="running")
+					
+				// if a protocol was just started and the lid is still heating to temperature
+				// while running, continue to update the 
+					if (status["s"]=="running" || status["s"]=="lidwait")
 					{
+					air.trace(status["s"] + "\n");
 						// preset name
 							var prog_name = status["n"];
 							$("#runningHeader").html(prog_name);
@@ -1037,8 +1044,6 @@ function disableEnterKey(e)
 			// check if the form is validated
 			if (false == ($("#pcrForm").validate().form()))
 				{ return 0;} // if the form is not valid, show the errors
-			// grab the current timestamp
-			var currentTime = new Date();
 			// command_id will be the timestamp (currentTime), stored to the window for later use
 			///// set for testing purposes
 			//	window.command_id="40000";
