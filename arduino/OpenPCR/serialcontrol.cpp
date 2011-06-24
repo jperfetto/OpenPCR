@@ -212,8 +212,9 @@ void SerialControl::ParseCommand(char* pCommandBuf) {
   char* pValue;
   SCommand command;
   memset(&command, NULL, sizeof(command));
-  
   char buf[32];
+
+  iThermocycler.Stop(); //need to stop here to reset program pools
     
   char* pParam = strtok(pCommandBuf, "&");
   while (pParam) {  
@@ -223,12 +224,11 @@ void SerialControl::ParseCommand(char* pCommandBuf) {
     pParam = strtok(NULL, "&");
   }
 
-  ProcessCommand(&command);
+  ProcessCommand(&command);  
 }
 
 void SerialControl::ProcessCommand(SCommand* pCommand) {
   if (pCommand->command == SCommand::EStart) {
-    iThermocycler.Stop();
     
     //find display cycle
     Cycle* pProgram = pCommand->pProgram;
@@ -242,13 +242,13 @@ void SerialControl::ProcessCommand(SCommand* pCommand) {
       }
     }
     
-    //start program
+    //start program by persisting and resetting device to overcome memory leak in C library
     iThermocycler.SetProgram(pProgram, pDisplayCycle, pCommand->name, pCommand->lidTemp);
     iCommandId = pCommand->commandId;
     iThermocycler.Start();
     
   } else if (pCommand->command == SCommand::EStop) {
-    iThermocycler.Stop();
+    iThermocycler.Stop(); //redundant as we already stopped
   }
 }
 
@@ -281,7 +281,8 @@ void SerialControl::AddCommand(SCommand* pCommand, char key, char* szValue) {
 }
 
 Cycle* SerialControl::ParseProgram(char* pBuffer) {
-  Cycle* pProgram = new Cycle(1);
+  Cycle* pProgram = iThermocycler.GetCyclePool().AllocateComponent();
+  pProgram->SetNumCycles(1);
 	
   char* pCycBuf = strtok(pBuffer, "()");
   while (pCycBuf != NULL) {
@@ -292,7 +293,6 @@ Cycle* SerialControl::ParseProgram(char* pBuffer) {
   return pProgram;
 }
 
-//(1[300|95|IDenaturing])
 ProgramComponent* SerialControl::ParseCycle(char* pBuffer) {
   char countBuf[5];
 	
@@ -306,8 +306,10 @@ ProgramComponent* SerialControl::ParseCycle(char* pBuffer) {
   int cycCount = atoi(countBuf);
   
   Cycle* pCycle = NULL;
-  if (cycCount > 1)	
-    pCycle = new Cycle(cycCount);
+  if (cycCount > 1) {
+    pCycle = iThermocycler.GetCyclePool().AllocateComponent();
+    pCycle->SetNumCycles(cycCount);
+  }
 	
   //add steps
   while (pStep != NULL) {
@@ -322,7 +324,7 @@ ProgramComponent* SerialControl::ParseCycle(char* pBuffer) {
       return pNewStep;
     pStep = strchr(pStepEnd, '[');
   }
-  
+
   return pCycle;
 }
 
@@ -336,6 +338,11 @@ Step* SerialControl::ParseStep(char* pBuffer) {
 	
   int duration = atoi(pBuffer);
   float temp = atof(pTemp);
-	
-  return new Step(pName, duration, temp);
+
+  Step* pStep = iThermocycler.GetStepPool().AllocateComponent();
+  
+  pStep->SetName(pName);
+  pStep->SetDuration(duration);
+  pStep->SetTemp(temp);
+  return pStep;
 }

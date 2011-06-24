@@ -221,10 +221,12 @@ void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char*
 void Thermocycler::Stop() {
   if (iProgramState != EOff)
     iProgramState = EStopped;
-    
-  delete ipProgram;
+  
   ipProgram = NULL;
   ipCurrentStep = NULL;
+  
+  iStepPool.ResetPool();
+  iCyclePool.ResetPool();
   
   ipDisplay->Clear();
 }
@@ -244,7 +246,6 @@ PcrStatus Thermocycler::Start() {
 // internal
 void Thermocycler::Loop() {
   CheckPower();
- 
   ReadPlateTemp();
   ReadLidTemp(); 
 

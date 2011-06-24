@@ -20,10 +20,9 @@
 #define _THERMOCYCLER_H_
 
 #include "PID_v1.h"
+#include "program.h"
 
 class Display;
-class Cycle;
-class Step;
 class SerialControl;
   
 class Thermocycler {
@@ -63,6 +62,8 @@ public:
   int GetCurrentCycleNum();
   const char* GetProgName() { return iszProgName; }
   Display* GetDisplay() { return ipDisplay; }
+  ProgramComponentPool<Cycle, 2>& GetCyclePool() { return iCyclePool; }
+  ProgramComponentPool<Step, 20>& GetStepPool() { return iStepPool; }
   
   boolean Ramping() { return iRamping; }
   int GetPeltierPwm() { return iPeltierPwm; }
@@ -103,6 +104,8 @@ private:
   // components
   Display* ipDisplay;
   SerialControl* ipSerialControl;
+  ProgramComponentPool<Cycle, 2> iCyclePool;
+  ProgramComponentPool<Step, 20> iStepPool;
   
   // state
   ProgramState iProgramState;

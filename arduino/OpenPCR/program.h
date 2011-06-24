@@ -16,6 +16,9 @@
  *  the OpenPCR control software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _PROGRAM_H_
+#define _PROGRAM_H_
+
 class Step;
 
 ////////////////////////////////////////////////////////////////////
@@ -27,7 +30,7 @@ public:
     ECycle
   };
   
-  virtual ~ProgramComponent() {}
+  virtual void Reset() = 0;
   virtual TType GetType() = 0;
   
   // iteration
@@ -38,16 +41,20 @@ public:
 ////////////////////////////////////////////////////////////////////
 // Class Step
 class Step: public ProgramComponent {
-public:
-  Step(char* name, int duration, float temp);
-  
+public:  
   // accessors
   char* GetName() { return iName; }
   int GetDuration() { return iDuration; }
   float GetTemp() { return iTemp; }
-  void SetTemp(float temp) { iTemp = temp; } //TEMP HACK
   virtual TType GetType() { return EStep; }
   boolean IsFinal() { return iDuration == 0; }
+
+  // mutators
+  void SetDuration(int duration) { iDuration = duration; }
+  void SetTemp(float temp) { iTemp = temp; }
+  void SetName(const char* szName);
+  
+  virtual void Reset();
   
   // iteration
   virtual void BeginIteration();
@@ -64,9 +71,6 @@ private:
 // Class Cycle
 class Cycle: public ProgramComponent {
 public:
-  Cycle(int numCycles);
-  virtual ~Cycle();
-  
   // accessors
   virtual TType GetType() { return ECycle; }
   int GetCurrentCycle() { return iCurrentCycle + 1; } //add 1 because cycles start at 0
@@ -75,7 +79,9 @@ public:
   ProgramComponent* GetComponent(int index);
   
   // mutators
+  void SetNumCycles(int numCycles) { iNumCycles = numCycles; }
   PcrStatus AddComponent(ProgramComponent* pComponent); //takes ownership
+  virtual void Reset();
   
   // iteration
   virtual void BeginIteration();
@@ -93,3 +99,27 @@ private:
   int iCurrentComponent; // -1 means no component
 };
 
+////////////////////////////////////////////////////////////////////
+// Class ProgramComponentPool
+template <class T, int N>
+class ProgramComponentPool {
+public:
+  ProgramComponentPool() { iAllocatedComponents = 0; }
+
+  T* AllocateComponent() { 
+    if (iAllocatedComponents == N)
+      return NULL;
+      
+    T* pComponent = &iComponents[iAllocatedComponents++];
+    pComponent->Reset();
+    return pComponent;
+  }
+  
+  void ResetPool() { iAllocatedComponents = 0; }
+  
+private:
+  int iAllocatedComponents;
+  T iComponents[N];
+};
+
+#endif

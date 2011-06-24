@@ -31,8 +31,6 @@ const char LIDWAIT_STR[] PROGMEM = "Heating Lid";
 const char STOPPED_STR[] PROGMEM = "Ready";
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";  
 
-// #define DEBUG_DISPLAY
-
 Display::Display(Thermocycler& thermocycler):
   iLcd(6, 7, 8, A5, 16, 17),
   iThermocycler(thermocycler),

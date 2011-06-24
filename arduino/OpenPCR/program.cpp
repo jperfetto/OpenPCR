@@ -23,13 +23,16 @@
 
 ////////////////////////////////////////////////////////////////////
 // Class Step
-Step::Step(char* name, int duration, float temp):
-  iDuration(duration),
-  iTemp(temp),
-  iStepReturned(false) {
-    
-  strncpy(iName, name, STEP_NAME_LENGTH - 1);
-  iName[STEP_NAME_LENGTH] = '\0';
+void Step::SetName(const char* szName) {
+  strncpy(iName, szName, sizeof(iName));
+  iName[sizeof(iName) - 1] = '\0';
+}
+
+void Step::Reset() {
+  iStepReturned = false;
+  iDuration = 0;
+  iTemp = 0;
+  iName[0] = '\0'; 
 }
 
 void Step::BeginIteration() {
@@ -47,33 +50,23 @@ Step* Step::GetNextStep() {
 
 ////////////////////////////////////////////////////////////////////
 // Class Cycle
-Cycle::Cycle(int numCycles):
-  iNumComponents(0),
-  iNumCycles(numCycles),
-  iCurrentCycle(0),
-  iCurrentComponent(0) {
-}
-
-Cycle::~Cycle() {
-  for (int i = 0; i < iNumComponents; i++)
-    delete iComponents[i];
-}
-
 ProgramComponent* Cycle::GetComponent(int index) {
   return iComponents[index];
 }
-  
+
 PcrStatus Cycle::AddComponent(ProgramComponent* pComponent) {
   if (iNumComponents >= MAX_CYCLE_ITEMS)
     return ETooManySteps;
-    
-  if (pComponent == NULL) {
-    gpThermocycler->GetDisplay()->SetDebugMsg("Add component: got NULL");  
-    delay(5000);
-  }
   
   iComponents[iNumComponents++] = pComponent;
   return ESuccess;
+}
+
+void Cycle::Reset() {
+  iNumComponents = 0;
+  iNumCycles = 0;
+  iCurrentCycle = 0;
+  iCurrentComponent = 0;
 }
 
 // iteration
@@ -107,4 +100,3 @@ void Cycle::RestartCycle() {
   for (int i = 0; i < iNumComponents; i++)
     iComponents[i]->BeginIteration();
 }
-
