@@ -140,7 +140,7 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
   }
 }
 
-#define STATUS_FILE_LEN 295
+#define STATUS_FILE_LEN 128
 
 void SerialControl::SendStatus()
 {
@@ -176,36 +176,87 @@ void SerialControl::SendStatus()
   case Thermocycler::EHolding:
     szThermState = "holding";
     break;
+  case Thermocycler::EIdle:
+    szThermState = "idle";
+    break;
   }
-  
-  char blockTempStr[8];
-  sprintFloat(blockTempStr, iThermocycler.GetPlateTemp(), 1, false);
-    
-  char statusBuf[128];
+      
+  char statusBuf[STATUS_FILE_LEN];
   char* statusPtr = statusBuf;
-  int lidTemp = iThermocycler.GetLidTemp();
-  statusPtr += sprintf(statusPtr, "d=%u", iCommandId);
-  statusPtr += sprintf(statusPtr, "&s=%s", szStatus);
-  statusPtr += sprintf(statusPtr, "&l=%d", lidTemp);
-  statusPtr += sprintf(statusPtr, "&b=%s", blockTempStr);
-  statusPtr += sprintf(statusPtr, "&t=%s", szThermState);
+  
+  statusPtr = AddParam(statusPtr, 'd', (unsigned long)iCommandId, true);
+  statusPtr = AddParam(statusPtr, 's', szStatus);
+  statusPtr = AddParam(statusPtr, 'l', (int)iThermocycler.GetLidTemp());
+  statusPtr = AddParam(statusPtr, 'b', iThermocycler.GetPlateTemp(), 1, false);
+  statusPtr = AddParam(statusPtr, 't', szThermState);
 
-  if (state == Thermocycler::ERunning || Thermocycler::EComplete) {
-    statusPtr += sprintf(statusPtr, "&e=%u", iThermocycler.GetElapsedTimeS());
-    statusPtr += sprintf(statusPtr, "&r=%u", iThermocycler.GetTimeRemainingS());
-    statusPtr += sprintf(statusPtr, "&u=%d", iThermocycler.GetNumCycles());
-    statusPtr += sprintf(statusPtr, "&c=%d", iThermocycler.GetCurrentCycleNum());
-    statusPtr += sprintf(statusPtr, "&n=%s", iThermocycler.GetProgName());
-    statusPtr += sprintf(statusPtr, "&p=%s", iThermocycler.GetCurrentStep()->GetName());
+  if (state == Thermocycler::ERunning || state == Thermocycler::EComplete) {
+    statusPtr = AddParam(statusPtr, 'e', iThermocycler.GetElapsedTimeS());
+    statusPtr = AddParam(statusPtr, 'r', iThermocycler.GetTimeRemainingS());
+    statusPtr = AddParam(statusPtr, 'u', iThermocycler.GetNumCycles());
+    statusPtr = AddParam(statusPtr, 'c', iThermocycler.GetCurrentCycleNum());
+    statusPtr = AddParam(statusPtr, 'n', iThermocycler.GetProgName());
+    if (iThermocycler.GetCurrentStep() != NULL)
+      statusPtr = AddParam(statusPtr, 'p', iThermocycler.GetCurrentStep()->GetName());
   }
+  statusPtr++; //to include null terminator
   
   //send packet
   PCPPacket packet(STATUS_RESP);
   packet.length = sizeof(packet) + STATUS_FILE_LEN;
   Serial.write((byte*)&packet, sizeof(packet));
-  Serial.write((byte*)statusBuf, strlen(statusBuf));
-  for (int i = strlen(statusBuf); i < STATUS_FILE_LEN; i++)
+  int statusBufLen = statusPtr - statusBuf;
+  Serial.write((byte*)statusBuf, statusBufLen);
+  for (int i = statusBufLen; i < STATUS_FILE_LEN; i++)
     Serial.write(0x20);
+}
+
+char* SerialControl::AddParam(char* pBuffer, char key, int val, boolean init) {
+  if (!init)
+    *pBuffer++ = '&';
+  *pBuffer++ = key;
+  *pBuffer++ = '=';
+  itoa(val, pBuffer, 10);
+  while (*pBuffer != '\0')
+    pBuffer++;
+    
+  return pBuffer;
+}
+
+char* SerialControl::AddParam(char* pBuffer, char key, unsigned long val, boolean init) {
+  if (!init)
+    *pBuffer++ = '&';
+  *pBuffer++ = key;
+  *pBuffer++ = '=';
+  ltoa(val, pBuffer, 10);
+  while (*pBuffer != '\0')
+    pBuffer++;
+    
+  return pBuffer;
+}
+
+char* SerialControl::AddParam(char* pBuffer, char key, float val, int decimalDigits, boolean pad, boolean init) {
+  if (!init)
+    *pBuffer++ = '&';
+  *pBuffer++ = key;
+  *pBuffer++ = '=';
+  sprintFloat(pBuffer, val, decimalDigits, pad);
+  while (*pBuffer != '\0')
+    pBuffer++;
+    
+  return pBuffer;
+}
+
+char* SerialControl::AddParam(char* pBuffer, char key, const char* szVal, boolean init) {
+  if (!init)
+    *pBuffer++ = '&';
+  *pBuffer++ = key;
+  *pBuffer++ = '=';
+  strcpy(pBuffer, szVal);
+  while (*pBuffer != '\0')
+    pBuffer++;
+    
+  return pBuffer;
 }
 
 void SerialControl::ParseCommand(char* pCommandBuf) {

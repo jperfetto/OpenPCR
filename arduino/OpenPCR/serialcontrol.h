@@ -78,6 +78,11 @@ private:
   Cycle* ParseProgram(char* pBuffer);
   ProgramComponent* ParseCycle(char* pBuffer);
   Step* ParseStep(char* pBuffer);
+
+  char* AddParam(char* pBuffer, char key, int val, boolean init = false);  
+  char* AddParam(char* pBuffer, char key, unsigned long val, boolean init = false);
+  char* AddParam(char* pBuffer, char key, float val, int decimalDigits, boolean pad, boolean init = false);
+  char* AddParam(char* pBuffer, char key, const char* szVal, boolean init = false);
   
 private:
   byte buf[MAX_BUFSIZE + 1]; //read or write buffer
