@@ -19,7 +19,7 @@
 #ifndef _PCR_INCLUDES_H_
 #define _PCR_INCLUDES_H_
 
-#define DEBUG_DISPLAY
+//#define DEBUG_DISPLAY
 
 #include "WProgram.h"
 #include <avr/pgmspace.h>

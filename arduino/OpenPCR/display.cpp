@@ -176,6 +176,9 @@ void Display::DisplayState() {
     case Thermocycler::EHolding:
       stateStr = iThermocycler.GetCurrentStep()->GetName();
       break;
+    case Thermocycler::EIdle:
+      stateStr = rps(STOPPED_STR);
+      break;
     }
     break;
     
