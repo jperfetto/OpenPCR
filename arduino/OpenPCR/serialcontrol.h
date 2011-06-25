@@ -1,6 +1,6 @@
 /*
- *	serialcontrol.h - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto and Xia Hong. All Rights Reserved.
+ *  serialcontrol.h - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto and Xia Hong. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
