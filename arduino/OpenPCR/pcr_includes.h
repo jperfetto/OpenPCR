@@ -26,6 +26,7 @@
 
 class Thermocycler;
 extern Thermocycler* gpThermocycler;
+inline Thermocycler& GetThermocycler() { return *gpThermocycler; }
 
 //fixes for incomplete C++ implementation, defined in util.cpp
 void* operator new(size_t size);

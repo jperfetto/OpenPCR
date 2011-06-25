@@ -122,4 +122,32 @@ private:
   T iComponents[N];
 };
 
+////////////////////////////////////////////////////////////////////
+// Struct SCommand
+struct SCommand {
+  char name[21];
+  uint16_t commandId;
+  enum TCommandType {
+    ENone = 0,
+    EStart,
+    EStop
+  } command;
+  int lidTemp;
+  uint8_t contrast;
+  Cycle* pProgram;
+};
+
+////////////////////////////////////////////////////////////////////
+// Class CommandParser
+class CommandParser {
+public:
+  static void ParseCommand(SCommand& command, char* pCommandBuf);
+
+private:
+  static void AddComponent(SCommand* pCommand, char key, char* szValue);
+  static Cycle* ParseProgram(char* pBuffer);
+  static ProgramComponent* ParseCycle(char* pBuffer);
+  static Step* ParseStep(char* pBuffer);
+};
+
 #endif

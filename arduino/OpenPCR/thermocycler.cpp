@@ -119,8 +119,8 @@ Thermocycler::Thermocycler():
   iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, LID_PID_P, LID_PID_I, LID_PID_D, DIRECT),
   iTargetLidTemp(0) {
     
-  ipDisplay = new Display(*this);
-  ipSerialControl = new SerialControl(*this, ipDisplay);
+  ipDisplay = new Display();
+  ipSerialControl = new SerialControl(ipDisplay);
   
   //init pins
   pinMode(15, INPUT);

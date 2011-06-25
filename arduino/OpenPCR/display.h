@@ -26,7 +26,7 @@ class Cycle;
 
 class Display {
 public:
-  Display(Thermocycler& thermocycler);
+  Display();
   
   void SetContrast(uint8_t contrast);
   void Clear();
@@ -43,7 +43,6 @@ private:
 private:
   LiquidCrystal iLcd;
   char iszDebugMsg[21];
-  Thermocycler& iThermocycler;
   Thermocycler::ProgramState iLastState;
   unsigned long iLastReset;
   uint8_t iContrast;

@@ -100,3 +100,115 @@ void Cycle::RestartCycle() {
   for (int i = 0; i < iNumComponents; i++)
     iComponents[i]->BeginIteration();
 }
+
+////////////////////////////////////////////////////////////////////
+// Class CommandParser
+void CommandParser::ParseCommand(SCommand& command, char* pCommandBuf) {
+  char* pValue;
+  memset(&command, NULL, sizeof(command));
+  char buf[32];
+
+  gpThermocycler->Stop(); //need to stop here to reset program pools
+    
+  char* pParam = strtok(pCommandBuf, "&");
+  while (pParam) {  
+    pValue = strchr(pParam, '=');
+    *pValue++ = '\0';
+    AddComponent(&command, pParam[0], pValue);
+    pParam = strtok(NULL, "&");
+  }
+}
+
+void CommandParser::AddComponent(SCommand* pCommand, char key, char* szValue) {
+  switch(key) {
+  case 'n':
+    strncpy(pCommand->name, szValue, sizeof(pCommand->name) - 1);
+    pCommand->name[sizeof(pCommand->name) - 1] = '\0';
+    break;
+  case 'c':
+    if (strcmp(szValue, "start") == 0)
+      pCommand->command = SCommand::EStart;
+    else if (strcmp(szValue, "stop") == 0)
+      pCommand->command = SCommand::EStop;
+    break;
+  case 't':
+    pCommand->contrast = atoi(szValue);
+    break;
+  case 'l':
+    pCommand->lidTemp = atoi(szValue);
+    break;
+  case 'd':
+    pCommand->commandId = atoi(szValue);
+    break;
+  case 'p':
+    pCommand->pProgram = ParseProgram(szValue);
+    break;
+  }
+}
+
+Cycle* CommandParser::ParseProgram(char* pBuffer) {
+  Cycle* pProgram = gpThermocycler->GetCyclePool().AllocateComponent();
+  pProgram->SetNumCycles(1);
+	
+  char* pCycBuf = strtok(pBuffer, "()");
+  while (pCycBuf != NULL) {
+    pProgram->AddComponent(ParseCycle(pCycBuf));
+    pCycBuf = strtok(NULL, "()");
+  }
+  
+  return pProgram;
+}
+
+ProgramComponent* CommandParser::ParseCycle(char* pBuffer) {
+  char countBuf[5];
+	
+  //find first step
+  char* pStep = strchr(pBuffer, '[');
+	
+  //get cycle count
+  int countLen = pStep - pBuffer;
+  strncpy(countBuf, pBuffer, countLen);
+  countBuf[countLen] = '\0';
+  int cycCount = atoi(countBuf);
+  
+  Cycle* pCycle = NULL;
+  if (cycCount > 1) {
+    pCycle = gpThermocycler->GetCyclePool().AllocateComponent();
+    pCycle->SetNumCycles(cycCount);
+  }
+	
+  //add steps
+  while (pStep != NULL) {
+    *pStep++ = '\0';
+    char* pStepEnd = strchr(pStep, ']');
+    *pStepEnd++ = '\0';
+
+    Step* pNewStep = ParseStep(pStep);
+    if (pCycle != NULL)
+      pCycle->AddComponent(pNewStep);
+    else
+      return pNewStep;
+    pStep = strchr(pStepEnd, '[');
+  }
+
+  return pCycle;
+}
+
+Step* CommandParser::ParseStep(char* pBuffer) {
+  char* pTemp = strchr(pBuffer, '|');
+  *pTemp++ = '\0';
+  char* pName = strchr(pTemp, '|');
+  *pName++ = '\0';
+  char* pEnd = strchr(pName, ']');
+  *pEnd = '\0';
+	
+  int duration = atoi(pBuffer);
+  float temp = atof(pTemp);
+
+  Step* pStep = gpThermocycler->GetStepPool().AllocateComponent();
+  
+  pStep->SetName(pName);
+  pStep->SetDuration(duration);
+  pStep->SetTemp(temp);
+  return pStep;
+}
