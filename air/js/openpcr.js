@@ -37,6 +37,7 @@
 				devicePath.nativePath = deviceLocation;
 			// store the path to a window variable for later use
 				window.path = devicePath;
+				running(window.path);
 		}
 			
 		// Application Updater code		
@@ -804,7 +805,7 @@
 			// also, reset the command_id_counter
 			window.command_id_counter = 0;
 			// load the OpenPCR Running page
-			running(path);
+			//running(path);
 		}
 	
 
@@ -819,14 +820,12 @@
 	
 	function running(path)
 		{
-		// Listen for VolumeChangeEvents so we can know if OpenPCR gets unplugged?
-			
 		// Find the STATUS.TXT file containing the current OpenPCR data
 			window.runningFile = path;
 			window.runningFile = window.runningFile.resolvePath("STATUS.TXT");
 
 		// refresh the running page every 2 s
-			window.updateRunningPage = setInterval(updateRunning,2000);
+			window.updateRunningPage = setInterval(updateRunning,1000);
 		}
 	
 	/* updateRunning()
@@ -1072,7 +1071,7 @@
 		*/
 		function stopPCR() {
 			// Stop reading the STATUS.TXT file
-			clearInterval(window.updateRunningPage);
+			
 			
 			// Clear the values in the Running page
 			$("#runningHeader").html("");
