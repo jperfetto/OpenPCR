@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <configuration xmlns="http://ns.adobe.com/air/framework/update/configuration/1.0" >
    <url>http://pearlbiotech.com/OpenPCR_Air/update-descriptor.xml</url>
-   <delay>0.001</delay>
+   <delay>1</delay>
    <defaultUI>
        <dialog name="checkForUpdate" visible="false" />
        <dialog name="downloadUpdate" visible="true" />

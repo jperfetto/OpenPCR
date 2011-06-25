@@ -6,7 +6,7 @@
  
  /*
  * This code is generally broken up into 3 sections, each having to do with the 3 main pages of the OpenPCR interface
- * 1. Home screen and initialization
+ * 1. Home screen + initialization
  * 2. Form screen, entering the PCR protocol
  * 3. Running screen, displaying live information from OpenPCR
  * Extra. Buttons
@@ -53,12 +53,13 @@
 		}
 	
 	/* listExperiments()
-	* Updates the list of Saved Experiments on the home page. Grabs all the files in the Experiments folder and lists them alphabetically
+	* Updates the list of Saved Experiments on the home page.
+	* Grabs all the files in the Experiments folder and lists them alphabetically
 	*
 	*/
 	function listExperiments()
 	{
-		// start a drop down menu
+		// Start a drop down menu
 		presetsHTML = "<select id='dropdown'>";
 		// look for "Experiments" directory
 		searchDir = air.File.applicationStorageDirectory.resolvePath("Experiments");
@@ -100,7 +101,7 @@
 	}
 	
 	/* listSubmit()
-	* Loads the currently selected experiment in the list on the home page
+	* Loads the selected experiment in the list on the home page
 	*/
 	function listSubmit()
 	{
@@ -110,17 +111,17 @@
 		loadExperiment(experimentID);
 	}
 	
-		/* pluggedIn()
-		* Checks that a volume named "OpenPCR" is mounted on the computer
-		* Sets up 2 listeners (MOUNT and UNMOUNT) and then checks to see if OpenPCR is already mounted
-		* Returns: deviceLocation (null if not plugged in)
-		*/
+	/* pluggedIn()
+	* Checks that a volume named "OpenPCR" is mounted on the computer
+	* Sets up 2 listeners (MOUNT and UNMOUNT) and then checks to see if OpenPCR is already mounted
+	* Returns: deviceLocation (null if not plugged in)
+	*/
 	function pluggedIn()
-		{
+	{
 		var volInfo = air.StorageVolumeInfo.storageVolumeInfo;
 		// wait for a USB device to be plugged in
 		volInfo.addEventListener(air.StorageVolumeChangeEvent.STORAGE_VOLUME_MOUNT, function(e)
-		{
+			{
 				// if the name is OpenPCR, then set the window variable pluggedIn to "true". otherwise do nothing
 				var pattern = /OPENPCR/;
 				// if the nativePath contains "OpenPCR"
@@ -151,10 +152,10 @@
 					{
 					// otherwise it isn't OpenPCR that was plugged in
 					}
-		});
+			});
 		// wait for a USB device to be unplugged
 		volInfo.addEventListener(air.StorageVolumeChangeEvent.STORAGE_VOLUME_UNMOUNT, function(e)
-		{
+			{
 				// air doesn't store the name of what was unplugged, so does the nativePath match OpenPCR
 				nativePath = e.rootDirectory.nativePath
 				// if the device unplugged contained "OpenPCR"
@@ -209,35 +210,33 @@
 				}
 				
 			return deviceLocation;
+	}
+		
+	/* loadExperiment();
+	* loads the experiment with the given experimentID
+	*/
+	function loadExperiment(experimentID)
+		{
+		// Now we've made all the modifications needed, display the Form page
+			sp2.showPanel(1);
+		// clear the experiment form
+		clearForm();
+		// given an experiment ID, get the path for that ID
+		experimentPath = window.experimentList[experimentID];
+		// if the experiment id doesn't exist, exit and do nothing (why would this happen?)
+		if (experimentPath == null) { return 0; }
+		// read in the file
+		experimentJSON = JSON.parse(readFile(experimentPath));
+		// loads filen into the Form and moves onto Form page
+		experimentToHTML(experimentJSON);
+		// update the buttons to make sure everything is ready to re-run an experiment
+		reRunButtons();
 		}
-		
-		/* loadExperiment();
-		* loads the experiment with the given experimentID
-		*/
-		function loadExperiment(experimentID)
-			{
-			// Now we've made all the modifications needed, display the Form page
-				sp2.showPanel(1);
-			// clear the experiment form
-			clearForm();
-			// given an experiment ID, get the path for that ID
-			experimentPath = window.experimentList[experimentID];
-			// if the experiment id doesn't exist, exit and do nothing (why would this happen?)
-			if (experimentPath == null) { return 0; }
-			// read in the file
-			experimentJSON = JSON.parse(readFile(experimentPath));
-			// loads filen into the Form and moves onto Form page
-			experimentToHTML(experimentJSON);
-			// update the buttons to make sure everything is ready to re-run an experiment
-			reRunButtons();
-			
-			}
 
-		/*  newExperiment()
-		* This function is called when the "New Experiment" button is clicked on the Home page
-		* This function brings up a blank experiment
-		*/
-		
+	/*  newExperiment()
+	* This function is called when the "New Experiment" button is clicked on the Home page
+	* This function brings up a blank experiment
+	*/	
 		function newExperiment()
 		{
 		// clear the experiment form
@@ -290,33 +289,33 @@
 		/* startOrUnplugged(display)
 		* Determines whether to display the "Start" or "Unplugged" button on the Form page.
 		* Input: CSS display status of the button
+		* Returns: nothing
 		*/
 		function startOrUnplugged(display)
 		{
-		//pick the Start or Unplugged button based on whether the device is plugged in or not
-		// if plugged in then
-		if (window.pluggedIn==true)
-			{
-			// then we definitely want to hide the "Unplugged" button
-			$("#Unplugged").hide();
-			// and maybe want to show/hide the "Start" button, whatever was submitted as the "display" var
-			$("#Start").css("display", display)
-			// and, change the running screen to plugged in
-						$("#runningUnplugged").hide();
-						$("#runningPluggedIn").show();
-			}
-		else 
-			{
-			// else, device is unplugged
-			// then we definitely want to hide the "Start" button
-			$("#Start").hide();
-			// and maybe want to show/hide the "Unplugged" button, whatever was submitted as the "display" var
-			$("#Unplugged").css("display", display)
-			// change the running screen to unplugged
-						$("#runningUnplugged").show();
-						$("#runningPluggedIn").hide();
-			
-			}
+			//pick the Start or Unplugged button based on whether the device is plugged in or not
+			// if plugged in then
+			if (window.pluggedIn==true)
+				{
+				// then we definitely want to hide the "Unplugged" button
+				$("#Unplugged").hide();
+				// and maybe want to show/hide the "Start" button, whatever was submitted as the "display" var
+				$("#Start").css("display", display)
+				// and, change the running screen to plugged in
+							$("#runningUnplugged").hide();
+							$("#runningPluggedIn").show();
+				}
+			else 
+				{
+				// else, device is unplugged
+				// then we definitely want to hide the "Start" button
+				$("#Start").hide();
+				// and maybe want to show/hide the "Unplugged" button, whatever was submitted as the "display" var
+				$("#Unplugged").css("display", display)
+				// change the running screen to unplugged
+							$("#runningUnplugged").show();
+							$("#runningPluggedIn").hide();
+				}
 		}
 		
 		/* reRunButtons()
@@ -379,8 +378,7 @@
 		}
 
 	/* writeoutExperiment
-	* Reads out all the variables from the OpenPCR form.
-	* Stored in JSON format to "Save" the experiment
+	* Reads out all the variables from the OpenPCR form into a JSON object to "Save" the experiment
 	* Separate function is used to write out the experiment to the device
 	*/
 	function writeoutExperiment()
@@ -536,7 +534,7 @@
 	}
 
 	/* experimentToHTML(inputJSON)
-		* Takes a given experiment JSON and loads it into the OpenPCR interface
+		* Takes a given experiment JSON object and loads it into the OpenPCR interface
 		*/
 		function experimentToHTML(inputJSON)
 		{
@@ -651,32 +649,36 @@
 		stepHTML += '</tr></table></div>';
 		return stepHTML;
 		}
-		
-function stepToString(inputJSON)
-{
-		var stepString = "";
-		// if single step return something like (1[300|95|Denaturing])
-		if (inputJSON.type=="step")
-		{
-		stepString += "(1[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "])";			
-		}
-		// if cycle return something like (35,[60|95|Step A],[30|95|Step B],[30|95|Step C])
-		else if (inputJSON.type=="cycle")
-		 {
-			// add the number of Cycles
-					stepString += "(";
-					stepString += inputJSON.count;
-			
-			for (a=0; a<inputJSON.steps.length; a++)
-					{
-					stepString += "[" + inputJSON.steps[a].time + "|" + inputJSON.steps[a].temp + "|" + inputJSON.steps[a].name.slice(0,13) + "]";
-					}
-			// close the stepString string
-			stepString += ")";
-		 }
-		 //alert(stepString);
-	return stepString;
-}
+	
+	/* stepToString(inputJSON)
+	* Takes a JSON object and turns it into a string
+	* This is used to load an experiment into the OpenPCR device
+	*/
+	function stepToString(inputJSON)
+	{
+			var stepString = "";
+			// if single step return something like (1[300|95|Denaturing])
+			if (inputJSON.type=="step")
+			{
+			stepString += "(1[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "])";			
+			}
+			// if cycle return something like (35,[60|95|Step A],[30|95|Step B],[30|95|Step C])
+			else if (inputJSON.type=="cycle")
+			 {
+				// add the number of Cycles
+						stepString += "(";
+						stepString += inputJSON.count;
+				
+				for (a=0; a<inputJSON.steps.length; a++)
+						{
+						stepString += "[" + inputJSON.steps[a].time + "|" + inputJSON.steps[a].temp + "|" + inputJSON.steps[a].name.slice(0,13) + "]";
+						}
+				// close the stepString string
+				stepString += ")";
+			 }
+			 //alert(stepString);
+		return stepString;
+	}
 
 	/* clearForm()
 	* Reset all elements on the Forms page
@@ -702,8 +704,12 @@ function stepToString(inputJSON)
 	//$(".SlidingPanels").height(defaultHeight);
 	}
 	
-function disableEnterKey(e)
-{
+
+	/* disableEnterKey(e)
+	* The Enter/Return key doesn't do anything right now
+	*/
+	function disableEnterKey(e)
+	{
      var key;      
      if(window.event)
           key = window.event.keyCode; //IE
@@ -711,14 +717,86 @@ function disableEnterKey(e)
           key = e.which; //firefox      
 
      return (key != 13);
-}
+	}
+	
+	function startPCR()
+	{
+			// check if the form is validated
+			if (false == ($("#pcrForm").validate().form()))
+				{ return 0;} // if the form is not valid, show the errors
+			// command_id will be a random ID, stored to the window for later use
+			window.command_id=Math.floor(Math.random()*65534);
+			// where is OpenPCR
+				var devicePath =  window.path;
+			// name of the output file written to OpenPCR
+				var controlFile = devicePath.resolvePath("CONTROL.TXT"); 
+			// grab all the variables from the form in JSON format
+			pcrProgram = writeoutExperiment();
+			// now parse it out
+			// Start with the signature
+			var parsedProgram = "s=ACGTC";
+			// Command
+			parsedProgram += "&c=start";
+			// Contrast
+			parsedProgram += "&t=50";
+			// Command id 
+			parsedProgram += "&d=" + window.command_id;
+			// Lid Temp NO DECIMALS. Not handeled by UI currently, but just making sure it doesn't make it to OpenPCR
+			parsedProgram += "&l=" + Math.round(pcrProgram.lidtemp);
+			// Name
+			parsedProgram += "&n=" + pcrProgram.name
+			// get all the variables from the pre-cycle, cycle, and post-cycle steps
+			parsedProgram +="&p=";
+			for (i=0; i < pcrProgram.steps.length; i++)
+				{
+					if (pcrProgram.steps[i].type == "step")
+					// if it's a step
+						{
+						// stepToString will return something like (1[300|95|Denaturing])
+						parsedProgram += stepToString(pcrProgram.steps[i]);
+						}
+					
+					else if (pcrProgram.steps[i].type == "cycle")
+					// if it's a cycle add the prefix for the number of steps, then each step
+					{
+					// for example, this should return (35[30,95,Denaturing][60,55,Annealing][60,72,Extension])
+					parsedProgram += stepToString(pcrProgram.steps[i]);
+					}
+				}
+			// check that the entire protocol isn't >252 bytes
+			if (parsedProgram.length > 252)
+			{
+			alert("Oops, OpenPCR can't handle protocols longer than 252 characters, and this protocol is " + parsedProgram.length + " characters. The fix? You can try trimming down the name of your protocol or removing unnecessary steps");
+			return 0;
+			}
+			// go to the Running dashboard
+			sp2.showPanel(2);
+			$("#ex2_p3").hide();
+			// go to the top of the page
+			scrollTo(0,0);
+			//hide the home button on the running page
+			$("#homeButton").hide();
+			$('#starting').dialog('open');
+			// then close it after 1 second
+			setTimeout(function(){$('#starting').dialog('close');}, 5000);
+			setTimeout(function(){$('#ex2_p3').show();}, 5000);
+			// write out the file to the OpenPCR device
+			var fileStream = new window.runtime.flash.filesystem.FileStream();
+			fileStream.open(controlFile, window.runtime.flash.filesystem.FileMode.WRITE); 
+			fileStream.writeUTFBytes(parsedProgram);
+			fileStream.close();
+			// also, reset the command_id_counter
+			window.command_id_counter = 0;
+			// load the OpenPCR Running page
+			running(path);
+		}
 	
 
-/**************
-* Running screen*
-***************/
+/*****************
+* Running screen *
+******************/
 
-/* running(path)
+	/* running(path)
 	* Controls the "running" page of OpenPCR. Reads updates from the running.pcr control file on OpenPCR every 250 ms
 	* Input: path, the location of the running.pcr control file
 	*/
@@ -735,16 +813,16 @@ function disableEnterKey(e)
 			window.updateRunningPage = setInterval(updateRunning,2000);
 		}
 	
-	/* updateRunning
+	/* updateRunning()
 	* Updates the Running page variables
 	*/
+	
 	function updateRunning()
 		{
 		updateFile = readDevice(window.runningFile);
 		if (updateFile==null || updateFile=="")
 			{
-			// don't do anything, updateRunning will be re-run
-			//air.trace("updatefile's null");
+			window.command_id_counter++;
 			}
 		else
 			{
@@ -769,9 +847,6 @@ function disableEnterKey(e)
 				}		
   			
 				// make sure the status isn't blank
-				
-						
-				
 				// if command id in the running file doesn't match, check again 50 times and then quit if there is still no match
 					if (status["d"]!=window.command_id)
 						{
@@ -886,7 +961,7 @@ function disableEnterKey(e)
 		
 
 		/* readDevice()
-		* Checks the OS (Mac or PC) and runs the appropriate middleman app to grab info off the USB drive
+		* Checks the OS (Mac or PC) and runs the appropriate middleman app (NCC) to grab info off the USB drive
 		*/
 		function readDevice(filePath)
 		{
@@ -974,6 +1049,44 @@ function disableEnterKey(e)
 			window.nativeWindow.visible = true;
 		}
 	
+	/* StopPCR()
+		* This function is called when the Stop button (Running page) is clicked and confirmed
+		* Or when the "Return to home screen" button is clicked
+		* Returns: boolean
+		*/
+		function stopPCR() {
+			// Stop reading the STATUS.TXT file
+			clearInterval(window.updateRunningPage);
+			
+			// Clear the values in the Running page
+			$("#runningHeader").html("");
+			$("#progressbar").progressbar({ value: ""});
+			$("#minutesRemaining").html("");
+				
+			// Create the string to write out
+			var stopPCR = 's=ACGTC&c=stop';
+			// contrast
+			stopPCR += '&t=50';
+			// turn off lid
+			stopPCR += '&l=0';
+			// keep the protocol name the same
+			//stopPCR += '&n=Bio on the Bay';
+			// and increment the command id
+			stopPCR += '&d='+ (window.command_id + 1);
+			
+			// Write out the STOP command to CONTROL.TXT
+			// name of the output file
+			var file = window.path.resolvePath("CONTROL.TXT"); 
+			// write out all the variables, command id + PCR settings
+			var fileStream = new window.runtime.flash.filesystem.FileStream();
+			fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE); 
+			fileStream.writeUTFBytes(stopPCR); 
+			fileStream.close();
+			// go back to the Form page
+			sp2.showPanel(1);
+			return false;
+		}
+
 	/* humanTime()
 	* Input: seconds (integer)
 	* Returns: time in a human friendly format, i.e. 2 hours, 10 minutes, 1 hour, 10 minutes, 1 hour, 1 minute, 60 minutes, 1 minute
@@ -1039,77 +1152,7 @@ function disableEnterKey(e)
 	* Sends an experiment to OpenPCR and switches to the Running page
 	*/	
 	$('#Start').live('click', function(){
-			// check if the form is validated
-			if (false == ($("#pcrForm").validate().form()))
-				{ return 0;} // if the form is not valid, show the errors
-			// command_id will be the timestamp (currentTime), stored to the window for later use
-			///// set for testing purposes
-			//	window.command_id="40000";
-	window.command_id=Math.floor(Math.random()*65534);
-	//alert(command_id);
-			// where is OpenPCR
-				var devicePath =  window.path;
-			// name of the output file written to OpenPCR
-				var controlFile = devicePath.resolvePath("CONTROL.TXT"); 
-			// grab all the variables from the form in JSON format
-			pcrProgram = writeoutExperiment();
-			// now parse it out
-			// Start with the signature
-			var parsedProgram = "s=ACGTC";
-			// Command
-			parsedProgram += "&c=start";
-			// Contrast
-			parsedProgram += "&t=50";
-			// Command id 
-			parsedProgram += "&d=" + window.command_id;
-			// Lid Temp NO DECIMALS. Not handeled by UI currently, but just making sure it doesn't make it to OpenPCR
-			parsedProgram += "&l=" + Math.round(pcrProgram.lidtemp);
-			// Name
-			parsedProgram += "&n=" + pcrProgram.name
-			// get all the variables from the pre-cycle, cycle, and post-cycle steps
-			parsedProgram +="&p=";
-			for (i=0; i < pcrProgram.steps.length; i++)
-				{
-					if (pcrProgram.steps[i].type == "step")
-					// if it's a step
-						{
-						// stepToString will return something like (1[300|95|Denaturing])
-						parsedProgram += stepToString(pcrProgram.steps[i]);
-						}
-					
-					else if (pcrProgram.steps[i].type == "cycle")
-					// if it's a cycle add the prefix for the number of steps, then each step
-					{
-					// for example, this should return (35[30,95,Denaturing][60,55,Annealing][60,72,Extension])
-					parsedProgram += stepToString(pcrProgram.steps[i]);
-					}
-				}
-			// check that the entire protocol isn't >252 bytes
-			if (parsedProgram.length > 252)
-			{
-			alert("Oops, OpenPCR can't handle protocols longer than 252 characters, and this protocol is " + parsedProgram.length + " characters. The fix? You can try trimming down the name of your protocol or removing unnecessary steps");
-			return 0;
-			}
-			// go to the Running dashboard
-			sp2.showPanel(2);
-			$("#ex2_p3").hide();
-			// go to the top of the page
-			scrollTo(0,0);
-			//hide the home button on the running page
-			$("#homeButton").hide();
-			$('#starting').dialog('open');
-			// then close it after 1 second
-			setTimeout(function(){$('#starting').dialog('close');}, 5000);
-			setTimeout(function(){$('#ex2_p3').show();}, 5000);
-			// write out the file to the OpenPCR device
-			var fileStream = new window.runtime.flash.filesystem.FileStream();
-			fileStream.open(controlFile, window.runtime.flash.filesystem.FileMode.WRITE); 
-			fileStream.writeUTFBytes(parsedProgram);
-			fileStream.close();
-			// also, reset the command_id_counter
-			window.command_id_counter = 0;
-			// load the OpenPCR Running page
-			running(path);
+			startPCR();
 		});
 					
 	/*  "Save" button on the OpenPCR Form
@@ -1315,58 +1358,8 @@ function disableEnterKey(e)
 		{
 			// doesn't do anything right now. The delete step button should reference here
 		}
-		
-		
-		// Running page					
-		/* StopPCR()
-		* This function is called when the STOP button (Running page) is clicked and confirmed
-		* Or when the "Return to home screen" button is clicked
-		* The state "stop" is written out to OpenPCR's CONTROL.TXT file
-		* Returns: boolean
-		*/
-		function stopPCR() {
-			clearInterval(window.updateRunningPage);
-			// command_id will match the current command ID
-			
-			// name of the output file
-				var file = window.path.resolvePath("CONTROL.TXT"); 
-			// write out all the variables, command id + PCR settings
-				
-				//var stopPCR = "{\n\t\"command_id\":" + command_id + ",\n" +	"\t\"state\": stop\n}";
-				var stopPCR = 's=ACGTC&c=stop';
-				// contrast
-				stopPCR += '&t=50';
-				// turn off lid
-				stopPCR += '&l=120';
-				// keep the protocol name the same
-				stopPCR += '&n=Bio on the Bay';
-				// and increment the command id
-				stopPCR += '&d='+ window.command_id;
-			// write out the file
-				var fileStream = new window.runtime.flash.filesystem.FileStream();
-				fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE); 
-				fileStream.writeUTFBytes(stopPCR); 
-				fileStream.close();
-			// go to the Running page
-			sp2.showPanel(1);
-			return false;
-		}
-
-// Debugging function
-
-/* Writes out 
-*/
-function writeCSV(a,b,c,d,e,f,g,h)
-	{
-	// take in all 8 variables and write them to a new line in the history file
-	fileDestination = air.File.applicationStorageDirectory.resolvePath("history.txt");
-		// write out the file
-			var fileStream = new window.runtime.flash.filesystem.FileStream();
-			fileStream.open(fileDestination, window.runtime.flash.filesystem.FileMode.APPEND); 
-			fileStream.writeUTFBytes(a + "," + b + "," + c + "," + d + "," + e + "," + f + "," + g + "," + h + "\n"); 
-			fileStream.close();
-	}
-// JQUERY UI stuffs
+						
+		// JQUERY UI stuffs
 
 $(function(){
 	// About Dialog			
@@ -1504,3 +1497,20 @@ $(function(){
     $(':button:contains("Save")').click();
   }
 	});
+	
+// Debugging function
+		/* writeCSV(a,b,c,d,e,f,g,h)
+		* Writes out current status to the histor file in comma delimited format
+		* Can load this into Excel and see ramp times, etc
+		* This should be commented out in actual releases
+		*/
+		function writeCSV(a,b,c,d,e,f,g,h)
+			{
+			// take in all 8 variables and write them to a new line in the history file
+			fileDestination = air.File.applicationStorageDirectory.resolvePath("history.txt");
+				// write out the file
+					var fileStream = new window.runtime.flash.filesystem.FileStream();
+					fileStream.open(fileDestination, window.runtime.flash.filesystem.FileMode.APPEND); 
+					fileStream.writeUTFBytes(a + "," + b + "," + c + "," + d + "," + e + "," + f + "," + g + "," + h + "\n"); 
+					fileStream.close();
+			}
