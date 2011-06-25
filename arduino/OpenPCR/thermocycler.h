@@ -1,6 +1,6 @@
 /*
- *	thermocycler.h - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto. All Rights Reserved.
+ *  thermocycler.h - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -50,7 +50,7 @@ public:
     COOL
   };
   
-  Thermocycler();
+  Thermocycler(boolean restarted);
   ~Thermocycler();
   
   // accessors
@@ -62,7 +62,7 @@ public:
   int GetCurrentCycleNum();
   const char* GetProgName() { return iszProgName; }
   Display* GetDisplay() { return ipDisplay; }
-  ProgramComponentPool<Cycle, 2>& GetCyclePool() { return iCyclePool; }
+  ProgramComponentPool<Cycle, 4>& GetCyclePool() { return iCyclePool; }
   ProgramComponentPool<Step, 20>& GetStepPool() { return iStepPool; }
   
   boolean Ramping() { return iRamping; }
@@ -76,6 +76,7 @@ public:
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp); //takes ownership of cycles
   void Stop();
   PcrStatus Start();
+  void ProcessCommand(SCommand& command);
   
   // internal
   void Loop();
@@ -104,7 +105,7 @@ private:
   // components
   Display* ipDisplay;
   SerialControl* ipSerialControl;
-  ProgramComponentPool<Cycle, 2> iCyclePool;
+  ProgramComponentPool<Cycle, 4> iCyclePool;
   ProgramComponentPool<Step, 20> iStepPool;
   
   // state
@@ -124,6 +125,7 @@ private:
     EBangBang,
     EPID
   };
+  boolean iRestarted;
   
   ControlMode iPlateControlMode;
   ControlMode iLidControlMode;

@@ -1,6 +1,6 @@
 /*
- *	thermocycler.cpp - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto. All Rights Reserved.
+ *  thermocycler.cpp - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -62,30 +62,8 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
   
 // I2C address for MCP3422 - base address for MCP3424
 #define MCP3422_ADDRESS 0X68
-
-// fields in configuration register
-#define MCP342X_GAIN_FIELD 0X03 // PGA field
-#define MCP342X_GAIN_X1    0X00 // PGA gain X1
-#define MCP342X_GAIN_X2    0X01 // PGA gain X2
-#define MCP342X_GAIN_X4    0X02 // PGA gain X4
-#define MCP342X_GAIN_X8    0X03 // PGA gain X8
-
 #define MCP342X_RES_FIELD  0X0C // resolution/rate field
-#define MCP342X_RES_SHIFT  2    // shift to low bits
-#define MCP342X_12_BIT     0X00 // 12-bit 240 SPS
-#define MCP342X_14_BIT     0X04 // 14-bit 60 SPS
-#define MCP342X_16_BIT     0X08 // 16-bit 15 SPS
 #define MCP342X_18_BIT     0X0C // 18-bit 3.75 SPS
-
-#define MCP342X_CONTINUOUS 0X10 // 1 = continuous, 0 = one-shot
-
-#define MCP342X_CHAN_FIELD 0X60 // channel field
-#define MCP342X_CHANNEL_1  0X00 // select MUX channel 1
-#define MCP342X_CHANNEL_2  0X20 // select MUX channel 2
-#define MCP342X_CHANNEL_3  0X40 // select MUX channel 3
-#define MCP342X_CHANNEL_4  0X60 // select MUX channel 4
-
-#define MCP342X_START      0X80 // write: start a conversion
 #define MCP342X_BUSY       0X80 // read: output not ready
 
 #define DATAOUT 11//MOSI
@@ -96,13 +74,18 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define CYCLE_START_TOLERANCE 0.2
 #define LID_START_TOLERANCE 1.0
 
-#define PLATE_PID_P 1000
-#define PLATE_PID_I 250
-#define PLATE_PID_D 250
+#define PLATE_PID_INC_P 1000
+#define PLATE_PID_INC_I 250
+#define PLATE_PID_INC_D 250
 
 #define PLATE_PID_DEC_P 500
 #define PLATE_PID_DEC_I 400
 #define PLATE_PID_DEC_D 200
+
+#define PLATE_PID_DEC_LOW_THRESHOLD 35
+#define PLATE_PID_DEC_LOW_P 2000
+#define PLATE_PID_DEC_LOW_I 100
+#define PLATE_PID_DEC_LOW_D 200
 
 #define LID_PID_P 100
 #define LID_PID_I 50
@@ -118,7 +101,8 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define MIN_LID_PWM 0
 
 //public
-Thermocycler::Thermocycler():
+Thermocycler::Thermocycler(boolean restarted):
+  iRestarted(restarted),
   ipDisplay(NULL),
   ipProgram(NULL),
   ipDisplayCycle(NULL),
@@ -132,12 +116,12 @@ Thermocycler::Thermocycler():
   iLidTemp(0.0),
   iCycleStartTime(0),
   iRamping(true),
-  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_P, PLATE_PID_I, PLATE_PID_D, DIRECT),
+  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D, DIRECT),
   iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, LID_PID_P, LID_PID_I, LID_PID_D, DIRECT),
   iTargetLidTemp(0) {
     
-  ipDisplay = new Display(*this);
-  ipSerialControl = new SerialControl(*this, ipDisplay);
+  ipDisplay = new Display();
+  ipSerialControl = new SerialControl(ipDisplay);
   
   //init pins
   pinMode(15, INPUT);
@@ -208,8 +192,7 @@ Thermocycler::ThermalState Thermocycler::GetThermalState() {
  
 // control
 void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp) {
-  Stop();  
-  delete ipProgram;
+  Stop();
 
   ipProgram = pProgram;
   ipDisplayCycle = pDisplayCycle;
@@ -234,23 +217,23 @@ void Thermocycler::Stop() {
 PcrStatus Thermocycler::Start() {
   if (ipProgram == NULL)
     return ENoProgram;
-//  if (iProgramState == EOff) // DANGEROUS TEMP HACK, REMOVE ONCE SERIAL CONTROL IN PLACE
-  //  return ENoPower;
+  if (iProgramState == EOff)
+    return ENoPower;
   
   //advance to lid wait state
   iProgramState = ELidWait;
   
   return ESuccess;
 }
-
+    
 // internal
 void Thermocycler::Loop() {
   CheckPower();
   ReadPlateTemp();
   ReadLidTemp(); 
-
+  
   switch (iProgramState) {
-  case ELidWait:
+  case ELidWait:    
     if (iLidTemp >= iTargetLidTemp - LID_START_TOLERANCE) {
       //advance to running state
       //calculate program time params
@@ -331,6 +314,14 @@ void Thermocycler::CheckPower() {
   boolean externalPower = digitalRead(A0); //voltage > 7.0;
   if (externalPower && iProgramState == EOff) {
     iProgramState = EStopped;
+    
+    if (!iRestarted) {
+      //check for stored program
+      SCommand command;
+      if (ProgramStore::RetrieveProgram(command, (char*)ipSerialControl->GetBuffer()))
+        ProcessCommand(command);
+    }
+
   } else if (!externalPower && iProgramState != EOff) {
     Stop();
     iProgramState = EOff;
@@ -413,10 +404,13 @@ void Thermocycler::SetPlateTarget(double target) {
   if (iRamping) {
     if (iTargetPlateTemp >= iPlateTemp) {
       iDecreasing = false;
-      iPlatePid.SetTunings(PLATE_PID_P, PLATE_PID_I, PLATE_PID_D);
+      iPlatePid.SetTunings(PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D);
     } else {
       iDecreasing = true;
-      iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
+      if (iTargetPlateTemp < PLATE_PID_DEC_LOW_THRESHOLD)
+        iPlatePid.SetTunings(PLATE_PID_DEC_LOW_P, PLATE_PID_DEC_LOW_I, PLATE_PID_DEC_LOW_D);
+      else
+        iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
     }
   }
 }
@@ -449,7 +443,7 @@ void Thermocycler::ControlPeltier() {
     }
     iPlatePid.Compute();
     
-    if (iDecreasing && iTargetPlateTemp > 20) {
+    if (iDecreasing && iTargetPlateTemp > PLATE_PID_DEC_LOW_THRESHOLD) {
       if (iTargetPlateTemp < iPlateTemp)
         iPlatePid.ResetI();
       else
@@ -520,6 +514,31 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
   }
   
   analogWrite(9, pwm);
+}
+
+void Thermocycler::ProcessCommand(SCommand& command) {
+  if (command.command == SCommand::EStart) {
+    ipDisplay->SetContrast(command.contrast);
+    
+    //find display cycle
+    Cycle* pProgram = command.pProgram;
+    Cycle* pDisplayCycle = pProgram;
+    
+    for (int i = 0; i < pProgram->GetNumComponents(); i++) {
+      ProgramComponent* pComp = pProgram->GetComponent(i);
+      if (pComp->GetType() == ProgramComponent::ECycle) {
+        pDisplayCycle = (Cycle*)pComp;
+        break;
+      }
+    }
+    
+    //start program by persisting and resetting device to overcome memory leak in C library
+    GetThermocycler().SetProgram(pProgram, pDisplayCycle, command.name, command.lidTemp);
+    GetThermocycler().Start();
+    
+  } else if (command.command == SCommand::EStop) {
+    GetThermocycler().Stop(); //redundant as we already stopped during parsing
+  }
 }
 
 uint8_t Thermocycler::mcp342xRead(int32_t &data)

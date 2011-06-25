@@ -1,6 +1,6 @@
 /*
- *	display.h - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto. All Rights Reserved.
+ *  display.h - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -26,7 +26,7 @@ class Cycle;
 
 class Display {
 public:
-  Display(Thermocycler& thermocycler);
+  Display();
   
   void SetContrast(uint8_t contrast);
   void Clear();
@@ -43,7 +43,6 @@ private:
 private:
   LiquidCrystal iLcd;
   char iszDebugMsg[21];
-  Thermocycler& iThermocycler;
   Thermocycler::ProgramState iLastState;
   unsigned long iLastReset;
   uint8_t iContrast;

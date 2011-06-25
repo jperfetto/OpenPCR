@@ -1,6 +1,6 @@
 /*
- *	serialcontrol.h - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto and Xia Hong. All Rights Reserved.
+ *  serialcontrol.h - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto and Xia Hong. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -22,31 +22,18 @@
 #define START_CODE    0xFF
 #define ESCAPE_CODE   0xFE
 
-#define MAX_BUFSIZE     256
-
 class Thermocycler;
 class Display;
 class ProgramComponent;
 class Cycle;
 class Step;
+struct SCommand;
 
 typedef enum {
     SEND_CMD       = 0x10,
     STATUS_REQ     = 0x40,
     STATUS_RESP    = 0x80
 } PACKET_TYPE;
-  
-struct SCommand {
-  char name[21];
-  uint16_t commandId;
-  enum TCommandType {
-    ENone = 0,
-    EStart,
-    EStop
-  } command;
-  int lidTemp;
-  Cycle* pProgram;
-};
 
 //packet header
 struct PCPPacket {
@@ -63,21 +50,16 @@ struct PCPPacket {
 
 class SerialControl {
 public:
-  SerialControl(Thermocycler& thermocycler, Display* pDisplay);
+  SerialControl(Display* pDisplay);
   ~SerialControl();
   
   void Process();
+  byte* GetBuffer() { return buf; } //used for stored program parsing at start-up only if no serial command received
   
 private:
   void ReadPacket();
   void ProcessPacket(byte* data, int datasize);
   void SendStatus();
-  void ParseCommand(char* pCommandBuf);
-  void AddCommand(SCommand* pCommand, char key, char* szValue);
-  void ProcessCommand(SCommand* pCommand);
-  Cycle* ParseProgram(char* pBuffer);
-  ProgramComponent* ParseCycle(char* pBuffer);
-  Step* ParseStep(char* pBuffer);
 
   char* AddParam(char* pBuffer, char key, int val, boolean init = false);  
   char* AddParam(char* pBuffer, char key, unsigned long val, boolean init = false);
@@ -85,7 +67,7 @@ private:
   char* AddParam(char* pBuffer, char key, const char* szVal, boolean init = false);
   
 private:
-  byte buf[MAX_BUFSIZE + 1]; //read or write buffer
+  byte buf[MAX_COMMAND_SIZE + 1]; //read or write buffer
   
   typedef enum{
     STATE_START,
@@ -99,7 +81,6 @@ private:
   uint16_t packetLen, packetRealLen, iCommandId;
   boolean bEscapeCodeFound;
   
-  Thermocycler& iThermocycler;
   Display* ipDisplay;
 };
 

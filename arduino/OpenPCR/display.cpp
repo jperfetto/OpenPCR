@@ -1,6 +1,6 @@
 /*
- *	display.cpp - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto. All Rights Reserved.
+ *  display.cpp - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -31,9 +31,8 @@ const char LIDWAIT_STR[] PROGMEM = "Heating Lid";
 const char STOPPED_STR[] PROGMEM = "Ready";
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";  
 
-Display::Display(Thermocycler& thermocycler):
+Display::Display():
   iLcd(6, 7, 8, A5, 16, 17),
-  iThermocycler(thermocycler),
   iLastState(Thermocycler::EOff),
   iContrast(10) {
 
@@ -62,7 +61,7 @@ void Display::SetDebugMsg(char* szDebugMsg) {
 }
 
 void Display::Update() {
-  Thermocycler::ProgramState state = iThermocycler.GetProgramState();
+  Thermocycler::ProgramState state = GetThermocycler().GetProgramState();
   if (iLastState != state)
     iLcd.clear();
   iLastState = state;
@@ -82,14 +81,14 @@ void Display::Update() {
  #ifdef DEBUG_DISPLAY
     iLcd.print(iszDebugMsg);
  #else
-    iLcd.print(iThermocycler.GetProgName());
+    iLcd.print(GetThermocycler().GetProgName());
  #endif
            
     DisplayLidTemp();
     DisplayBlockTemp();
     DisplayState();
 
-    if (state == Thermocycler::ERunning && !iThermocycler.GetCurrentStep()->IsFinal()) {
+    if (state == Thermocycler::ERunning && !GetThermocycler().GetCurrentStep()->IsFinal()) {
       DisplayCycle();
       DisplayEta();
     } else if (state == Thermocycler::EComplete) {
@@ -110,7 +109,7 @@ void Display::Update() {
 
 void Display::DisplayEta() {
   char timeString[16];
-  unsigned long timeRemaining = iThermocycler.GetTimeRemainingS();
+  unsigned long timeRemaining = GetThermocycler().GetTimeRemainingS();
   int hours = timeRemaining / 3600;
   int mins = (timeRemaining % 3600) / 60;
   int secs = timeRemaining % 60;
@@ -130,7 +129,7 @@ void Display::DisplayLidTemp() {
   char pbuf[16];
   char buf[16];
   strcpy_P(pbuf, LID_FORM_STR);
-  sprintf(buf, pbuf, (int)(iThermocycler.GetLidTemp() + 0.5));
+  sprintf(buf, pbuf, (int)(GetThermocycler().GetLidTemp() + 0.5));
 
   iLcd.setCursor(10, 2);
   iLcd.print(buf);
@@ -140,7 +139,7 @@ void Display::DisplayBlockTemp() {
   char buf[16];
   char floatStr[16];
   
-  sprintFloat(floatStr, iThermocycler.GetPlateTemp(), 1, true);
+  sprintFloat(floatStr, GetThermocycler().GetPlateTemp(), 1, true);
   sprintf(buf, "%s C", floatStr);
  
   iLcd.setCursor(13, 0);
@@ -151,7 +150,7 @@ void Display::DisplayCycle() {
   char buf[16];
   
   iLcd.setCursor(0, 3);
-  sprintf(buf, "%d of %d", iThermocycler.GetCurrentCycleNum(), iThermocycler.GetNumCycles());
+  sprintf(buf, "%d of %d", GetThermocycler().GetCurrentCycleNum(), GetThermocycler().GetNumCycles());
   iLcd.print(buf);
 }
 
@@ -159,14 +158,14 @@ void Display::DisplayState() {
   char buf[32];
   char* stateStr;
   
-  switch (iThermocycler.GetProgramState()) {
+  switch (GetThermocycler().GetProgramState()) {
   case Thermocycler::ELidWait:
     stateStr = rps(LIDWAIT_STR);
     break;
     
   case Thermocycler::ERunning:
   case Thermocycler::EComplete:
-    switch (iThermocycler.GetThermalState()) {
+    switch (GetThermocycler().GetThermalState()) {
     case Thermocycler::EHeating:
       stateStr = rps(HEATING_STR);
       break;
@@ -174,7 +173,7 @@ void Display::DisplayState() {
       stateStr = rps(COOLING_STR);
       break;
     case Thermocycler::EHolding:
-      stateStr = iThermocycler.GetCurrentStep()->GetName();
+      stateStr = GetThermocycler().GetCurrentStep()->GetName();
       break;
     case Thermocycler::EIdle:
       stateStr = rps(STOPPED_STR);

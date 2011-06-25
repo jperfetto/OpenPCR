@@ -1,6 +1,6 @@
 /*
- *	program.h - OpenPCR control software.
- *  Copyright (C) 2010 Josh Perfetto. All Rights Reserved.
+ *  program.h - OpenPCR control software.
+ *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -121,5 +121,42 @@ private:
   int iAllocatedComponents;
   T iComponents[N];
 };
+
+////////////////////////////////////////////////////////////////////
+// Struct SCommand
+struct SCommand {
+  char name[21];
+  uint16_t commandId;
+  enum TCommandType {
+    ENone = 0,
+    EStart,
+    EStop
+  } command;
+  int lidTemp;
+  uint8_t contrast;
+  Cycle* pProgram;
+};
+
+////////////////////////////////////////////////////////////////////
+// Class CommandParser
+class CommandParser {
+public:
+  static void ParseCommand(SCommand& command, char* pCommandBuf);
+
+private:
+  static void AddComponent(SCommand* pCommand, char key, char* szValue);
+  static Cycle* ParseProgram(char* pBuffer);
+  static ProgramComponent* ParseCycle(char* pBuffer);
+  static Step* ParseStep(char* pBuffer);
+};
+
+////////////////////////////////////////////////////////////////////
+// Class ProgramStore
+class ProgramStore {
+public:
+  static void StoreProgram(const char* szProgram);
+  static boolean RetrieveProgram(SCommand& command, char* pBuffer);
+};
+  
 
 #endif
