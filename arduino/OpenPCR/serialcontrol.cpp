@@ -152,56 +152,20 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
 
 #define STATUS_FILE_LEN 128
 
-void SerialControl::SendStatus()
-{
-  char* szStatus;
+void SerialControl::SendStatus() {
   Thermocycler::ProgramState state = GetThermocycler().GetProgramState();
-  switch (state) {
-  case Thermocycler::EOff:
-  case Thermocycler::EStopped:
-    szStatus = "stopped";
-    break;
-  case Thermocycler::ELidWait:
-    szStatus = "lidwait";
-    break;
-  case Thermocycler::ERunning:
-    szStatus = "running";
-    break;
-  case Thermocycler::EComplete:
-    szStatus = "complete";
-    break;
-  case Thermocycler::EStartup:
-    szStatus = "startup";
-    break;
-  case Thermocycler::EError:
-  default:
-    szStatus = "error";
-  }
-  
-  char* szThermState = "\0";
-  switch (GetThermocycler().GetThermalState()) {
-  case Thermocycler::EHeating:
-    szThermState = "heating";
-    break;
-  case Thermocycler::ECooling:
-    szThermState = "cooling";
-    break;
-  case Thermocycler::EHolding:
-    szThermState = "holding";
-    break;
-  case Thermocycler::EIdle:
-    szThermState = "idle";
-    break;
-  }
+  const char* szStatus = GetProgramStateString_P(state); 
+  const char* szThermState = GetThermalStateString_P(GetThermocycler().GetThermalState());
       
   char statusBuf[STATUS_FILE_LEN];
   char* statusPtr = statusBuf;
   Thermocycler& tc = GetThermocycler();
+    
   statusPtr = AddParam(statusPtr, 'd', (unsigned long)iCommandId, true);
-  statusPtr = AddParam(statusPtr, 's', szStatus);
+  statusPtr = AddParam_P(statusPtr, 's', szStatus);
   statusPtr = AddParam(statusPtr, 'l', (int)tc.GetLidTemp());
   statusPtr = AddParam(statusPtr, 'b', tc.GetPlateTemp(), 1, false);
-  statusPtr = AddParam(statusPtr, 't', szThermState);
+  statusPtr = AddParam_P(statusPtr, 't', szThermState);
 
   if (state == Thermocycler::ERunning || state == Thermocycler::EComplete) {
     statusPtr = AddParam(statusPtr, 'e', tc.GetElapsedTimeS());
@@ -271,3 +235,60 @@ char* SerialControl::AddParam(char* pBuffer, char key, const char* szVal, boolea
     
   return pBuffer;
 }
+
+char* SerialControl::AddParam_P(char* pBuffer, char key, const char* szVal, boolean init) {
+  if (!init)
+    *pBuffer++ = '&';
+  *pBuffer++ = key;
+  *pBuffer++ = '=';
+  strcpy_P(pBuffer, szVal);
+  while (*pBuffer != '\0')
+    pBuffer++;
+    
+  return pBuffer;
+}
+
+const char STOPPED_STR[] PROGMEM = "stopped";
+const char LIDWAIT_STR[] PROGMEM = "lidwait";
+const char RUNNING_STR[] PROGMEM = "running";
+const char COMPLETE_STR[] PROGMEM = "complete";
+const char STARTUP_STR[] PROGMEM = "startup";
+const char ERROR_STR[] PROGMEM = "error";
+const char* SerialControl::GetProgramStateString_P(Thermocycler::ProgramState state) {
+  switch (state) {
+  case Thermocycler::EOff:
+  case Thermocycler::EStopped:
+    return STOPPED_STR;
+  case Thermocycler::ELidWait:
+    return LIDWAIT_STR;
+  case Thermocycler::ERunning:
+    return RUNNING_STR;
+  case Thermocycler::EComplete:
+    return COMPLETE_STR;
+  case Thermocycler::EStartup:
+    return STARTUP_STR;
+  case Thermocycler::EError:
+  default:
+    return ERROR_STR;
+  }
+}
+
+const char HEATING_STR[] PROGMEM = "heating";
+const char COOLING_STR[] PROGMEM = "cooling";
+const char HOLDING_STR[] PROGMEM = "holding";
+const char IDLE_STR[] PROGMEM = "idle";
+const char* SerialControl::GetThermalStateString_P(Thermocycler::ThermalState state) {
+  switch (state) {
+  case Thermocycler::EHeating:
+    return HEATING_STR;
+  case Thermocycler::ECooling:
+    return COOLING_STR;
+  case Thermocycler::EHolding:
+    return HOLDING_STR;
+  case Thermocycler::EIdle:
+    return IDLE_STR;
+  default:
+    return ERROR_STR;
+  }
+}
+

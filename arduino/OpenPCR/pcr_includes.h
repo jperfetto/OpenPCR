@@ -21,8 +21,6 @@
 
 //#define DEBUG_DISPLAY
 
-#define VERSION_STRING "Firmware v1.0"
-
 #include "WProgram.h"
 #include <avr/pgmspace.h>
 
@@ -39,7 +37,6 @@ extern "C" void __cxa_pure_virtual(void);
 #define STEP_NAME_LENGTH       16
 #define MAX_CYCLE_ITEMS        16
 #define MAX_COMMAND_SIZE      256
-#define COMMAND_SIGNATURE     "s=ACGTC"
 
 enum PcrStatus {
   ESuccess = 0,

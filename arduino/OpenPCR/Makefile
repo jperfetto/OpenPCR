@@ -18,6 +18,6 @@
  	# Where to find header files and libraries.
  	INC_DIRS = ./inc
  	LIB_DIRS = $(addprefix $(ARD_HOME)/libraries/, $(LIBS))
- 	LIBS = LiquidCrystal Wire Wire/utility
+ 	LIBS = LiquidCrystal EEPROM Wire Wire/utility
  	
  	include ./Makefile.master
