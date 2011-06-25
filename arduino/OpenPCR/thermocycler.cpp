@@ -101,7 +101,8 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define MIN_LID_PWM 0
 
 //public
-Thermocycler::Thermocycler():
+Thermocycler::Thermocycler(boolean restarted):
+  iRestarted(restarted),
   ipDisplay(NULL),
   ipProgram(NULL),
   ipDisplayCycle(NULL),
@@ -191,8 +192,7 @@ Thermocycler::ThermalState Thermocycler::GetThermalState() {
  
 // control
 void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp) {
-  Stop();  
-  delete ipProgram;
+  Stop();
 
   ipProgram = pProgram;
   ipDisplayCycle = pDisplayCycle;
@@ -217,23 +217,23 @@ void Thermocycler::Stop() {
 PcrStatus Thermocycler::Start() {
   if (ipProgram == NULL)
     return ENoProgram;
-//  if (iProgramState == EOff) // DANGEROUS TEMP HACK, REMOVE ONCE SERIAL CONTROL IN PLACE
-  //  return ENoPower;
+  if (iProgramState == EOff)
+    return ENoPower;
   
   //advance to lid wait state
   iProgramState = ELidWait;
   
   return ESuccess;
 }
-
+    
 // internal
 void Thermocycler::Loop() {
   CheckPower();
   ReadPlateTemp();
   ReadLidTemp(); 
-
+  
   switch (iProgramState) {
-  case ELidWait:
+  case ELidWait:    
     if (iLidTemp >= iTargetLidTemp - LID_START_TOLERANCE) {
       //advance to running state
       //calculate program time params
@@ -314,6 +314,14 @@ void Thermocycler::CheckPower() {
   boolean externalPower = digitalRead(A0); //voltage > 7.0;
   if (externalPower && iProgramState == EOff) {
     iProgramState = EStopped;
+    
+    if (!iRestarted) {
+      //check for stored program
+      SCommand command;
+      if (ProgramStore::RetrieveProgram(command, (char*)ipSerialControl->GetBuffer()))
+        ProcessCommand(command);
+    }
+
   } else if (!externalPower && iProgramState != EOff) {
     Stop();
     iProgramState = EOff;
@@ -506,6 +514,31 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
   }
   
   analogWrite(9, pwm);
+}
+
+void Thermocycler::ProcessCommand(SCommand& command) {
+  if (command.command == SCommand::EStart) {
+    ipDisplay->SetContrast(command.contrast);
+    
+    //find display cycle
+    Cycle* pProgram = command.pProgram;
+    Cycle* pDisplayCycle = pProgram;
+    
+    for (int i = 0; i < pProgram->GetNumComponents(); i++) {
+      ProgramComponent* pComp = pProgram->GetComponent(i);
+      if (pComp->GetType() == ProgramComponent::ECycle) {
+        pDisplayCycle = (Cycle*)pComp;
+        break;
+      }
+    }
+    
+    //start program by persisting and resetting device to overcome memory leak in C library
+    GetThermocycler().SetProgram(pProgram, pDisplayCycle, command.name, command.lidTemp);
+    GetThermocycler().Start();
+    
+  } else if (command.command == SCommand::EStop) {
+    GetThermocycler().Stop(); //redundant as we already stopped during parsing
+  }
 }
 
 uint8_t Thermocycler::mcp342xRead(int32_t &data)

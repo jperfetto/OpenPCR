@@ -22,8 +22,6 @@
 #define START_CODE    0xFF
 #define ESCAPE_CODE   0xFE
 
-#define MAX_BUFSIZE     256
-
 class Thermocycler;
 class Display;
 class ProgramComponent;
@@ -56,12 +54,12 @@ public:
   ~SerialControl();
   
   void Process();
+  byte* GetBuffer() { return buf; } //used for stored program parsing at start-up only if no serial command received
   
 private:
   void ReadPacket();
   void ProcessPacket(byte* data, int datasize);
   void SendStatus();
-  void ProcessCommand(SCommand* pCommand);
 
   char* AddParam(char* pBuffer, char key, int val, boolean init = false);  
   char* AddParam(char* pBuffer, char key, unsigned long val, boolean init = false);
@@ -69,7 +67,7 @@ private:
   char* AddParam(char* pBuffer, char key, const char* szVal, boolean init = false);
   
 private:
-  byte buf[MAX_BUFSIZE + 1]; //read or write buffer
+  byte buf[MAX_COMMAND_SIZE + 1]; //read or write buffer
   
   typedef enum{
     STATE_START,

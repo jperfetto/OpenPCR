@@ -31,12 +31,13 @@ inline Thermocycler& GetThermocycler() { return *gpThermocycler; }
 //fixes for incomplete C++ implementation, defined in util.cpp
 void* operator new(size_t size);
 void operator delete(void * ptr);
-void sprintFloat(char* str, float val, int decimalDigits, boolean pad);
 extern "C" void __cxa_pure_virtual(void);
 
 //defines
-#define STEP_NAME_LENGTH 16
-#define MAX_CYCLE_ITEMS 16
+#define STEP_NAME_LENGTH       16
+#define MAX_CYCLE_ITEMS        16
+#define MAX_COMMAND_SIZE      256
+#define COMMAND_SIGNATURE     "s=ACGTC"
 
 enum PcrStatus {
   ESuccess = 0,
@@ -47,6 +48,7 @@ enum PcrStatus {
 
 #define SUCCEEDED(status) (status == ESuccess)
 
+void sprintFloat(char* str, float val, int decimalDigits, boolean pad);
 unsigned short htons(unsigned short val);
 double absf(double val);
 char* rps(const char* progString);

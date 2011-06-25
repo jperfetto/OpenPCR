@@ -50,7 +50,7 @@ public:
     COOL
   };
   
-  Thermocycler();
+  Thermocycler(boolean restarted);
   ~Thermocycler();
   
   // accessors
@@ -76,6 +76,7 @@ public:
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp); //takes ownership of cycles
   void Stop();
   PcrStatus Start();
+  void ProcessCommand(SCommand& command);
   
   // internal
   void Loop();
@@ -124,6 +125,7 @@ private:
     EBangBang,
     EPID
   };
+  boolean iRestarted;
   
   ControlMode iPlateControlMode;
   ControlMode iLidControlMode;

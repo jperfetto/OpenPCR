@@ -150,4 +150,13 @@ private:
   static Step* ParseStep(char* pBuffer);
 };
 
+////////////////////////////////////////////////////////////////////
+// Class ProgramStore
+class ProgramStore {
+public:
+  static void StoreProgram(const char* szProgram);
+  static boolean RetrieveProgram(SCommand& command, char* pBuffer);
+};
+  
+
 #endif

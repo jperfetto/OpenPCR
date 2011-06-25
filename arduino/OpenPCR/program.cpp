@@ -19,6 +19,8 @@
 #include "pcr_includes.h"
 #include "program.h"
 
+#include <EEPROM.h>
+
 #include "display.h"
 
 ////////////////////////////////////////////////////////////////////
@@ -211,4 +213,26 @@ Step* CommandParser::ParseStep(char* pBuffer) {
   pStep->SetDuration(duration);
   pStep->SetTemp(temp);
   return pStep;
+}
+
+
+////////////////////////////////////////////////////////////////////
+// Class ProgramStore
+void ProgramStore::StoreProgram(const char* szProgram) {
+  for (int i = 0; i < MAX_COMMAND_SIZE; i++)
+    EEPROM.write(i, szProgram[i]);
+}
+
+boolean ProgramStore::RetrieveProgram(SCommand& command, char* pBuffer) {
+  for (int i = 0; i < MAX_COMMAND_SIZE; i++)
+    pBuffer[i] = EEPROM.read(i);
+  
+  if (pBuffer[0] != 255) {
+    //previous program stored
+    CommandParser::ParseCommand(command, pBuffer);   
+    return true;
+    
+  } else {
+    return false;
+  }
 }

@@ -63,9 +63,9 @@ void SerialControl::ReadPacket()
       } 
       else if (packetState == STATE_PACKETLEN_LOW) {
         packetLen |= incomingByte << 8;
-        if (packetLen > MAX_BUFSIZE)
-          packetLen = MAX_BUFSIZE;
-        if (packetLen >= sizeof(struct PCPPacket) && packetLen <= MAX_BUFSIZE){
+        if (packetLen > MAX_COMMAND_SIZE)
+          packetLen = MAX_COMMAND_SIZE;
+        if (packetLen >= sizeof(struct PCPPacket) && packetLen <= MAX_COMMAND_SIZE) {
           packetState = STATE_PACKETHEADER_DONE;
           buf[0] = START_CODE;
           buf[1] = packetLen & 0xff;
@@ -122,24 +122,32 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
   uint8_t packetType = packet->eType & 0xf0;
   uint8_t packetSeq = packet->eType & 0x0f;
   uint8_t result = false;
-  int len;
+  char* pCommandBuf;
   
 //  if (packetSeq != lastPacketSeq){ //not retransmission
     switch(packetType){
     case SEND_CMD:
       data[datasize] = '\0';
       SCommand command;
-      CommandParser::ParseCommand(command, (char*)(data + sizeof(PCPPacket)));
-      ProcessCommand(&command);  
+      pCommandBuf = (char*)(data + sizeof(PCPPacket));
+      
+      //store start commands for restart
+      ProgramStore::StoreProgram(pCommandBuf);
+      
+      CommandParser::ParseCommand(command, pCommandBuf);
+      GetThermocycler().ProcessCommand(command);
+      iCommandId = command.commandId;
       break;
+      
     case STATUS_REQ:
       SendStatus();
       break;
     default:
       break;
- //   }
+   }
+
     lastPacketSeq = packetSeq;
-  }
+//  }
 }
 
 #define STATUS_FILE_LEN 128
@@ -259,30 +267,4 @@ char* SerialControl::AddParam(char* pBuffer, char key, const char* szVal, boolea
     pBuffer++;
     
   return pBuffer;
-}
-
-void SerialControl::ProcessCommand(SCommand* pCommand) {
-  if (pCommand->command == SCommand::EStart) {
-    ipDisplay->SetContrast(pCommand->contrast);
-    
-    //find display cycle
-    Cycle* pProgram = pCommand->pProgram;
-    Cycle* pDisplayCycle = pProgram;
-    
-    for (int i = 0; i < pProgram->GetNumComponents(); i++) {
-      ProgramComponent* pComp = pProgram->GetComponent(i);
-      if (pComp->GetType() == ProgramComponent::ECycle) {
-        pDisplayCycle = (Cycle*)pComp;
-        break;
-      }
-    }
-    
-    //start program by persisting and resetting device to overcome memory leak in C library
-    GetThermocycler().SetProgram(pProgram, pDisplayCycle, pCommand->name, pCommand->lidTemp);
-    iCommandId = pCommand->commandId;
-    GetThermocycler().Start();
-    
-  } else if (pCommand->command == SCommand::EStop) {
-    GetThermocycler().Stop(); //redundant as we already stopped
-  }
 }
