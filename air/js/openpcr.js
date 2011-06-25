@@ -661,7 +661,7 @@
 			// if single step return something like (1[300|95|Denaturing])
 			if (inputJSON.type=="step")
 			{
-			stepString += "(1[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "])";			
+			stepString += "[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "]";			
 			}
 			// if cycle return something like (35,[60|95|Step A],[30|95|Step B],[30|95|Step C])
 			else if (inputJSON.type=="cycle")
@@ -727,6 +727,7 @@
 				{ return 0;} // if the form is not valid, show the errors
 			// command_id will be a random ID, stored to the window for later use
 			window.command_id=Math.floor(Math.random()*65534);
+			// command id can't be 0 
 			// where is OpenPCR
 				var devicePath =  window.path;
 			// name of the output file written to OpenPCR
@@ -753,10 +754,22 @@
 			for (i=0; i < pcrProgram.steps.length; i++)
 				{
 					if (pcrProgram.steps[i].type == "step")
-					// if it's a step
+					// if it's a step, stepToString will return something like [300|95|Denaturing]
+					// then this loop needs to figure out when to add [1(  and )]
 						{
-						// stepToString will return something like (1[300|95|Denaturing])
+							// if the previous element wasn't a step (i.e. null or cycle)
+							if (pcrProgram.steps[i-1].type != "step")
+							{
+							parsedProgram += "(1";
+							}
+							
 						parsedProgram += stepToString(pcrProgram.steps[i]);
+						
+						// if the next element isn't a step (i.e. null or cycle)
+							if (pcrProgram.steps[i-1].type != "step")
+							{
+							parsedProgram += ")";
+							}
 						}
 					
 					else if (pcrProgram.steps[i].type == "cycle")
@@ -786,6 +799,8 @@
 			alert("Oops, OpenPCR can't handle protocols longer than 252 characters, and this protocol is " + parsedProgram.length + " characters. The fix? You can try trimming down the name of your protocol or removing unnecessary steps");
 			return 0;
 			}
+			//debug
+			air.trace(parsedProgram);
 			// go to the Running dashboard
 			sp2.showPanel(2);
 			$("#ex2_p3").hide();
