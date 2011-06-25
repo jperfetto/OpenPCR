@@ -732,7 +732,7 @@ function disableEnterKey(e)
 			window.runningFile = window.runningFile.resolvePath("STATUS.TXT");
 
 		// refresh the running page every 2 s
-			setInterval(updateRunning,2000);
+			window.updateRunningPage = setInterval(updateRunning,2000);
 		}
 	
 	/* updateRunning
@@ -748,7 +748,7 @@ function disableEnterKey(e)
 			}
 		else
 			{
-			air.trace(updateFile + "/n/n");
+			air.trace(updateFile + '\n\n');
 			// split on &
 			var splitonAmp = updateFile.split("&");
 			// split on =
@@ -1325,6 +1325,7 @@ function disableEnterKey(e)
 		* Returns: boolean
 		*/
 		function stopPCR() {
+			clearInterval(window.updateRunningPage);
 			// command_id will match the current command ID
 			
 			// name of the output file
