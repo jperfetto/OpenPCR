@@ -732,6 +732,7 @@
 				var controlFile = devicePath.resolvePath("CONTROL.TXT"); 
 			// grab all the variables from the form in JSON format
 			pcrProgram = writeoutExperiment();
+			
 			// now parse it out
 			// Start with the signature
 			var parsedProgram = "s=ACGTC";
@@ -747,6 +748,7 @@
 			parsedProgram += "&n=" + pcrProgram.name
 			// get all the variables from the pre-cycle, cycle, and post-cycle steps
 			parsedProgram +="&p=";
+			window.lessthan20steps = 0;
 			for (i=0; i < pcrProgram.steps.length; i++)
 				{
 					if (pcrProgram.steps[i].type == "step")
@@ -761,8 +763,22 @@
 					{
 					// for example, this should return (35[30,95,Denaturing][60,55,Annealing][60,72,Extension])
 					parsedProgram += stepToString(pcrProgram.steps[i]);
+					window.lessthan20steps = pcrProgram.steps[i].length;
 					}
 				}
+						
+			// verify that there are no more than 16 top level steps
+			if (pcrProgram.steps.length > 16)
+			{
+				alert("OpenPCR can handle a maximum of 16 top-level steps, you have " + stepCount + " steps");
+			}
+			
+			// verify the cycle step has no more than 20 steps
+			if ( window.lessthan20steps > 20)
+			{
+				alert("OpenPCR can handle a maximum of 20 cycle steps, you have " + window.cycleStepCount + " steps");
+			}
+			
 			// check that the entire protocol isn't >252 bytes
 			if (parsedProgram.length > 252)
 			{
@@ -937,9 +953,9 @@
 							$("#blockTemp").html(block_temp);
 						// update the lid temp
 						var lid_temp = status["l"];
-						$("#lidTemp").html(lid_temp);
+						$("#lidTemperature").html(lid_temp);
 						// replace the "cycle # of total#" span with "PCR took..."
-						$("#cycleNumOfNum").html("PCR took " + humanTime(status["timeElapsed"]));
+						$("#cycleNumOfNum").html("PCR took " + humanTime(status["e"]));
 						// i.e. hide the "Holding for 10 sec", just show "Holding"
 						$("#stepRemaining").hide();
 						// Current step name
@@ -1067,10 +1083,7 @@
 			var stopPCR = 's=ACGTC&c=stop';
 			// contrast
 			stopPCR += '&t=50';
-			// turn off lid
-			stopPCR += '&l=0';
-			// keep the protocol name the same
-			//stopPCR += '&n=Bio on the Bay';
+			// keep the protocol name the 
 			// and increment the command id
 			stopPCR += '&d='+ (window.command_id + 1);
 			

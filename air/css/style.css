@@ -82,6 +82,11 @@ background-color: #6EABEB;
 border: #0064F4 1px solid;
 }
 
+.homeRunning{
+background-color: white;
+border: #0064F4 1px solid;
+}
+
 .unplugged
 {
 background-color: #bad9ff;
