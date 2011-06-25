@@ -100,6 +100,8 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define MAX_LID_PWM 255
 #define MIN_LID_PWM 0
 
+#define STARTUP_DELAY 5000
+
 //public
 Thermocycler::Thermocycler(boolean restarted):
   iRestarted(restarted),
@@ -233,6 +235,19 @@ void Thermocycler::Loop() {
   ReadLidTemp(); 
   
   switch (iProgramState) {
+  case EStartup:
+    if (millis() - iProgramStartTimeMs > STARTUP_DELAY) {
+      iProgramState = EStopped;
+      
+      if (!iRestarted && !ipSerialControl->CommandReceived()) {
+        //check for stored program
+        SCommand command;
+        if (ProgramStore::RetrieveProgram(command, (char*)ipSerialControl->GetBuffer()))
+          ProcessCommand(command);
+      }
+    }
+    break;
+
   case ELidWait:    
     if (iLidTemp >= iTargetLidTemp - LID_START_TOLERANCE) {
       //advance to running state
@@ -313,14 +328,8 @@ void Thermocycler::CheckPower() {
   float voltage = analogRead(0) * 5.0 / 1024 * 10 / 3; // 10/3 is for voltage divider
   boolean externalPower = digitalRead(A0); //voltage > 7.0;
   if (externalPower && iProgramState == EOff) {
-    iProgramState = EStopped;
-    
-    if (!iRestarted) {
-      //check for stored program
-      SCommand command;
-      if (ProgramStore::RetrieveProgram(command, (char*)ipSerialControl->GetBuffer()))
-        ProcessCommand(command);
-    }
+    iProgramState = EStartup;
+    iProgramStartTimeMs = millis();
 
   } else if (!externalPower && iProgramState != EOff) {
     Stop();

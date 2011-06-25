@@ -170,6 +170,9 @@ void SerialControl::SendStatus()
   case Thermocycler::EComplete:
     szStatus = "complete";
     break;
+  case Thermocycler::EStartup:
+    szStatus = "startup";
+    break;
   case Thermocycler::EError:
   default:
     szStatus = "error";

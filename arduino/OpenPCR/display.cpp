@@ -98,11 +98,17 @@ void Display::Update() {
     break;
   
   case Thermocycler::EOff:
+  case Thermocycler::EStartup:
     iLcd.setCursor(6, 1);
     iLcd.print("OpenPCR");
 
-    iLcd.setCursor(4, 2);
-    iLcd.print("Powered Off");
+    if (state == Thermocycler::EOff) {
+      iLcd.setCursor(4, 2);
+      iLcd.print("Powered Off");
+    } else {
+      iLcd.setCursor(3, 2);
+      iLcd.print(VERSION_STRING);
+    }
     break;
   }
 }

@@ -55,6 +55,7 @@ public:
   
   void Process();
   byte* GetBuffer() { return buf; } //used for stored program parsing at start-up only if no serial command received
+  boolean CommandReceived() { return iCommandId != 0; }
   
 private:
   void ReadPacket();

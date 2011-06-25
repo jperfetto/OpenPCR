@@ -21,6 +21,8 @@
 
 //#define DEBUG_DISPLAY
 
+#define VERSION_STRING "Firmware v1.0"
+
 #include "WProgram.h"
 #include <avr/pgmspace.h>
 
