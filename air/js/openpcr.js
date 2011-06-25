@@ -846,7 +846,7 @@ function disableEnterKey(e)
 						writeCSV(prog_name, status["e"], secondsRemaining, 1, current_cycle, total_cycles, block_temp, lid_temp);
 						
 						}
-					else if (status["status"]=="complete")
+					else if (status["s"]=="complete")
 						{
 						// if the status of OpenPCR comes back as "complete"
 						// show the "Home" button
@@ -858,21 +858,18 @@ function disableEnterKey(e)
 						// hide "Time remaining" span
 						$("#timeRemaining").hide();
 						// update the "current temp"
-						var block_temp = status["blockTemp"];
+						var block_temp = status["b"];
 							$("#blockTemp").html(block_temp);
 						// update the lid temp
-						var lid_temp = status["lidTemp"];
+						var lid_temp = status["l"];
 						$("#lidTemp").html(lid_temp);
 						// replace the "cycle # of total#" span with "PCR took..."
 						$("#cycleNumOfNum").html("PCR took " + humanTime(status["timeElapsed"]));
 						// i.e. hide the "Holding for 10 sec", just show "Holding"
 						$("#stepRemaining").hide();
 						// Current step name
-								var current_step = status["stepName"];
+								var current_step = status["p"];
 								$("#currentStep").html(current_step);
-						//and "elapsed time" (elapsed time could be static)
-						//status["timeElapsed"]
-						//$("#minutesRemaining") = "PCR took" + humanTime(100);
 						}
 					else if (status["status"]=="stopped")
 						{
@@ -1032,6 +1029,7 @@ function disableEnterKey(e)
 	* Goes Home
 	*/	
 	$('#Home').live('click', function(){
+					stopPCR();
 					listExperiments();
 					sp2.showPanel(0);
 					setTimeout(clearForm,500);
