@@ -96,13 +96,18 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define CYCLE_START_TOLERANCE 0.2
 #define LID_START_TOLERANCE 1.0
 
-#define PLATE_PID_P 1000
-#define PLATE_PID_I 250
-#define PLATE_PID_D 250
+#define PLATE_PID_INC_P 1000
+#define PLATE_PID_INC_I 250
+#define PLATE_PID_INC_D 250
 
 #define PLATE_PID_DEC_P 500
 #define PLATE_PID_DEC_I 400
 #define PLATE_PID_DEC_D 200
+
+#define PLATE_PID_DEC_LOW_THRESHOLD 35
+#define PLATE_PID_DEC_LOW_P 2000
+#define PLATE_PID_DEC_LOW_I 100
+#define PLATE_PID_DEC_LOW_D 200
 
 #define LID_PID_P 100
 #define LID_PID_I 50
@@ -132,7 +137,7 @@ Thermocycler::Thermocycler():
   iLidTemp(0.0),
   iCycleStartTime(0),
   iRamping(true),
-  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_P, PLATE_PID_I, PLATE_PID_D, DIRECT),
+  iPlatePid(&iPlateTemp, &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D, DIRECT),
   iLidPid(&iLidTemp, &iLidPwm, &iTargetLidTemp, LID_PID_P, LID_PID_I, LID_PID_D, DIRECT),
   iTargetLidTemp(0) {
     
@@ -413,10 +418,13 @@ void Thermocycler::SetPlateTarget(double target) {
   if (iRamping) {
     if (iTargetPlateTemp >= iPlateTemp) {
       iDecreasing = false;
-      iPlatePid.SetTunings(PLATE_PID_P, PLATE_PID_I, PLATE_PID_D);
+      iPlatePid.SetTunings(PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D);
     } else {
       iDecreasing = true;
-      iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
+      if (iTargetPlateTemp < PLATE_PID_DEC_LOW_THRESHOLD)
+        iPlatePid.SetTunings(PLATE_PID_DEC_LOW_P, PLATE_PID_DEC_LOW_I, PLATE_PID_DEC_LOW_D);
+      else
+        iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
     }
   }
 }
@@ -449,7 +457,7 @@ void Thermocycler::ControlPeltier() {
     }
     iPlatePid.Compute();
     
-    if (iDecreasing && iTargetPlateTemp > 20) {
+    if (iDecreasing && iTargetPlateTemp > PLATE_PID_DEC_LOW_THRESHOLD) {
       if (iTargetPlateTemp < iPlateTemp)
         iPlatePid.ResetI();
       else
