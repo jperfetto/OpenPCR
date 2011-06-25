@@ -173,11 +173,8 @@ ProgramComponent* CommandParser::ParseCycle(char* pBuffer) {
   countBuf[countLen] = '\0';
   int cycCount = atoi(countBuf);
   
-  Cycle* pCycle = NULL;
-  if (cycCount > 1) {
-    pCycle = gpThermocycler->GetCyclePool().AllocateComponent();
-    pCycle->SetNumCycles(cycCount);
-  }
+  Cycle* pCycle = gpThermocycler->GetCyclePool().AllocateComponent();
+  pCycle->SetNumCycles(cycCount);
 	
   //add steps
   while (pStep != NULL) {
@@ -186,10 +183,7 @@ ProgramComponent* CommandParser::ParseCycle(char* pBuffer) {
     *pStepEnd++ = '\0';
 
     Step* pNewStep = ParseStep(pStep);
-    if (pCycle != NULL)
-      pCycle->AddComponent(pNewStep);
-    else
-      return pNewStep;
+    pCycle->AddComponent(pNewStep);
     pStep = strchr(pStepEnd, '[');
   }
 

@@ -62,7 +62,7 @@ public:
   int GetCurrentCycleNum();
   const char* GetProgName() { return iszProgName; }
   Display* GetDisplay() { return ipDisplay; }
-  ProgramComponentPool<Cycle, 2>& GetCyclePool() { return iCyclePool; }
+  ProgramComponentPool<Cycle, 4>& GetCyclePool() { return iCyclePool; }
   ProgramComponentPool<Step, 20>& GetStepPool() { return iStepPool; }
   
   boolean Ramping() { return iRamping; }
@@ -105,7 +105,7 @@ private:
   // components
   Display* ipDisplay;
   SerialControl* ipSerialControl;
-  ProgramComponentPool<Cycle, 2> iCyclePool;
+  ProgramComponentPool<Cycle, 4> iCyclePool;
   ProgramComponentPool<Step, 20> iStepPool;
   
   // state
