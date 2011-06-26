@@ -777,20 +777,30 @@
 					{
 					// for example, this should return (35[30,95,Denaturing][60,55,Annealing][60,72,Extension])
 					parsedProgram += stepToString(pcrProgram.steps[i]);
-					window.lessthan20steps = pcrProgram.steps[i].length;
+					window.lessthan20steps = pcrProgram.steps[i].steps.length;
 					}
 				}
 						
 			// verify that there are no more than 16 top level steps
+			air.trace(pcrProgram.steps.length + " : top level steps" );
 			if (pcrProgram.steps.length > 16)
 			{
 				alert("OpenPCR can handle a maximum of 16 top-level steps, you have " + stepCount + " steps");
 			}
 			
+			air.trace( window.lessthan20steps + " : cycle level steps" );
+			
 			// verify the cycle step has no more than 20 steps
-			if ( window.lessthan20steps > 20)
+			if ( window.lessthan20steps > 16)
 			{
 				alert("OpenPCR can handle a maximum of 20 cycle steps, you have " + window.cycleStepCount + " steps");
+			}
+			
+			// and check that the total overall is less than 30
+			var totalSteps = window.lessthan20steps + pcrProgram.steps.length;
+			if ( totalSteps > 30)
+			{
+				alert("OpenPCR can handle a maximum of 30 total steps, you have " + totalSteps + " steps");
 			}
 			
 			// check that the entire protocol isn't >252 bytes
@@ -809,16 +819,14 @@
 			//hide the home button on the running page
 			$("#homeButton").hide();
 			$('#starting').dialog('open');
-			// then close it after 1 second
-			setTimeout(function(){$('#starting').dialog('close');}, 5000);
-			setTimeout(function(){$('#ex2_p3').show();}, 5000);
 			// write out the file to the OpenPCR device
-			air.trace("before write\n");
 			var fileStream = new window.runtime.flash.filesystem.FileStream();
 			fileStream.open(controlFile, window.runtime.flash.filesystem.FileMode.WRITE); 
 			fileStream.writeUTFBytes(parsedProgram);
 			fileStream.close();
-			air.trace("after write\n");
+			// then close windows it after 1 second
+			setTimeout(function(){$('#starting').dialog('close');}, 5000);
+			setTimeout(function(){$('#ex2_p3').show();}, 5000);
 			// also, reset the command_id_counter
 			window.command_id_counter = 0;
 			// load the OpenPCR Running page
@@ -841,8 +849,8 @@
 			window.runningFile = path;
 			window.runningFile = window.runningFile.resolvePath("STATUS.TXT");
 
-		// refresh the running page every 333 ms
-			window.updateRunningPage = setInterval(updateRunning,333);
+		// refresh the running page every 1000 ms
+			window.updateRunningPage = setInterval(updateRunning,1000);
 		}
 	
 	/* updateRunning()
@@ -1113,8 +1121,9 @@
 			var stopPCR = 's=ACGTC&c=stop';
 			// contrast
 			stopPCR += '&t=50';
-			// increment the command id
-			stopPCR += '&d='+ (window.command_id + 1);
+			// increment the window.command id and send the new command to the device
+			window.command_id++;
+			stopPCR += '&d='+ window.command_id;
 			
 			// Write out the STOP command to CONTROL.TXT
 			// name of the output file
