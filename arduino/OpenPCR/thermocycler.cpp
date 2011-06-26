@@ -78,9 +78,14 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define PLATE_PID_INC_I 250
 #define PLATE_PID_INC_D 250
 
+#define PLATE_PID_DEC_HIGH_THRESHOLD 70
+#define PLATE_PID_DEC_HIGH_P 800
+#define PLATE_PID_DEC_HIGH_I 700
+#define PLATE_PID_DEC_HIGH_D 300
+
 #define PLATE_PID_DEC_P 500
 #define PLATE_PID_DEC_I 400
-#define PLATE_PID_DEC_D 200 //400
+#define PLATE_PID_DEC_D 200
 
 #define PLATE_PID_DEC_LOW_THRESHOLD 35
 #define PLATE_PID_DEC_LOW_P 2000
@@ -416,7 +421,9 @@ void Thermocycler::SetPlateTarget(double target) {
       iPlatePid.SetTunings(PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D);
     } else {
       iDecreasing = true;
-      if (iTargetPlateTemp < PLATE_PID_DEC_LOW_THRESHOLD)
+      if (iTargetPlateTemp > PLATE_PID_DEC_HIGH_THRESHOLD)
+        iPlatePid.SetTunings(PLATE_PID_DEC_HIGH_P, PLATE_PID_DEC_HIGH_I, PLATE_PID_DEC_HIGH_D);
+      else if (iTargetPlateTemp < PLATE_PID_DEC_LOW_THRESHOLD)
         iPlatePid.SetTunings(PLATE_PID_DEC_LOW_P, PLATE_PID_DEC_LOW_I, PLATE_PID_DEC_LOW_D);
       else
         iPlatePid.SetTunings(PLATE_PID_DEC_P, PLATE_PID_DEC_I, PLATE_PID_DEC_D);
