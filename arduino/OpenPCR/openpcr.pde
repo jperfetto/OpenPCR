@@ -34,7 +34,7 @@ void setup() {
   else
     strcpy(gszRestartDetect, RESTART_DETECTION_STRING);
     
-  gpThermocycler = new Thermocycler(restarted);
+  gpThermocycler = new Thermocycler(!(MCUSR & 1));
 }
 
 void loop() {
