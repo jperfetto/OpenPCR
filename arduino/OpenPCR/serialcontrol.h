@@ -19,10 +19,11 @@
 #ifndef _SERIALCONTROL_H_
 #define _SERIALCONTROL_H_
 
+#include "thermocycler.h"
+
 #define START_CODE    0xFF
 #define ESCAPE_CODE   0xFE
 
-class Thermocycler;
 class Display;
 class ProgramComponent;
 class Cycle;
@@ -55,6 +56,7 @@ public:
   
   void Process();
   byte* GetBuffer() { return buf; } //used for stored program parsing at start-up only if no serial command received
+  boolean CommandReceived() { return iReceivedStatusRequest; }
   
 private:
   void ReadPacket();
@@ -65,6 +67,10 @@ private:
   char* AddParam(char* pBuffer, char key, unsigned long val, boolean init = false);
   char* AddParam(char* pBuffer, char key, float val, int decimalDigits, boolean pad, boolean init = false);
   char* AddParam(char* pBuffer, char key, const char* szVal, boolean init = false);
+  char* AddParam_P(char* pBuffer, char key, const char* szVal, boolean init = false);
+  
+  const char* GetProgramStateString_P(Thermocycler::ProgramState state);
+  const char* GetThermalStateString_P(Thermocycler::ThermalState state);
   
 private:
   byte buf[MAX_COMMAND_SIZE + 1]; //read or write buffer
@@ -80,6 +86,7 @@ private:
   uint8_t lastPacketSeq, checksum;
   uint16_t packetLen, packetRealLen, iCommandId;
   boolean bEscapeCodeFound;
+  boolean iReceivedStatusRequest;
   
   Display* ipDisplay;
 };

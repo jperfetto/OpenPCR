@@ -29,6 +29,7 @@ class Thermocycler {
 public:
   enum ProgramState {
     EOff = 0,
+    EStartup,
     EStopped,
     ELidWait,
     ERunning,

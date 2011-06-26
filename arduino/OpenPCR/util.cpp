@@ -97,7 +97,9 @@ double absf(double val) {
 }
 
 char* rps(const char* progString) {
-  static char buf[32];
+  static char buf[21];
   strcpy_P(buf, progString);
   return buf;
 }
+
+

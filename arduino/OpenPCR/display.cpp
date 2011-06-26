@@ -29,7 +29,18 @@ const char HEATING_STR[] PROGMEM = "Heating";
 const char COOLING_STR[] PROGMEM = "Cooling";
 const char LIDWAIT_STR[] PROGMEM = "Heating Lid";
 const char STOPPED_STR[] PROGMEM = "Ready";
-const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";  
+const char RUN_COMPLETE_STR[] PROGMEM = "*** Run Complete ***";
+const char OPENPCR_STR[] PROGMEM = "OpenPCR";
+const char POWERED_OFF_STR[] PROGMEM = "Powered Off";
+const char VERSION_STR[] PROGMEM = "Firmware v1.0";
+const char ETA_OVER_10H_STR[] PROGMEM = "ETA: >10h";
+
+const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";
+const char CYCLE_FORM_STR[] PROGMEM = "%d of %d";
+const char ETA_HOURMIN_FORM_STR[] PROGMEM = "ETA: %d:%02d";
+const char ETA_SEC_FORM_STR[] PROGMEM = "ETA:  %2ds";
+const char BLOCK_TEMP_FORM_STR[] PROGMEM = "%s C";
+const char STATE_FORM_STR[] PROGMEM = "%-13s";
 
 Display::Display():
   iLcd(6, 7, 8, A5, 16, 17),
@@ -93,16 +104,22 @@ void Display::Update() {
       DisplayEta();
     } else if (state == Thermocycler::EComplete) {
       iLcd.setCursor(0, 3);
-      iLcd.print("*** Run Complete ***");
+      iLcd.print(rps(RUN_COMPLETE_STR));
     }
     break;
   
   case Thermocycler::EOff:
+  case Thermocycler::EStartup:
     iLcd.setCursor(6, 1);
-    iLcd.print("OpenPCR");
+    iLcd.print(rps(OPENPCR_STR));
 
-    iLcd.setCursor(4, 2);
-    iLcd.print("Powered Off");
+    if (state == Thermocycler::EOff) {
+      iLcd.setCursor(4, 2);
+      iLcd.print(rps(POWERED_OFF_STR));
+    } else {
+      iLcd.setCursor(3, 2);
+      iLcd.print(rps(VERSION_STR));
+    }
     break;
   }
 }
@@ -115,21 +132,19 @@ void Display::DisplayEta() {
   int secs = timeRemaining % 60;
   
   if (hours >= 10)
-    strcpy(timeString, "ETA: >10h");
+    strcpy_P(timeString, ETA_OVER_10H_STR);
   else if (mins >= 1 || hours >= 1)
-    sprintf(timeString, "ETA: %d:%02d", hours, mins);
+    sprintf_P(timeString, ETA_HOURMIN_FORM_STR, hours, mins);
   else
-    sprintf(timeString, "ETA:  %2ds", secs);
+    sprintf_P(timeString, ETA_SEC_FORM_STR, secs);
     
   iLcd.setCursor(11, 3);
   iLcd.print(timeString);
 }
 
 void Display::DisplayLidTemp() {
-  char pbuf[16];
   char buf[16];
-  strcpy_P(pbuf, LID_FORM_STR);
-  sprintf(buf, pbuf, (int)(GetThermocycler().GetLidTemp() + 0.5));
+  sprintf_P(buf, LID_FORM_STR, (int)(GetThermocycler().GetLidTemp() + 0.5));
 
   iLcd.setCursor(10, 2);
   iLcd.print(buf);
@@ -140,7 +155,7 @@ void Display::DisplayBlockTemp() {
   char floatStr[16];
   
   sprintFloat(floatStr, GetThermocycler().GetPlateTemp(), 1, true);
-  sprintf(buf, "%s C", floatStr);
+  sprintf_P(buf, BLOCK_TEMP_FORM_STR, floatStr);
  
   iLcd.setCursor(13, 0);
   iLcd.print(buf);
@@ -150,7 +165,7 @@ void Display::DisplayCycle() {
   char buf[16];
   
   iLcd.setCursor(0, 3);
-  sprintf(buf, "%d of %d", GetThermocycler().GetCurrentCycleNum(), GetThermocycler().GetNumCycles());
+  sprintf_P(buf, CYCLE_FORM_STR, GetThermocycler().GetCurrentCycleNum(), GetThermocycler().GetNumCycles());
   iLcd.print(buf);
 }
 
@@ -187,6 +202,6 @@ void Display::DisplayState() {
   }
   
   iLcd.setCursor(0, 0);
-  sprintf(buf, "%-13s", stateStr);
+  sprintf_P(buf, STATE_FORM_STR, stateStr);
   iLcd.print(buf);
 }
