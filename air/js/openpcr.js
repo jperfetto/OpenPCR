@@ -268,7 +268,7 @@
 										]
 										},
 							{   "type": "step",
-								"name": "Final Hold Temperature",
+								"name": "Final Hold",
 								"temp": "4",
 							    "time": 0
 							}
@@ -493,7 +493,7 @@
 				{
 				experimentJSON.steps.push(
 					{   "type": "step",
-						"name": "Final Hold Temperature",
+						"name": "Final Hold",
 						"time": 0,
 						"temp": holdArray.shift()
 					});
@@ -758,7 +758,7 @@
 					// then this loop needs to figure out when to add [1(  and )]
 						{
 							// if the previous element wasn't a step (i.e. null or cycle)
-							if (pcrProgram.steps[i-1].type != "step")
+							if (typeof pcrProgram.steps[i-1] == 'undefined' || pcrProgram.steps[i-1].type == "cycle")
 							{
 							parsedProgram += "(1";
 							}
@@ -766,7 +766,7 @@
 						parsedProgram += stepToString(pcrProgram.steps[i]);
 						
 						// if the next element isn't a step (i.e. null or cycle)
-							if (pcrProgram.steps[i-1].type != "step")
+							if (typeof pcrProgram.steps[i+1] == 'undefined' || pcrProgram.steps[i+1].type != "step")
 							{
 							parsedProgram += ")";
 							}
@@ -813,10 +813,12 @@
 			setTimeout(function(){$('#starting').dialog('close');}, 5000);
 			setTimeout(function(){$('#ex2_p3').show();}, 5000);
 			// write out the file to the OpenPCR device
+			air.trace("before write\n");
 			var fileStream = new window.runtime.flash.filesystem.FileStream();
 			fileStream.open(controlFile, window.runtime.flash.filesystem.FileMode.WRITE); 
 			fileStream.writeUTFBytes(parsedProgram);
 			fileStream.close();
+			air.trace("after write\n");
 			// also, reset the command_id_counter
 			window.command_id_counter = 0;
 			// load the OpenPCR Running page
@@ -829,7 +831,7 @@
 ******************/
 
 	/* running(path)
-	* Controls the "running" page of OpenPCR. Reads updates from the running.pcr control file on OpenPCR every 250 ms
+	* Controls the "running" page of OpenPCR. Reads updates from the running.pcr control file on OpenPCR continuously
 	* Input: path, the location of the running.pcr control file
 	*/
 	
@@ -839,8 +841,8 @@
 			window.runningFile = path;
 			window.runningFile = window.runningFile.resolvePath("STATUS.TXT");
 
-		// refresh the running page every 2 s
-			window.updateRunningPage = setInterval(updateRunning,1000);
+		// refresh the running page every 333 ms
+			window.updateRunningPage = setInterval(updateRunning,333);
 		}
 	
 	/* updateRunning()
@@ -852,7 +854,7 @@
 		updateFile = readDevice(window.runningFile);
 		if (updateFile==null || updateFile=="")
 			{
-			window.command_id_counter++;
+			//window.command_id_counter++;
 			}
 		else
 			{
@@ -878,41 +880,54 @@
   			
 				// make sure the status isn't blank
 				// if command id in the running file doesn't match, check again 50 times and then quit if there is still no match
-					if (status["d"]!=window.command_id)
-						{
-						if (window.command_id_counter > 50)
-							{
-							alert("OpenPCR command_id does not match running file, window.command_id_counter =" + window.command_id_counter +  " . This error should not appear\nstatus"+status["d"]+"\nwindow:"+window.command_id);
-							// quit
-							air.NativeApplication.nativeApplication.exit();
-							}
-						window.command_id_counter++;
-						}
-				// if command Id does match the running file, reset the counter
-					if (status["d"]==window.command_id)
+				if (status["d"]!=window.command_id)
 					{
-					window.command_id_counter = 0;
-					air.trace(window.command_id_counter);
+					if (window.command_id_counter > 50)
+						{
+						alert("OpenPCR command_id does not match running file, window.command_id_counter =" + window.command_id_counter +  " . This error should not appear\nstatus"+status["d"]+"\nwindow:"+window.command_id);
+						// quit
+						air.NativeApplication.nativeApplication.exit();
+						}
+					window.command_id_counter++;
+					// debug
+					air.trace("command_id_counter " + window.command_id_counter);
+					}
+				// if app command id matches the device command id, reset the counter
+				if (status["d"]==window.command_id)
+				{
+				window.command_id_counter = 0;
+				air.trace(window.command_id_counter);
+				}
+				
+				if (status["s"]=="running" || status["s"]=="lidwait")
+				{
+					//debug
+					air.trace(status["s"] + "\n");
+					// preset name
+					var prog_name = status["n"];
+					$("#runningHeader").html(prog_name);
+							
+					if (status["s"]=="lidwait")
+					{
+						// if the lid is heating say so
+						$("#progressbar").hide();
+						$("#timeRemaining").html("");
+						$("#minutesRemaining").html("Lid is heating");
 					}
 					
-				// if a protocol was just started and the lid is still heating to temperature
-				// while running, continue to update the 
-					if (status["s"]=="running" || status["s"]=="lidwait")
-					{
-					air.trace(status["s"] + "\n");
-						// preset name
-							var prog_name = status["n"];
-							$("#runningHeader").html(prog_name);
-							
-						// set variable for percentComplete
-						// never display less than 2% for UI purposes
+					if (status["s"]=="running")
+						{
+							$("#progressbar").show();
+							$("#timeRemaining").html("Time remaining:");
+							// otherwise, if running set variable for percentComplete
+							// never display less than 2% for UI purposes
 							var percentComplete = 100 * status["e"]/(status["e"]+status["r"]);
 							if (percentComplete < 2)
-							{ percentComplete = 2; }
-						// Progress bar
+								{ percentComplete = 2; }
+							// Progress bar
 							$("#progressbar").progressbar({ value: percentComplete});
-						
-						// Time Remaining
+							
+							// Time Remaining
 							var secondsRemaining = status["r"];
 							if (secondsRemaining == 0) 
 									{
@@ -923,24 +938,25 @@
 										var timeRemaining = humanTime(secondsRemaining);
 									}
 							$("#minutesRemaining").html(timeRemaining);
-							
+						}		
 						// Current step name
-							var current_step = status["p"];
-							$("#currentStep").html(current_step);
+						var current_step = status["p"];
+						$("#currentStep").html(current_step);
 					
 						// Current step time remaining
 						//	var step_seconds_remaining = status["step_seconds_remaining"];
 						//	$("#stepSecondsRemaining").html(step_seconds_remaining);
 						// Current cycle #
-							var current_cycle = status["c"];
-							$("#cycleNumber").html(current_cycle);
+						var current_cycle = status["c"];
+						$("#cycleNumber").html(current_cycle);
 							
 						// Total # of cycles
 							var total_cycles = status["u"];
 							$("#totalCycles").html(total_cycles);
 							
 						// Current temp
-							var block_temp = status["b"];
+							var block_temp = status["b"].toFixed(1);
+							air.trace(status["b"]);
 							$("#blockTemp").html(block_temp);
 							
 						// Current lid temp
@@ -1090,15 +1106,14 @@
 			
 			// Clear the values in the Running page
 			$("#runningHeader").html("");
-			$("#progressbar").progressbar({ value: ""});
+			$("#progressbar").progressbar({ value: "0"});
 			$("#minutesRemaining").html("");
 				
 			// Create the string to write out
 			var stopPCR = 's=ACGTC&c=stop';
 			// contrast
 			stopPCR += '&t=50';
-			// keep the protocol name the 
-			// and increment the command id
+			// increment the command id
 			stopPCR += '&d='+ (window.command_id + 1);
 			
 			// Write out the STOP command to CONTROL.TXT

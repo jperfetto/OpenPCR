@@ -208,6 +208,30 @@ a.small_button:active span {
     padding: 11px 9px; /* push text down 1px */
 }
 
+a.med_button {
+    -webkit-border-radius: 9px;
+-moz-border-radius: 9px;
+border-radius: 9px;
+width:315px;
+text-align:center;
+font-size:18px;
+outline:0;
+padding:16px;
+border: #B8B8B8 solid 1px;
+color: #000000;
+cursor:pointer;
+vertical-align:middle;
+padding-right: 10px; /* sliding doors padding */
+padding-left: 10px;
+text-decoration: none;
+font-weight: normal;
+}
+
+a.med_button:active span {
+    background-position: bottom left;
+    padding: 11px 9px; /* push text down 1px */
+}
+
 a {
   text-decoration:  none;
   color: black;
