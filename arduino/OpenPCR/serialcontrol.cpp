@@ -34,6 +34,7 @@ SerialControl::SerialControl(Display* pDisplay)
 , lastPacketSeq(0xff)
 , bEscapeCodeFound(false)
 , iCommandId(0)
+, iReceivedStatusRequest(false)
 {  
   Serial.begin(BAUD_RATE);
 }
@@ -140,6 +141,7 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
       break;
       
     case STATUS_REQ:
+      iReceivedStatusRequest = true;
       SendStatus();
       break;
     default:

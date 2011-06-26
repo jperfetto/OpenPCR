@@ -56,7 +56,7 @@ public:
   
   void Process();
   byte* GetBuffer() { return buf; } //used for stored program parsing at start-up only if no serial command received
-  boolean CommandReceived() { return iCommandId != 0; }
+  boolean CommandReceived() { return iReceivedStatusRequest; }
   
 private:
   void ReadPacket();
@@ -86,6 +86,7 @@ private:
   uint8_t lastPacketSeq, checksum;
   uint16_t packetLen, packetRealLen, iCommandId;
   boolean bEscapeCodeFound;
+  boolean iReceivedStatusRequest;
   
   Display* ipDisplay;
 };
