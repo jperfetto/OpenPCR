@@ -515,7 +515,7 @@ void Thermocycler::UpdateEta() {
   if (iProgramState == ERunning) {
     double secondPerDegree;
     if (iElapsedRampDegrees == 0 || !iHasCooled)
-      secondPerDegree = 0.8;
+      secondPerDegree = 1.0;
     else
       secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
       
