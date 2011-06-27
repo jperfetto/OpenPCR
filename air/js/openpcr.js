@@ -124,12 +124,15 @@
 		volInfo.addEventListener(air.StorageVolumeChangeEvent.STORAGE_VOLUME_MOUNT, function(e)
 			{
 				// if the name is OpenPCR, then set the window variable pluggedIn to "true". otherwise do nothing
+				//alert(e.storageVolume.name);
 				var pattern = /OPENPCR/;
 				// if the nativePath contains "OpenPCR"
-				if (pattern.test(e.rootDirectory.nativePath))
+				if (pattern.test(e.rootDirectory.nativePath) || pattern.test(e.storageVolume.name))
 					{
 					// re-set the path to OpenPCR
-					//alert(e.rootDirectory.nativePath);
+					
+					// hack alert! windows doesn't keep good track of the device path, so storing the drive name (i.e. E:) just in case
+					window.mountDirectory = e.rootDirectory.nativePath;
 					var deviceLocation = e.rootDirectory.nativePath;
 					var devicePath = new air.File(); 
 					devicePath.nativePath = deviceLocation;
@@ -157,18 +160,17 @@
 		// wait for a USB device to be unplugged
 		volInfo.addEventListener(air.StorageVolumeChangeEvent.STORAGE_VOLUME_UNMOUNT, function(e)
 			{
-				// air doesn't store the name of what was unplugged, so does the nativePath match OpenPCR
-				nativePath = e.rootDirectory.nativePath
+				// air doesn't store the name of what was unplugged, so does the nativePath match OpenPCR?
+				nativePath = e.rootDirectory.nativePath;
 				// if the device unplugged contained "OpenPCR"
 				var pattern = /OPENPCR/;
-				if (pattern.test(nativePath))
+				if (pattern.test(nativePath) || nativePath == window.mountDirectory)
 					{
 						if($("#Start").is(':visible'))
 						{
 						// if the "Start" button is visible, hide it and show "Unplugged" instead
 						$("#Start").hide();
 						$("#Unplugged").show();
-						
 						}
 						// and next time we check the status, make sure it shows unplugged
 						window.pluggedIn=false;
@@ -194,6 +196,8 @@
 					if (pattern.test(volumesList[i].name))
 						{
 						var deviceLocation = directory;
+						window.mountDirectory = directory;
+						alert(directory);
 						}
 				}
 			
@@ -892,9 +896,9 @@
 					{
 					if (window.command_id_counter > 50)
 						{
-						alert("OpenPCR command_id does not match running file, window.command_id_counter =" + window.command_id_counter +  " . This error should not appear\nstatus"+status["d"]+"\nwindow:"+window.command_id);
+						//alert("OpenPCR command_id does not match running file, window.command_id_counter =" + window.command_id_counter +  " . This error should not appear\nstatus"+status["d"]+"\nwindow:"+window.command_id);
 						// quit
-						air.NativeApplication.nativeApplication.exit();
+						//air.NativeApplication.nativeApplication.exit();
 						}
 					window.command_id_counter++;
 					// debug
@@ -1124,7 +1128,7 @@
 			// increment the window.command id and send the new command to the device
 			window.command_id++;
 			stopPCR += '&d='+ window.command_id;
-			
+			air.trace(stopPCR);
 			// Write out the STOP command to CONTROL.TXT
 			// name of the output file
 			var file = window.path.resolvePath("CONTROL.TXT"); 
