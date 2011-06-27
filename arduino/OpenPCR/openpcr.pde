@@ -24,17 +24,12 @@
 
 Thermocycler* gpThermocycler = NULL;
 
-#define RESTART_DETECTION_STRING "restart"
-char gszRestartDetect[sizeof(RESTART_DETECTION_STRING)] __attribute__ ((section (".noinit")));
-
 void setup() {
-  boolean restarted = false;
-  if (strncmp(gszRestartDetect, RESTART_DETECTION_STRING, strlen(RESTART_DETECTION_STRING)) == 0)
-    restarted = true;
-  else
-    strcpy(gszRestartDetect, RESTART_DETECTION_STRING);
+  //restart detection
+  boolean restarted = !(MCUSR & 1);
+  MCUSR &= 0xFE;
     
-  gpThermocycler = new Thermocycler(!(MCUSR & 1));
+  gpThermocycler = new Thermocycler(restarted);
 }
 
 void loop() {
