@@ -78,6 +78,11 @@ PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
 #define PLATE_PID_INC_I 250
 #define PLATE_PID_INC_D 250
 
+#define PLATE_PID_INC_LOW_THRESHOLD 40
+#define PLATE_PID_INC_LOW_P 600
+#define PLATE_PID_INC_LOW_I 200
+#define PLATE_PID_INC_LOW_D 400
+
 #define PLATE_PID_DEC_HIGH_THRESHOLD 70
 #define PLATE_PID_DEC_HIGH_P 800
 #define PLATE_PID_DEC_HIGH_I 700
@@ -418,7 +423,10 @@ void Thermocycler::SetPlateTarget(double target) {
   if (iRamping) {
     if (iTargetPlateTemp >= iPlateTemp) {
       iDecreasing = false;
-      iPlatePid.SetTunings(PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D);
+      if (iTargetPlateTemp < PLATE_PID_INC_LOW_THRESHOLD)
+        iPlatePid.SetTunings(PLATE_PID_INC_LOW_P, PLATE_PID_INC_LOW_I, PLATE_PID_INC_LOW_D);
+      else
+        iPlatePid.SetTunings(PLATE_PID_INC_P, PLATE_PID_INC_I, PLATE_PID_INC_D);
     } else {
       iDecreasing = true;
       if (iTargetPlateTemp > PLATE_PID_DEC_HIGH_THRESHOLD)
@@ -464,7 +472,7 @@ void Thermocycler::ControlPeltier() {
         iPlatePid.ResetI();
       else
         iDecreasing = false;
-    }
+    } 
     
     if (iPeltierPwm > 0)
       newDirection = HEAT;
@@ -507,7 +515,7 @@ void Thermocycler::UpdateEta() {
   if (iProgramState == ERunning) {
     double secondPerDegree;
     if (iElapsedRampDegrees == 0 || !iHasCooled)
-      secondPerDegree = 0.8;
+      secondPerDegree = 1.0;
     else
       secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
       

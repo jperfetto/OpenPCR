@@ -105,6 +105,26 @@ FAT_ROOT_DIRECTORY PROGMEM fileName =
 		.size						= 300
 };
 
+FAT_ROOT_DIRECTORY PROGMEM autorun = 
+{
+		.filename          			= "AUTORUN ",
+		.ext						= "INF",
+		.attribute 					= 0,
+		.reserved 					= 0,
+		.create_time_ms				= 0,
+		.create_time				= 0x8800,
+		.create_date				= 0x3ea1,
+		.access_date				= 0x3ea1,
+		.first_cluster_highorder	= 0,
+		.modified_time				= 0x8800,
+		.modified_date				= 0x3ea1,
+		.first_cluster_loworder		= 3,
+		.size						= 32
+};
+
+char PROGMEM autorun_content[] = "[autorun]\r\n";
+uint8_t autorun_content_length = 11;
+
 #define START_CODE				0xFF
 #define PACKET_HEADER_LENGTH	4
 
@@ -218,8 +238,11 @@ bool DataManager_ReadBlocks(uint32_t BlockAddress, uint16_t TotalBlocks)
 			//sector 2 where data start
 			Endpoint_Write_Byte(0xff);
 			Endpoint_Write_Byte(0xff);
+			//sector 3
+			Endpoint_Write_Byte(0xff);
+			Endpoint_Write_Byte(0xff);
 			
-			for (block_index=6; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
+			for (block_index=8; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
 				DoReadFlowControl();
 				Endpoint_Write_Byte(0x00);
 			}
@@ -233,7 +256,11 @@ bool DataManager_ReadBlocks(uint32_t BlockAddress, uint16_t TotalBlocks)
 				DoReadFlowControl();
 				Endpoint_Write_Byte(pgm_read_byte(((char*)&fileName)+block_index));
 			}
-			for (block_index=64; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
+			for (block_index=0;block_index<32; block_index++){
+				DoReadFlowControl();
+				Endpoint_Write_Byte(pgm_read_byte(((char*)&autorun)+block_index));
+			}
+			for (block_index=96; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
 				DoReadFlowControl();
 				Endpoint_Write_Byte(0x00);
 			}
@@ -272,6 +299,16 @@ bool DataManager_ReadBlocks(uint32_t BlockAddress, uint16_t TotalBlocks)
 				}
 			}
 
+			for (; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
+				DoReadFlowControl();
+				Endpoint_Write_Byte(0x00);
+			}
+		}
+		else if (BlockAddress == 68){	//AUTORUN.INF
+			for (block_index=0; block_index<autorun_content_length; block_index++){
+				DoReadFlowControl();
+				Endpoint_Write_Byte(pgm_read_byte(autorun_content+block_index));
+			}
 			for (; block_index<VIRTUAL_MEMORY_BLOCK_SIZE; block_index++){
 				DoReadFlowControl();
 				Endpoint_Write_Byte(0x00);
