@@ -20,6 +20,9 @@
 #include "thermocycler.h"
 #include "display.h"
 
+const char FLOAT_PAD_FORM_STR[] PROGMEM = "%3d.%d";
+const char FLOAT_FORM_STR[] PROGMEM = "%d.%d";
+
 void sprintFloat(char* str, float val, int decimalDigits, boolean pad) {
   long factor = pow(10, decimalDigits);
   long intVal;
@@ -33,9 +36,9 @@ void sprintFloat(char* str, float val, int decimalDigits, boolean pad) {
   int number = intVal / factor;
 
   if (pad)
-    sprintf(str, "%3d.%d", number, abs(decimal));
+    sprintf_P(str, FLOAT_PAD_FORM_STR, number, abs(decimal));
   else
-    sprintf(str, "%d.%d", number, abs(decimal));
+    sprintf_P(str, FLOAT_FORM_STR, number, abs(decimal));
 }
 
 void* operator new(size_t size) {
