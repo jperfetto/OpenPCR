@@ -1,0 +1,36 @@
+{
+	"name": "GMO Test - Carolina",
+	"steps": [
+		{
+			"type": "cycle",
+			"count": "32",
+			"steps": [
+				{
+					"type": "step",
+					"name": "Denaturing",
+					"temp": "94",
+					"time": "30"
+				},
+				{
+					"type": "step",
+					"name": "Annealing",
+					"temp": "60",
+					"time": "30"
+				},
+				{
+					"type": "step",
+					"name": "Elongation",
+					"temp": "72",
+					"time": "30"
+				}
+			]
+		},
+		{
+			"type": "step",
+			"name": "Final Hold",
+			"time": 0,
+			"temp": "4"
+		}
+	],
+	"lidtemp": "110"
+}

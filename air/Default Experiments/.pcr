@@ -1,0 +1,35 @@
+{
+	"name": "",
+	"steps": [
+		{
+			"type": "cycle",
+			"count": "35",
+			"steps": [
+				{
+					"type": "step",
+					"name": "Step",
+					"temp": "9",
+					"time": "9"
+				},
+				{
+					"type": "step",
+					"name": "Step",
+					"temp": "9",
+					"time": "9"
+				},
+				{
+					"type": "step",
+					"name": "Step",
+					"temp": "9",
+					"time": "9"
+				}
+			]
+		},
+		{
+			"type": "step",
+			"name": "Final Hold Temperature",
+			"time": 0,
+			"temp": "4"
+		}
+	]
+}

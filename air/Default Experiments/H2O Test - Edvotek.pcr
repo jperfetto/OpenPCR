@@ -1,0 +1,48 @@
+{
+	"name": "H2O Test - Edvotek",
+	"steps": [
+		{
+			"type": "step",
+			"name": "Initial Step",
+			"temp": "95",
+			"time": "350"
+		},
+		{
+			"type": "cycle",
+			"count": "30",
+			"steps": [
+				{
+					"type": "Annealing",
+					"name": "Step",
+					"temp": "94",
+					"time": "45"
+				},
+				{
+					"type": "step",
+					"name": "Denaturing",
+					"temp": "50",
+					"time": "45"
+				},
+				{
+					"type": "step",
+					"name": "Elongation",
+					"temp": "72",
+					"time": "90"
+				}
+			]
+		},
+		{
+			"type": "step",
+			"name": "Final Step",
+			"temp": "72",
+			"time": "420"
+		},
+		{
+			"type": "step",
+			"name": "Final Hold",
+			"time": 0,
+			"temp": "4"
+		}
+	],
+	"lidtemp": "110"
+}
