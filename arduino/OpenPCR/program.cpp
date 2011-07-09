@@ -217,11 +217,13 @@ void ProgramStore::StoreProgram(const char* szProgram) {
     EEPROM.write(i, szProgram[i]);
 }
 
+#define PROG_START_STR "&c=start"
+const char PROG_START_STR_P[] PROGMEM = PROG_START_STR;
 boolean ProgramStore::RetrieveProgram(SCommand& command, char* pBuffer) {
   for (int i = 0; i < MAX_COMMAND_SIZE; i++)
     pBuffer[i] = EEPROM.read(i);
   
-  if (pBuffer[0] != 255) {
+  if (strncmp_P(pBuffer, PROG_START_STR_P, strlen(PROG_START_STR)) == 0) {
     //previous program stored
     CommandParser::ParseCommand(command, pBuffer);   
     return true;
