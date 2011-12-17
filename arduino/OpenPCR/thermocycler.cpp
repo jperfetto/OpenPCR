@@ -547,12 +547,16 @@ void Thermocycler::ProcessCommand(SCommand& command) {
     //find display cycle
     Cycle* pProgram = command.pProgram;
     Cycle* pDisplayCycle = pProgram;
+    int largestCycleCount = 0;
     
     for (int i = 0; i < pProgram->GetNumComponents(); i++) {
       ProgramComponent* pComp = pProgram->GetComponent(i);
       if (pComp->GetType() == ProgramComponent::ECycle) {
-        pDisplayCycle = (Cycle*)pComp;
-        break;
+        Cycle* pCycle = (Cycle*)pComp;
+        if (pCycle->GetNumCycles() > largestCycleCount) {
+          largestCycleCount = pCycle->GetNumCycles();
+          pDisplayCycle = pCycle;
+        }
       }
     }
     
