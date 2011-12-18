@@ -117,7 +117,7 @@ void Display::Update() {
       iLcd.setCursor(4, 2);
       iLcd.print(rps(POWERED_OFF_STR));
     } else {
-      iLcd.setCursor(3, 2);
+      iLcd.setCursor(2, 2);
       iLcd.print(rps(VERSION_STR));
     }
     break;
