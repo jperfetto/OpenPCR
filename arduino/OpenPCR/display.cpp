@@ -32,7 +32,7 @@ const char STOPPED_STR[] PROGMEM = "Ready";
 const char RUN_COMPLETE_STR[] PROGMEM = "*** Run Complete ***";
 const char OPENPCR_STR[] PROGMEM = "OpenPCR";
 const char POWERED_OFF_STR[] PROGMEM = "Powered Off";
-const char VERSION_STR[] PROGMEM = "Firmware v1.0.1";
+const char VERSION_STR[] PROGMEM = "Firmware v1.0.2";
 const char ETA_OVER_10H_STR[] PROGMEM = "ETA: >10h";
 
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";
@@ -44,14 +44,14 @@ const char STATE_FORM_STR[] PROGMEM = "%-13s";
 
 Display::Display():
   iLcd(6, 7, 8, A5, 16, 17),
-  iLastState(Thermocycler::EOff),
-  iContrast(10) {
+  iLastState(Thermocycler::EOff) {
 
   iLcd.begin(20, 4);
   iLastReset = millis();
   iszDebugMsg[0] = '\0';
   
   // Set contrast
+  iContrast = ProgramStore::RetrieveContrast();
   analogWrite(5, iContrast);
 }
 

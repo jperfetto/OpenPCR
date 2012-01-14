@@ -566,6 +566,13 @@ void Thermocycler::ProcessCommand(SCommand& command) {
     
   } else if (command.command == SCommand::EStop) {
     GetThermocycler().Stop(); //redundant as we already stopped during parsing
+  
+  } else if (command.command == SCommand::EConfig) {
+    //update displayed
+    ipDisplay->SetContrast(command.contrast);
+    
+    //update stored contrast
+    ProgramStore::StoreContrast(command.contrast);
   }
 }
 

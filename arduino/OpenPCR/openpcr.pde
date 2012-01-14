@@ -24,7 +24,21 @@
 
 Thermocycler* gpThermocycler = NULL;
 
+boolean InitialStart() {
+  for (int i = 0; i < 50; i++) {
+    if (EEPROM.read(i) != 0xFF)
+      return false;
+  }
+  
+  return true;
+}
+
 void setup() {
+  //init factory settings
+  if (InitialStart()) {
+    EEPROM.write(0, 140); // set contrast to 140
+  }
+  
   //restart detection
   boolean restarted = !(MCUSR & 1);
   MCUSR &= 0xFE;

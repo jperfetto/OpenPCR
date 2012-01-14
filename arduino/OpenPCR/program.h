@@ -130,7 +130,8 @@ struct SCommand {
   enum TCommandType {
     ENone = 0,
     EStart,
-    EStop
+    EStop,
+    EConfig
   } command;
   int lidTemp;
   uint8_t contrast;
@@ -154,8 +155,13 @@ private:
 // Class ProgramStore
 class ProgramStore {
 public:
-  static void StoreProgram(const char* szProgram);
+  //reading
+  static uint8_t RetrieveContrast();
   static boolean RetrieveProgram(SCommand& command, char* pBuffer);
+
+  //writing
+  static void StoreContrast(uint8_t contrast);
+  static void StoreProgram(const char* szProgram);
 };
   
 

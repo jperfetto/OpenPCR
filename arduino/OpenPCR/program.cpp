@@ -132,13 +132,14 @@ void CommandParser::AddComponent(SCommand* pCommand, char key, char* szValue) {
       pCommand->command = SCommand::EStart;
     else if (strcmp(szValue, "stop") == 0)
       pCommand->command = SCommand::EStop;
-    break;
-  case 't':
-    pCommand->contrast = atoi(szValue);
+    else if (strcmp(szValue, "cfg") == 0)
+      pCommand->command = SCommand::EConfig;
     break;
   case 'l':
     pCommand->lidTemp = atoi(szValue);
     break;
+  case 'o':
+    pCommand->contrast = atoi(szValue);
   case 'd':
     pCommand->commandId = atoi(szValue);
     break;
@@ -212,16 +213,19 @@ Step* CommandParser::ParseStep(char* pBuffer) {
 
 ////////////////////////////////////////////////////////////////////
 // Class ProgramStore
-void ProgramStore::StoreProgram(const char* szProgram) {
-  for (int i = 0; i < MAX_COMMAND_SIZE; i++)
-    EEPROM.write(i, szProgram[i]);
+//
+// Note: Byte 0 of EEPROM is used for contrast
+//       Bytes 1 and onwards are used for stored program string
+//
+uint8_t ProgramStore::RetrieveContrast() {
+  return EEPROM.read(0);
 }
 
 #define PROG_START_STR "&c=start"
 const char PROG_START_STR_P[] PROGMEM = PROG_START_STR;
 boolean ProgramStore::RetrieveProgram(SCommand& command, char* pBuffer) {
   for (int i = 0; i < MAX_COMMAND_SIZE; i++)
-    pBuffer[i] = EEPROM.read(i);
+    pBuffer[i] = EEPROM.read(i + 1);
   
   if (strncmp_P(pBuffer, PROG_START_STR_P, strlen(PROG_START_STR)) == 0) {
     //previous program stored
@@ -232,3 +236,16 @@ boolean ProgramStore::RetrieveProgram(SCommand& command, char* pBuffer) {
     return false;
   }
 }
+
+
+
+void ProgramStore::StoreContrast(uint8_t contrast) {
+  EEPROM.write(0, contrast);
+}
+
+void ProgramStore::StoreProgram(const char* szProgram) {
+  for (int i = 0; i < MAX_COMMAND_SIZE; i++)
+    EEPROM.write(i + 1, szProgram[i]);
+}
+
+
