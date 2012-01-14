@@ -542,8 +542,6 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
 
 void Thermocycler::ProcessCommand(SCommand& command) {
   if (command.command == SCommand::EStart) {
-    ipDisplay->SetContrast(command.contrast);
-    
     //find display cycle
     Cycle* pProgram = command.pProgram;
     Cycle* pDisplayCycle = pProgram;

@@ -168,6 +168,7 @@ void SerialControl::SendStatus() {
   statusPtr = AddParam(statusPtr, 'l', (int)tc.GetLidTemp());
   statusPtr = AddParam(statusPtr, 'b', tc.GetPlateTemp(), 1, false);
   statusPtr = AddParam_P(statusPtr, 't', szThermState);
+  statusPtr = AddParam(statusPtr, 'o', GetThermocycler().GetDisplay()->GetContrast());
 
   if (state == Thermocycler::ERunning || state == Thermocycler::EComplete) {
     statusPtr = AddParam(statusPtr, 'e', tc.GetElapsedTimeS());

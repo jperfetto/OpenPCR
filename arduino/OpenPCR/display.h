@@ -28,6 +28,9 @@ class Display {
 public:
   Display();
   
+  //accessotrs
+  uint8_t GetContrast() { return iContrast; }
+  
   void SetContrast(uint8_t contrast);
   void Clear();
   void SetDebugMsg(char* szDebugMsg);
