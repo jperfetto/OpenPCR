@@ -21,7 +21,7 @@
 
 //#define DEBUG_DISPLAY
 
-#include "WProgram.h"
+#include "Arduino.h"
 #include <avr/pgmspace.h>
 
 class Thermocycler;

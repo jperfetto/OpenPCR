@@ -5,7 +5,7 @@
  * This Code is licensed under a Creative Commons Attribution-ShareAlike 3.0 Unported License.
  **********************************************************************************************/
 
-#include <WProgram.h>
+#include <Arduino.h>
 #include "PID_v1.h"
 
 /*Constructor (...)*********************************************************

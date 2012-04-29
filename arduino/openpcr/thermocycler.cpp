@@ -587,12 +587,12 @@ uint8_t Thermocycler::mcp342xRead(int32_t &data)
       return false;
     }
     for (int8_t i = 2; i >= 0; i--) {
-      p[i] = Wire.receive();
+      p[i] = Wire.read();
     }
     // extend sign bits
     p[3] = p[2] & 0X80 ? 0XFF : 0;
     // read config/status byte
-    uint8_t s = Wire.receive();
+    uint8_t s = Wire.read();
     if ((s & MCP342X_RES_FIELD) != MCP342X_18_BIT) {
       // not 18 bits - shift bytes for 12, 14, or 16 bits
       p[0] = p[1];
@@ -608,7 +608,7 @@ uint8_t Thermocycler::mcp342xRead(int32_t &data)
 uint8_t Thermocycler::mcp342xWrite(uint8_t config)
 {
   Wire.beginTransmission(MCP3422_ADDRESS);
-  Wire.send(config);
+  Wire.write(config);
   Wire.endTransmission();
 }
 //------------------------------------------------------------------------------
