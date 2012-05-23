@@ -36,7 +36,7 @@ boolean InitialStart() {
 void setup() {
   //init factory settings
   if (InitialStart()) {
-    EEPROM.write(0, 140); // set contrast to 140
+    EEPROM.write(0, 100); // set contrast to 100
   }
   
   //restart detection

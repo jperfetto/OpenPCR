@@ -23,8 +23,7 @@
 #include "program.h"
 #include "display.h"
 
-#define BAUD_RATE 9600
-#define STATUS_INTERVAL_MS 250
+#define BAUD_RATE 4800
 
 SerialControl::SerialControl(Display* pDisplay)
 : ipDisplay(pDisplay)
@@ -43,19 +42,19 @@ SerialControl::~SerialControl() {
 }
 
 void SerialControl::Process() {
-  ReadPacket();
+  while (ReadPacket()) {}
 }
 
 /////////////////////////////////////////////////////////////////
 // Private
-void SerialControl::ReadPacket()
+boolean SerialControl::ReadPacket()
 {
-  char dbuf[10];
   int availableBytes = Serial.available();
+  int origAvailableBytes = availableBytes;
  
-  if (packetState < STATE_PACKETHEADER_DONE){ //new packet
+  if (packetState < STATE_PACKETHEADER_DONE) { //new packet
     //sync with start code
-    while (availableBytes){
+    while (availableBytes) {
       byte incomingByte = Serial.read();
       availableBytes--;
       if (packetState == STATE_STARTCODE_FOUND){
@@ -72,7 +71,6 @@ void SerialControl::ReadPacket()
           buf[1] = packetLen & 0xff;
           buf[2] = (packetLen & 0xff00)>>8;
           bEscapeCodeFound = false;
-          checksum = 0;
           packetRealLen = 3;
           packetLen -= 3;
         }
@@ -95,7 +93,6 @@ void SerialControl::ReadPacket()
       byte incomingByte = Serial.read();
       availableBytes--;
       packetLen--;
-      checksum ^= incomingByte;
       if (incomingByte == ESCAPE_CODE)
         bEscapeCodeFound = true;
       else if (bEscapeCodeFound && incomingByte == START_CODE)
@@ -105,16 +102,18 @@ void SerialControl::ReadPacket()
       buf[packetRealLen++] = incomingByte; 
     }
     
-    if (packetLen == 0){
-      //checksum
-      //if (incomingByte == checksum){
-        ProcessPacket(buf, packetRealLen);
-      //  }
+    if (packetLen == 0) {
+      ProcessPacket(buf, packetRealLen);
   
       //reset, to find START_CODE again
       packetState = STATE_START;
     }
   }
+  
+  if (availableBytes < origAvailableBytes)
+    return true;
+  else
+    return false;
 }
 
 void SerialControl::ProcessPacket(byte* data, int datasize)
@@ -189,6 +188,7 @@ void SerialControl::SendStatus() {
   Serial.write((byte*)statusBuf, statusBufLen);
   for (int i = statusBufLen; i < STATUS_FILE_LEN; i++)
     Serial.write(0x20);
+  Serial.flush();
 }
 
 char* SerialControl::AddParam(char* pBuffer, char key, int val, boolean init) {

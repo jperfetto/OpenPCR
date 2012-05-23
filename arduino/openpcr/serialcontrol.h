@@ -59,7 +59,7 @@ public:
   boolean CommandReceived() { return iReceivedStatusRequest; }
   
 private:
-  void ReadPacket();
+  boolean ReadPacket(); //returns true if bytes were read
   void ProcessPacket(byte* data, int datasize);
   void SendStatus();
 
@@ -83,7 +83,7 @@ private:
   }PACKET_STATE;
   
   PACKET_STATE packetState;
-  uint8_t lastPacketSeq, checksum;
+  uint8_t lastPacketSeq;
   uint16_t packetLen, packetRealLen, iCommandId;
   boolean bEscapeCodeFound;
   boolean iReceivedStatusRequest;
