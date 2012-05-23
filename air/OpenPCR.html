@@ -11,11 +11,11 @@
   <link href="css/SprySlidingPanels.css" rel="stylesheet" type="text/css" />
   <script type="text/javascript" src="js/sprypanels.js"></script>
   
+  <script type="application/x-shockwave-flash" src="NativeApplicationUpdater.swf"></script>
   <script type="text/javascript" src="js/openpcr.js"></script>
   <script type="text/javascript" src="js/first_run.js"></script>
-  <script type="text/javascript" src="js/openpcr_update.js"></script>
-  
-  <script src="applicationupdater_ui.swf" type="application/x-shockwave-flash" />
+  <!--<script type="text/javascript" src="js/openpcr_update.js"></script>
+  <script src="applicationupdater_ui.swf" type="application/x-shockwave-flash" />-->
  
   <style type="text/css">
 hr, .clearAll {
@@ -53,7 +53,7 @@ hr, .clearAll {
 			<a href="#" onclick="listSubmit()"><img src="images/rerun.png" style="vertical-align:middle;"><span class="home_title">Re-run an experiment</span></a>
 			<div id="reRun" align="right"></div>
 		
-			<a class="small_button" id="About">About this app</a><br /><br /> <br /> 
+			<a class="small_button" id="About">About this app</a>   <a class="small_button" id="Settings">Adjust the screen contrast</a><br /><br /> <br /> 
 		</div>
 	<!-- END PANEL 1 -->
 	
@@ -169,12 +169,17 @@ hr, .clearAll {
 			</div>
 			<!-- about-dialog -->
 			<div id="about_dialog" title="About OpenPCR">
-				Version 1.1<br />
+				Version 1.0.1<br />
 				OpenPCR App<br />
 				http://openpcr.org<br />
 				email us: support@openpcr.org
 			</div>
-				
+			
+			<!-- settings-dialog -->
+			<div id="settings_dialog" title="Set Screen Contrast">
+				Drag the slider to adjust the screen's contrast.<br /><br />
+				<div id="contrast_slider"></div>
+			</div>	
 			
 			</div>
 		</div>

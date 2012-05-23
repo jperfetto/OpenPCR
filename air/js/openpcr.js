@@ -16,37 +16,59 @@
 * Home screen*
 ***************/
 	
-	// declare the appUpdater variable
-	var appUpdater;
-	
 	/* init()
 	* Called when the app is loaded.
 	* Checks to see if OpenPCR is plugged in (gets the device path if it is) and checks to see if there is an Air update available
 	*/
 	
+	
+	if (air.Capabilities.os.toLowerCase().indexOf("Linux") > -1)
+						{
+						alert("linux");
+						} 
+	// Application Updater code		
+		// declare the appUpdater variable
+		var appUpdater = new window.runtime.com.riaspace.nativeApplicationUpdater.NativeApplicationUpdater();
+		appUpdater.updateURL = 'http://api.openpcr.org/sw/air/appUpdater_descriptor.xml';
+		appUpdater.addEventListener("initialized", function(e)
+			{
+			appUpdater.checkNow();
+			});
+		
+		// initialize the appUpdater
+		appUpdater.initialize();
+
+		// when the status comes back
+		appUpdater.addEventListener("updateStatus", function(e)
+		{
+		if (e.available)
+			{ 
+			//e.preventDefault();
+			//alert(e.isDefaultPrevented());
+			alert("Update for OpenPCR is Available for Download! Please click 'OK' to restart to app");
+			}
+		});
+		
 	function init()
 		{
+		// hide Settings button by default
+		($("#Settings").hide());
+		
 		// get the location of OpenPCR (can be null)
 		var deviceLocation = pluggedIn();
-		
+					
 		// if OpenPCR is plugged in
 		if (deviceLocation != null)
-		{
-			// get the path for OpenPCR
-				var devicePath = new air.File(); 
-				devicePath.nativePath = deviceLocation;
-			// store the path to a window variable for later use
-				window.path = devicePath;
-				running(window.path);
-		}
+			{
+				// get the path for OpenPCR
+					var devicePath = new air.File(); 
+					devicePath.nativePath = deviceLocation;
+				// store the path to a window variable for later use
+					window.path = devicePath;
+					running(window.path);
+
+			}
 			
-		// Application Updater code		
-			setApplicationNameAndVersion();	
-			appUpdater = new air.ApplicationUpdaterUI();
-		// App updater config file
-			appUpdater.configurationFile = new air.File("app:/config/update-config.xml");
-			appUpdater.addEventListener(air.ErrorEvent.ERROR, onError);
-			appUpdater.initialize();
 		// Display the list of Saved Experiments on the home page
 			listExperiments();
 		// get ready to validate the OpenPCR form
@@ -131,14 +153,14 @@
 					{
 					// re-set the path to OpenPCR
 					
-					// hack alert! windows doesn't keep good track of the device path, so storing the drive name (i.e. E:) just in case
+					// hack, windows doesn't keep good track of the device path, so storing the drive name (i.e. E:) just in case
 					window.mountDirectory = e.rootDirectory.nativePath;
 					var deviceLocation = e.rootDirectory.nativePath;
 					var devicePath = new air.File(); 
 					devicePath.nativePath = deviceLocation;
 				// store the path to a window variable for later use
 					window.path = devicePath;
-					//window.path=deviceLocation.nativePath;
+					running(window.path);
 					// update the UI
 					if($("#Unplugged").is(':visible'))
 						{
@@ -151,6 +173,21 @@
 					// and, set the running page to be normal
 					$("#runningUnplugged").hide();
 					$("#runningPluggedIn").show();
+					
+					// Show the Settings button if the status file contains "o="
+					var contrast_pattern = /o=/;
+					// grab the text from STATUS.TXT
+					status_string = readDevice(window.runningFile);
+					// if it contains "o=", show the settings button, otherwise don't
+					if (contrast_pattern.test(status_string))
+						 {
+						 ($("#Settings").show());
+						 }
+					 else
+						 {
+						 //air.trace("doesn't have an o");
+						 }
+					
 					}
 				else
 					{
@@ -166,6 +203,9 @@
 				var pattern = /OPENPCR/;
 				if (pattern.test(nativePath) || nativePath == window.mountDirectory)
 					{
+						// hide the Settings button
+						($("#Settings").hide());
+					
 						if($("#Start").is(':visible'))
 						{
 						// if the "Start" button is visible, hide it and show "Unplugged" instead
@@ -178,6 +218,7 @@
 						// and, change the running screen to tell the user OpenPCR is unplugged
 						$("#runningUnplugged").show();
 						$("#runningPluggedIn").hide();
+						clearInterval(window.updateRunningPage);
 					}
 				else
 					{
@@ -197,7 +238,7 @@
 						{
 						var deviceLocation = directory;
 						window.mountDirectory = directory;
-						alert(directory);
+						//alert(directory);
 						}
 				}
 			
@@ -745,7 +786,8 @@
 			// Command
 			parsedProgram += "&c=start";
 			// Contrast
-			parsedProgram += "&t=50";
+			//// contrast no longer controlld here, delete this
+			////parsedProgram += "&t=50";
 			// Command id 
 			parsedProgram += "&d=" + window.command_id;
 			// Lid Temp NO DECIMALS. Not handeled by UI currently, but just making sure it doesn't make it to OpenPCR
@@ -787,32 +829,45 @@
 						
 			// verify that there are no more than 16 top level steps
 			air.trace(pcrProgram.steps.length + " : top level steps" );
-			if (pcrProgram.steps.length > 16)
-			{
-				alert("OpenPCR can handle a maximum of 16 top-level steps, you have " + stepCount + " steps");
-			}
-			
 			air.trace( window.lessthan20steps + " : cycle level steps" );
-			
-			// verify the cycle step has no more than 20 steps
-			if ( window.lessthan20steps > 16)
-			{
-				alert("OpenPCR can handle a maximum of 20 cycle steps, you have " + window.cycleStepCount + " steps");
-			}
-			
-			// and check that the total overall is less than 30
 			var totalSteps = window.lessthan20steps + pcrProgram.steps.length;
-			if ( totalSteps > 30)
-			{
-				alert("OpenPCR can handle a maximum of 30 total steps, you have " + totalSteps + " steps");
-			}
 			
 			// check that the entire protocol isn't >252 bytes
 			if (parsedProgram.length > 252)
 			{
+			air.trace("parsedProgram:" + parsedProgram);
 			alert("Oops, OpenPCR can't handle protocols longer than 252 characters, and this protocol is " + parsedProgram.length + " characters. The fix? You can try trimming down the name of your protocol or removing unnecessary steps");
 			return 0;
 			}
+			
+			// and check there aren't more than 16 steps at the top level
+			
+			// this is wrong
+			// there can be up to 16 initial, 16 cycle, and 16 final steps, but the total can't be more than 30
+			// else if (pcrProgram.steps.length > 16)
+// 			{
+// 				air.trace(parsedProgram);
+// 			alert("OpenPCR can handle a maximum of 16 top-level steps, you have " + pcrProgram.steps.length + " steps");
+// 				return 0;
+// 			}
+// 			
+			
+			// verify the cycle step has no more than 16 steps
+			else if ( window.lessthan20steps > 16)
+			{
+				air.trace(parsedProgram);
+			alert("OpenPCR can handle a maximum of 20 cycle steps, you have " + window.lessthan20steps + " steps");
+				return 0;
+			}
+			
+			// and check that the total overall is less than 25
+			else if ( totalSteps > 25)
+			{
+				air.trace(parsedProgram);
+			alert("OpenPCR can handle a maximum of 25 total steps, you have " + totalSteps + " steps");
+				return 0;
+			}
+			
 			//debug
 			air.trace(parsedProgram);
 			// go to the Running dashboard
@@ -822,6 +877,8 @@
 			scrollTo(0,0);
 			//hide the home button on the running page
 			$("#homeButton").hide();
+			// show the "stop" button
+			$("#cancelButton").show();
 			$('#starting').dialog('open');
 			// write out the file to the OpenPCR device
 			var fileStream = new window.runtime.flash.filesystem.FileStream();
@@ -870,7 +927,7 @@
 			}
 		else
 			{
-			air.trace(updateFile + '\n\n');
+			air.trace("updateFile: " + updateFile + '\n\n');
 			// split on &
 			var splitonAmp = updateFile.split("&");
 			// split on =
@@ -914,7 +971,7 @@
 				if (status["s"]=="running" || status["s"]=="lidwait")
 				{
 					//debug
-					air.trace(status["s"] + "\n");
+					air.trace(status["s"]);
 					// preset name
 					var prog_name = status["n"];
 					$("#runningHeader").html(prog_name);
@@ -923,13 +980,16 @@
 					{
 						// if the lid is heating say so
 						$("#progressbar").hide();
+						$("#cycleNumOfNum").hide();
 						$("#timeRemaining").html("");
 						$("#minutesRemaining").html("Lid is heating");
+						
+						// during lidwait, no protocol name is included, so include the protocol name from the previous page
+						$("#runningHeader").html(document.getElementById("ExperimentName").innerHTML);
 					}
 					
 					if (status["s"]=="running")
 						{
-							$("#progressbar").show();
 							$("#timeRemaining").html("Time remaining:");
 							// otherwise, if running set variable for percentComplete
 							// never display less than 2% for UI purposes
@@ -938,27 +998,20 @@
 								{ percentComplete = 2; }
 							// Progress bar
 							$("#progressbar").progressbar({ value: percentComplete});
+							$("#progressbar").show();
 							
 							// Time Remaining
 							var secondsRemaining = status["r"];
-							if (secondsRemaining == 0) 
-									{
-										timeRemaining='<span style="color:#04B109;">Done!</span>';
-									}
-								else
-									{
-										var timeRemaining = humanTime(secondsRemaining);
-									}
+							var timeRemaining = humanTime(secondsRemaining);
 							$("#minutesRemaining").html(timeRemaining);
 						}		
 						// Current step name
 						var current_step = status["p"];
 						$("#currentStep").html(current_step);
 					
-						// Current step time remaining
-						//	var step_seconds_remaining = status["step_seconds_remaining"];
-						//	$("#stepSecondsRemaining").html(step_seconds_remaining);
-						// Current cycle #
+						// Current cycle # of #
+						$("#cycleNumOfNum").show();
+						
 						var current_cycle = status["c"];
 						$("#cycleNumber").html(current_cycle);
 							
@@ -976,20 +1029,23 @@
 							$("#lidTemperature").html(lid_temp);
 						// For the debugger, write all 8 vars out to the history file
 						//writeCSV(document.getElementById("runningHeader").innerHTML, document.getElementById("minutesRemaining").innerHTML, 1, document.getElementById("cycleNumber").innerHTML, document.getElementById("totalCycles").innerHTML, document.getElementById("blockTemp").innerHTML, document.getElementById("lidTemp").innerHTML, document.getElementById("progressbar").innerHTML);
-						writeCSV(prog_name, status["e"], secondsRemaining, 1, current_cycle, total_cycles, block_temp, lid_temp);
+						//writeCSV(prog_name, status["e"], secondsRemaining, 1, current_cycle, total_cycles, block_temp, lid_temp);
 						
 						}
 					else if (status["s"]=="complete")
 						{
-						// if the status of OpenPCR comes back as "complete"
+						// if the status of OpenPCR comes back as "complete"		
 						// show the "Home" button
 						$("#homeButton").show();
 						// hide the cancel button
 						$("#cancelButton").hide();
+						// hide timeRemaining
+						$("#timeRemaining").hide()
+						// finish the progress bar
+						$("#progressbar").progressbar({ value: 100 });
 						// show the completed message
-						timeRemaining='<span style="color:#04B109;">Done!</span>';
-						// hide "Time remaining" span
-						$("#timeRemaining").hide();
+						minutesRemaining='<span style="color:#04B109;">Done!</span>';
+						$("#minutesRemaining").html(minutesRemaining);
 						// update the "current temp"
 						var block_temp = status["b"];
 							$("#blockTemp").html(block_temp);
@@ -1006,7 +1062,7 @@
 						}
 					else if (status["status"]=="stopped")
 						{
-						// nothing, this shouldn't be a status that is read in
+						// nothing
 						}
 					else if (status["status"]=="error")
 						{
@@ -1015,6 +1071,25 @@
 						}
 				}
 		
+		// Show the Settings button if the status file contains "o="
+				var contrast_pattern = /o=/ ;
+				// grab the text from STATUS.TXT
+				
+				status_string = updateFile;
+				air.trace("status: " + status_string);
+				
+				// if it contains "o=", show the settings button, otherwise don't
+				if (contrast_pattern.test(status_string))
+					{
+					($("#Settings").show());
+					}
+				else
+					{
+					air.trace("doesn't have an o");
+					
+					air.trace(window.runningFile);
+					}
+					
 		}
 		
 
@@ -1044,10 +1119,17 @@
 						processName = air.File.applicationDirectory.resolvePath("ncc");
 						//processName = new air.File("/bin/cat");
 						//alert("mac");
-						}  
+						}
+					else if (air.Capabilities.os.toLowerCase().indexOf("Linux") > -1)
+						{
+						// in application directory
+						processName = air.File.applicationDirectory.resolvePath("ncc_linx");
+						//processName = new air.File("/bin/cat");
+						alert("linux");
+						} 
 					else
 						{
-						alert("Error #810 - Hmmm, Mac or PC?");
+						alert("Error #810 - Can't tell if this is a Mac, PC, or Linux");
 						}
 
 					nativeProcessStartup.executable = processName;
@@ -1124,7 +1206,8 @@
 			// Create the string to write out
 			var stopPCR = 's=ACGTC&c=stop';
 			// contrast
-			stopPCR += '&t=50';
+			//// contrast no longer controlled here, delete
+			////stopPCR += '&t=50';
 			// increment the window.command id and send the new command to the device
 			window.command_id++;
 			stopPCR += '&d='+ window.command_id;
@@ -1192,11 +1275,25 @@
 	 $('#About').live('click', function(){
 						$('#about_dialog').dialog('open');
 				 });
+				 
+	/*  "Contrast" button on the OpenPCR Home page
+	* Sets the contrast for OpenPCR
+	*/		
+	 $('#Settings').live('click', function(){
+						$('#settings_dialog').dialog('open');
+				 });
 	
 	/*  "Home" button on the OpenPCR Form page
 	* Goes Home
 	*/	
 	$('#Home').live('click', function(){
+					listExperiments();
+					sp2.showPanel(0);
+					setTimeout(clearForm,500);
+				 });
+				 
+	/*  "Home" button on the OpenPCR Running page */	
+	$('#homeButton').live('click', function(){
 					stopPCR();
 					listExperiments();
 					sp2.showPanel(0);
@@ -1431,7 +1528,73 @@ $(function(){
 					}
 				}
 		});
-	
+		
+	// Settings Dialog			
+		$('#settings_dialog').dialog({
+			autoOpen: false,
+			width: 400,
+			modal: true,
+			draggable: false,
+			resizable: false,
+			buttons:
+				{
+				"Apply": function() {
+					 // grab the value of the slider
+					  contrast = $("#contrast_slider").slider("value");
+					// command id
+					window.command_id=Math.floor(Math.random()*65534);
+					// set the command
+					contrast_string = 's=ACGTC&c=cfg&o=' + contrast + '&d=' + command_id;
+					
+					// trace it
+					 air.trace("string: " + contrast_string);
+					
+					// Write out the  command to CONTROL.TXT
+					// name of the output file
+					if (window.path != null)
+						{
+					var file = window.path.resolvePath("CONTROL.TXT"); 
+					// write out all the variables, command id + PCR settings
+					var fileStream = new window.runtime.flash.filesystem.FileStream();
+					fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE); 
+					fileStream.writeUTFBytes(contrast_string); 
+					fileStream.close();
+						}
+					},
+					"OK": function() {
+					 // grab the value of the slider
+					  contrast = $("#contrast_slider").slider("value");
+					  window.command_id=Math.floor(Math.random()*65534);
+					  contrast_string = 's=ACGTC&c=cfg&o=' + contrast + '&d=' + command_id;
+					 // trace it
+					 air.trace("string: " + contrast_string);
+					 // Write out the  command to CONTROL.TXT
+					// name of the output file
+					if (window.path != null)
+					{
+					var file = window.path.resolvePath("CONTROL.TXT"); 
+					// write out all the variables, command id + PCR settings
+					var fileStream = new window.runtime.flash.filesystem.FileStream();
+					fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE); 
+					fileStream.writeUTFBytes(contrast_string); 
+					fileStream.close();
+					}
+					 // close the dialog window
+					 $(this).dialog("close"); 
+					}
+				
+				}
+		});
+		
+		$(function() {
+		$( "#contrast_slider" ).slider(
+			{
+			min: 1,
+			max: 250
+			}
+			);
+		});
+		
 	// Save Dialog			
 		$('#save_form').dialog({
 			autoOpen: false,
