@@ -13,24 +13,24 @@
 			"steps": [
 				{
 					"type": "step",
-					"name": "It's hot in here!",
-					"temp": "94",
+					"name": "Denaturing",
+					"temp": "95",
 					"time": "30"
 				},
 				{
 					"type": "step",
-					"name": "Chomping DNA",
+					"name": "Annealing",
 					"temp": "55",
 					"time": "30"
 				},
 				{
 					"type": "step",
-					"name": "Making more DNA",
+					"name": "Extending",
 					"temp": "72",
 					"time": "60"
 				}
 			]
-		}
+		},
 		{
 			"type": "step",
 			"name": "Final Hold",
