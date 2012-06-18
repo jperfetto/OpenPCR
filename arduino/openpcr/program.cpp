@@ -32,8 +32,8 @@ void Step::SetName(const char* szName) {
 
 void Step::Reset() {
   iStepReturned = false;
-  iStepDuration = 0;
-  iRampDuration = 0;
+  iStepDurationS = 0;
+  iRampDurationS = 0;
   iTemp = 0;
   iName[0] = '\0'; 
 }
@@ -219,8 +219,8 @@ Step* CommandParser::ParseStep(char* pBuffer) {
   Step* pStep = gpThermocycler->GetStepPool().AllocateComponent();
   
   pStep->SetName(pName);
-  pStep->SetStepDuration(stepDuration);
-  pStep->SetRampDuration(rampDuration);
+  pStep->SetStepDurationS(stepDuration);
+  pStep->SetRampDurationS(rampDuration);
   pStep->SetTemp(temp);
   return pStep;
 }

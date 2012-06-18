@@ -44,15 +44,15 @@ class Step: public ProgramComponent {
 public:  
   // accessors
   char* GetName() { return iName; }
-  unsigned int GetStepDuration() { return iStepDuration; }
-  unsigned long GetRampDuration() { return iRampDuration; }
+  unsigned int GetStepDurationS() { return iStepDurationS; }
+  unsigned long GetRampDurationS() { return iRampDurationS; }
   float GetTemp() { return iTemp; }
   virtual TType GetType() { return EStep; }
-  boolean IsFinal() { return iStepDuration == 0; }
+  boolean IsFinal() { return iStepDurationS == 0; }
 
   // mutators
-  void SetStepDuration(unsigned int stepDuration) { iStepDuration = stepDuration; }
-  void SetRampDuration(unsigned int rampDuration) { iRampDuration = rampDuration; }
+  void SetStepDurationS(unsigned int stepDurationS) { iStepDurationS = stepDurationS; }
+  void SetRampDurationS(unsigned int rampDurationS) { iRampDurationS = rampDurationS; }
   void SetTemp(float temp) { iTemp = temp; }
   void SetName(const char* szName);
   
@@ -63,8 +63,8 @@ public:
   virtual Step* GetNextStep();
 
 private:
-  unsigned int iStepDuration; //in seconds
-  unsigned long iRampDuration; //in seconds, refers to ramp before the current step hold
+  unsigned int iStepDurationS; //in seconds
+  unsigned long iRampDurationS; //in seconds, refers to ramp before the current step hold
   float iTemp; // C
   boolean iStepReturned;
   char iName[STEP_NAME_LENGTH];

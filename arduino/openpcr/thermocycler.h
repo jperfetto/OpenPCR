@@ -23,6 +23,8 @@
 #include "program.h"
 #include "thermistors.h"
 
+#define PLATE_FAST_RAMP_THRESHOLD_MS 1000
+
 class Display;
 class SerialControl;
 
@@ -79,6 +81,8 @@ public:
   double GetPlateTemp() { return iPlateThermistor.GetTemp(); }
   unsigned long GetTimeRemainingS() { return iEstimatedTimeRemainingS; }
   unsigned long GetElapsedTimeS() { return (millis() - iProgramStartTimeMs) / 1000; }
+  unsigned long GetRampElapsedTimeMs() { return millis() - iRampStartTime; }
+  boolean InControlledRamp() { return iRamping && ipCurrentStep->GetRampDurationS() * 1000 > PLATE_FAST_RAMP_THRESHOLD_MS && ipPreviousStep != NULL; }
   
   // control
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp); //takes ownership of cycles
@@ -121,6 +125,7 @@ private:
   Cycle* ipProgram;
   Cycle* ipDisplayCycle;
   char iszProgName[21];
+  Step* ipPreviousStep;
   Step* ipCurrentStep;
   unsigned long iCycleStartTime;
   boolean iRamping;
@@ -142,7 +147,7 @@ private:
   unsigned long iProgramHoldDurationS;
   double iProgramRampDegrees;
   double iElapsedRampDegrees;
-  unsigned long iElapsedRampDurationMs;
+  unsigned long iTotalElapsedRampDurationMs;
   double iRampStartTemp;
   unsigned long iRampStartTime;
   unsigned long iEstimatedTimeRemainingS;

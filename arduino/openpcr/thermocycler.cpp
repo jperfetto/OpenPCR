@@ -82,6 +82,7 @@ Thermocycler::Thermocycler(boolean restarted):
   ipDisplayCycle(NULL),
   ipSerialControl(NULL),
   iProgramState(EOff),
+  ipPreviousStep(NULL),
   ipCurrentStep(NULL),
   iThermalDirection(OFF),
   iPeltierPwm(0),
@@ -171,6 +172,7 @@ void Thermocycler::Stop() {
     iProgramState = EStopped;
   
   ipProgram = NULL;
+  ipPreviousStep = NULL;
   ipCurrentStep = NULL;
   
   iStepPool.ResetPool();
@@ -220,7 +222,6 @@ void Thermocycler::Loop() {
       iProgramState = ERunning;
       
       ipProgram->BeginIteration();
-      iRamping = true;
       AdvanceToNextStep();
       
       iProgramStartTimeMs = millis();
@@ -230,16 +231,16 @@ void Thermocycler::Loop() {
   case ERunning:
     //update program
     if (iProgramState == ERunning) {
-      if (iRamping && abs(ipCurrentStep->GetTemp() - GetPlateTemp()) <= CYCLE_START_TOLERANCE) {
+      if (iRamping && abs(ipCurrentStep->GetTemp() - GetPlateTemp()) <= CYCLE_START_TOLERANCE && GetRampElapsedTimeMs() > ipCurrentStep->GetRampDurationS() * 1000) {
         //eta updates
         iElapsedRampDegrees += absf(GetPlateTemp() - iRampStartTemp);
-        iElapsedRampDurationMs += millis() - iRampStartTime;
+        iTotalElapsedRampDurationMs += millis() - iRampStartTime;
         if (iRampStartTemp > GetPlateTemp())
           iHasCooled = true;
         iRamping = false;
         iCycleStartTime = millis();
         
-      } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetStepDuration() * 1000) {
+      } else if (!iRamping && !ipCurrentStep->IsFinal() && millis() - iCycleStartTime > (unsigned long)ipCurrentStep->GetStepDurationS() * 1000) {
         AdvanceToNextStep();
           
         //check for program completion
@@ -279,12 +280,13 @@ void Thermocycler::CheckPower() {
 
 //private
 void Thermocycler::AdvanceToNextStep() {
+  ipPreviousStep = ipCurrentStep;
   ipCurrentStep = ipProgram->GetNextStep();
   if (ipCurrentStep == NULL)
     return;
   
   //update eta calc params
-  if (iTargetPlateTemp != ipCurrentStep->GetTemp()) {
+  if (ipPreviousStep == NULL || ipPreviousStep->GetTemp() != ipCurrentStep->GetTemp()) {
     iRamping = true;
     iRampStartTime = millis();
     iRampStartTemp = GetPlateTemp();
@@ -297,7 +299,7 @@ void Thermocycler::AdvanceToNextStep() {
 }
 
 void Thermocycler::SetPlateControlStrategy() {
-  if (absf(iTargetPlateTemp - GetPlateTemp()) >= PLATE_BANGBANG_THRESHOLD) {
+  if (absf(iTargetPlateTemp - GetPlateTemp()) >= PLATE_BANGBANG_THRESHOLD && !InControlledRamp()) {
     iPlateControlMode = EBangBang;
     iPlatePid.SetMode(MANUAL);
   } else {
@@ -339,9 +341,14 @@ void Thermocycler::CalcPlateTarget() {
   if (ipCurrentStep == NULL)
     return;
   
-  if (iRamping) {
-    iTargetPlateTemp = ipCurrentStep->GetTemp();
+  if (InControlledRamp()) {
+    //controlled ramp
+    double tempDelta = ipCurrentStep->GetTemp() - ipPreviousStep->GetTemp();
+    double rampPoint = iTotalElapsedRampDurationMs / (ipCurrentStep->GetRampDurationS() * 1000);
+    iTargetPlateTemp = ipPreviousStep->GetTemp() + tempDelta * rampPoint;
+    
   } else {
+    //fast ramp
     iTargetPlateTemp = ipCurrentStep->GetTemp();
   }
 }
@@ -413,13 +420,13 @@ void Thermocycler::CalcInitEtaEstimate() {
   double lastTemp = GetPlateTemp();  
   iProgramHoldDurationS = 0;
   iProgramRampDegrees = 0;
-  iElapsedRampDurationMs = 0;
+  iTotalElapsedRampDurationMs = 0;
   iElapsedRampDegrees = 0;
   iEstimatedTimeRemainingS = 0;
   iHasCooled = false;
   
   while ((pStep = ipProgram->GetNextStep()) && !pStep->IsFinal()) {
-    iProgramHoldDurationS += pStep->GetStepDuration();
+    iProgramHoldDurationS += pStep->GetStepDurationS();
     if (lastTemp != pStep->GetTemp())
       iProgramRampDegrees += absf(lastTemp - pStep->GetTemp()) - CYCLE_START_TOLERANCE;
     lastTemp = pStep->GetTemp();
@@ -432,7 +439,7 @@ void Thermocycler::UpdateEta() {
     if (iElapsedRampDegrees == 0 || !iHasCooled)
       secondPerDegree = 1.0;
     else
-      secondPerDegree = iElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
+      secondPerDegree = iTotalElapsedRampDurationMs / 1000 / iElapsedRampDegrees;
       
     unsigned long estimatedDurationS = iProgramHoldDurationS + iProgramRampDegrees * secondPerDegree;
     unsigned long elapsedTimeS = GetElapsedTimeS();
