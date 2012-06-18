@@ -350,7 +350,7 @@ void Thermocycler::ControlPeltier() {
   ThermalDirection newDirection = OFF;
   
   if (iProgramState == ERunning || (iProgramState == EComplete && ipCurrentStep != NULL)) {
-    // Check whether we should switch to PID control
+    // Check whether we are nearing target and should switch to PID control
     if (iPlateControlMode == EBangBang && absf(iTargetPlateTemp - GetPlateTemp()) < PLATE_BANGBANG_THRESHOLD) {
       iPlateControlMode = EPIDPlate;
       iPlatePid.SetMode(AUTOMATIC);
@@ -358,9 +358,8 @@ void Thermocycler::ControlPeltier() {
     }
  
     // Apply control mode
-    if (iPlateControlMode == EBangBang) {
+    if (iPlateControlMode == EBangBang)
       iPeltierPwm = iTargetPlateTemp > GetPlateTemp() ? MAX_PELTIER_PWM : MIN_PELTIER_PWM;
-    }
     iPlatePid.Compute();
     
     if (iDecreasing && iTargetPlateTemp > PLATE_PID_DEC_LOW_THRESHOLD) {

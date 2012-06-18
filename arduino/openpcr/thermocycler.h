@@ -106,9 +106,6 @@ private:
   void SetPeltier(ThermalDirection dir, int pwm);
   
 private:
-  // constants
-  static const int PLATE_TEMP_SENSOR_PIN = 0;
-  
   // components
   Display* ipDisplay;
   SerialControl* ipSerialControl;
