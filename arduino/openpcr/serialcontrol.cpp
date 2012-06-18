@@ -1,6 +1,6 @@
 /*
  *  serialcontrol.cpp - OpenPCR control software.
- *  Copyright (C) 2010-2011 Josh Perfetto and Xia Hong. All Rights Reserved.
+ *  Copyright (C) 2010-2012 Josh Perfetto and Xia Hong. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -22,6 +22,7 @@
 #include "thermocycler.h"
 #include "program.h"
 #include "display.h"
+#include "thermistors.h"
 
 #define BAUD_RATE 4800
 

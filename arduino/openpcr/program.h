@@ -1,6 +1,6 @@
 /*
  *  program.h - OpenPCR control software.
- *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
+ *  Copyright (C) 2010-2012 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -44,13 +44,15 @@ class Step: public ProgramComponent {
 public:  
   // accessors
   char* GetName() { return iName; }
-  int GetDuration() { return iDuration; }
+  unsigned int GetStepDuration() { return iStepDuration; }
+  unsigned long GetRampDuration() { return iRampDuration; }
   float GetTemp() { return iTemp; }
   virtual TType GetType() { return EStep; }
-  boolean IsFinal() { return iDuration == 0; }
+  boolean IsFinal() { return iStepDuration == 0; }
 
   // mutators
-  void SetDuration(int duration) { iDuration = duration; }
+  void SetStepDuration(unsigned int stepDuration) { iStepDuration = stepDuration; }
+  void SetRampDuration(unsigned int rampDuration) { iRampDuration = rampDuration; }
   void SetTemp(float temp) { iTemp = temp; }
   void SetName(const char* szName);
   
@@ -61,7 +63,8 @@ public:
   virtual Step* GetNextStep();
 
 private:
-  int iDuration; //in seconds
+  unsigned int iStepDuration; //in seconds
+  unsigned long iRampDuration; //in seconds, refers to ramp before the current step hold
   float iTemp; // C
   boolean iStepReturned;
   char iName[STEP_NAME_LENGTH];

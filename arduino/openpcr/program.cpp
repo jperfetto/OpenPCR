@@ -1,6 +1,6 @@
 /*
  *  program.cpp - OpenPCR control software.
- *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
+ *  Copyright (C) 2010-2012 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -32,7 +32,8 @@ void Step::SetName(const char* szName) {
 
 void Step::Reset() {
   iStepReturned = false;
-  iDuration = 0;
+  iStepDuration = 0;
+  iRampDuration = 0;
   iTemp = 0;
   iName[0] = '\0'; 
 }
@@ -192,20 +193,34 @@ ProgramComponent* CommandParser::ParseCycle(char* pBuffer) {
 }
 
 Step* CommandParser::ParseStep(char* pBuffer) {
+  //parse temp
   char* pTemp = strchr(pBuffer, '|');
   *pTemp++ = '\0';
+  
+  //parse name
   char* pName = strchr(pTemp, '|');
   *pName++ = '\0';
-  char* pEnd = strchr(pName, ']');
+  
+  //parse ramp duration if exists
+  char* pEnd;
+  char* pRampDuration = strchr(pName, '|');
+  if (pRampDuration) {
+    *pRampDuration++ = '\0';
+    pEnd = strchr(pRampDuration, ']');
+  } else {
+    pEnd = strchr(pName, '|');
+  }
   *pEnd = '\0';
 	
-  int duration = atoi(pBuffer);
+  unsigned int stepDuration = atol(pBuffer);
+  unsigned int rampDuration = pRampDuration == NULL ? 0 : atol(pRampDuration);
   float temp = atof(pTemp);
 
   Step* pStep = gpThermocycler->GetStepPool().AllocateComponent();
   
   pStep->SetName(pName);
-  pStep->SetDuration(duration);
+  pStep->SetStepDuration(stepDuration);
+  pStep->SetRampDuration(rampDuration);
   pStep->SetTemp(temp);
   return pStep;
 }

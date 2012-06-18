@@ -1,5 +1,5 @@
 /*
- *  openpcr.pde - OpenPCR control software.
+ *  thermistors.h - OpenPCR control software.
  *  Copyright (C) 2010-2012 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
@@ -16,37 +16,29 @@
  *  the OpenPCR control software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LiquidCrystal.h>
-#include <EEPROM.h>
+#ifndef _LID_THERMISTOR_H_
+#define _LID_THERMISTOR_H_
 
-#include "pcr_includes.h"
-#include "thermocycler.h"
-
-Thermocycler* gpThermocycler = NULL;
-
-boolean InitialStart() {
-  for (int i = 0; i < 50; i++) {
-    if (EEPROM.read(i) != 0xFF)
-      return false;
-  }
+class CLidThermistor {
+public:
+  CLidThermistor();
+  double& GetTemp() { return iTemp; }
+  void ReadTemp();
   
-  return true;
-}
+private:
+  double iTemp;
+};
 
-void setup() {
-  //init factory settings
-  if (InitialStart()) {
-    EEPROM.write(0, 100); // set contrast to 100
-  }
-  
-  //restart detection
-  boolean restarted = !(MCUSR & 1);
-  MCUSR &= 0xFE;
-    
-  gpThermocycler = new Thermocycler(restarted);
-}
+class CPlateThermistor {
+public:
+  CPlateThermistor();
+  double& GetTemp() { return iTemp; }
+  void ReadTemp();
+private:
+   char SPITransfer(volatile char data);
+   
+private:
+  double iTemp;
+};
 
-void loop() {
-  gpThermocycler->Loop();
-}
-
+#endif

@@ -1,6 +1,6 @@
 /*
  *  thermocycler.h - OpenPCR control software.
- *  Copyright (C) 2010-2011 Josh Perfetto. All Rights Reserved.
+ *  Copyright (C) 2010-2012 Josh Perfetto. All Rights Reserved.
  *
  *  OpenPCR control software is free software: you can redistribute it and/or
  *  modify it under the terms of the GNU General Public License as published
@@ -21,10 +21,11 @@
 
 #include "PID_v1.h"
 #include "program.h"
+#include "thermistors.h"
 
 class Display;
 class SerialControl;
-  
+
 class Thermocycler {
 public:
   enum ProgramState {
@@ -51,6 +52,12 @@ public:
     COOL
   };
   
+  enum ControlMode {
+    EBangBang,
+    EPIDLid,
+    EPIDPlate
+  };
+  
   Thermocycler(boolean restarted);
   ~Thermocycler();
   
@@ -68,8 +75,8 @@ public:
   
   boolean Ramping() { return iRamping; }
   int GetPeltierPwm() { return iPeltierPwm; }
-  float GetPlateTemp() { return iPlateTemp; }
-  float GetLidTemp() { return iLidTemp; }
+  double GetLidTemp() { return iLidThermistor.GetTemp(); }
+  double GetPlateTemp() { return iPlateThermistor.GetTemp(); }
   unsigned long GetTimeRemainingS() { return iEstimatedTimeRemainingS; }
   unsigned long GetElapsedTimeS() { return (millis() - iProgramStartTimeMs) / 1000; }
   
@@ -86,18 +93,17 @@ private:
   void CheckPower();
   void ReadLidTemp();
   void ReadPlateTemp();
+  void CalcPlateTarget();
   void ControlPeltier();
   void ControlLid();
+  void CalcInitEtaEstimate();
   void UpdateEta();
  
   //util functions
-  void SetPlateTarget(double target);
+  void AdvanceToNextStep();
+  void SetPlateControlStrategy();
   void SetLidTarget(double target);
   void SetPeltier(ThermalDirection dir, int pwm);
-  uint8_t mcp342xWrite(uint8_t config);
-  uint8_t mcp342xRead(int32_t &data);
-  float TableLookup(const unsigned long lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
-  float TableLookup(const unsigned int lookupTable[], unsigned int tableSize, int startValue, unsigned long searchValue);
   
 private:
   // constants
@@ -106,14 +112,14 @@ private:
   // components
   Display* ipDisplay;
   SerialControl* ipSerialControl;
+  CLidThermistor iLidThermistor;
+  CPlateThermistor iPlateThermistor;
   ProgramComponentPool<Cycle, 4> iCyclePool;
   ProgramComponentPool<Step, 20> iStepPool;
   
   // state
   ProgramState iProgramState;
-  double iPlateTemp;
   double iTargetPlateTemp;
-  double iLidTemp;
   double iTargetLidTemp;
   Cycle* ipProgram;
   Cycle* ipDisplayCycle;
@@ -122,10 +128,6 @@ private:
   unsigned long iCycleStartTime;
   boolean iRamping;
   boolean iDecreasing;
-  enum ControlMode {
-    EBangBang,
-    EPID
-  };
   boolean iRestarted;
   
   ControlMode iPlateControlMode;
