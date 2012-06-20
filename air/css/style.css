@@ -380,7 +380,7 @@ padding:30px 0;
 
 #content{
 padding:10px 50px;
-width:300px;
+width:500px;
 margin:0 auto;
 }
 
@@ -441,4 +441,8 @@ color: #FF0067;
 .clear { /* generic container (i.e. div) for floating buttons */
     overflow: hidden;
     width: 100%;
+}
+
+.newline {
+	clear: both;
 }

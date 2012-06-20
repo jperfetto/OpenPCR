@@ -15,8 +15,8 @@
  <initialWindow> 
         <content>OpenPCR.html</content> 
         <visible>true</visible> 
-        <width>500</width> 
-        <height>700</height>
+        <width>700</width> 
+        <height>800</height>
         <resizable>false</resizable>
         <y>0</y>
          <x>0</x>

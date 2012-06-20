@@ -3,7 +3,7 @@
  * http://openpcr.org
  * Copyright (c) 2011 OpenPCR
  */
- 
+
  /*
  * This code is generally broken up into 3 sections, each having to do with the 3 main pages of the OpenPCR interface
  * 1. Home screen + initialization
@@ -298,24 +298,28 @@
 											{ "type": "step",
 												"name": "Denaturing",
 											  "time": "",
-												"temp": ""
+												"temp": "",
+												"rampDuration": 0
 											},
 											{ "type": "step",
 												"name": "Annealing",
 											  "time": "",
-												"temp": ""
+												"temp": "",
+												"rampDuration": 0
 											},
 											{ "type": "step",
 												"name": "Extending",
 											  "time": "",
-												"temp": ""
+												"temp": "",
+												"rampDuration": 0
 											}
 										]
 										},
 							{   "type": "step",
 								"name": "Final Hold",
 								"temp": "4",
-							    "time": 0
+							  "time": 0,
+								"rampDuration": 0
 							}
 						],
 						"lidtemp": 110
@@ -476,15 +480,16 @@
 		experimentJSON.steps = [];
 		experimentJSON.lidtemp = lidTemp;
 		// Pre Steps
-		// every step will have 2 elements in preArray (temp,time)
-		preLength = (preArray.length)/2;
+		// every step will have 3 elements in preArray (Time, temp, rampDuration)
+		preLength = (preArray.length)/3;
 		for (a=0 ; a < preLength; a++)
 				{
 				experimentJSON.steps.push(
 					{   "type": "step",
 						"name": "Initial Step",
 						"temp": preArray.shift(),
-						"time": preArray.shift()
+						"time": preArray.shift(),
+						"rampDuration": preArray.shift()
 					});
 				}
 		
@@ -504,8 +509,8 @@
 				// then add the cycles
 				current = experimentJSON.steps.length-1;
 				
-				// every step will have 2 elements in cycleArray (Time and temp)
-				cycleLength = (cycleArray.length)/2;
+				// every step will have 3 elements in cycleArray (Time, temp, rampDuration)
+				cycleLength = (cycleArray.length)/3;
 				for (a=0 ; a < cycleLength; a++)
 					{
 						
@@ -514,22 +519,24 @@
 							"type": "step",
 							"name": "Step",
 							"temp": cycleArray.shift(),
-							"time": cycleArray.shift()
+							"time": cycleArray.shift(),
+							"rampDuration": cycleArray.shift()
 						});
 					}
 			}
 			
 			
-		// every step will have 2 elements in preArray (Time and temp)
+		// every step will have 3 elements in preArray (Time, temp, rampDuration)
 		// a better way to do this would be for a=0, postArray!=empty, a++
-		postLength = (postArray.length)/2;
+		postLength = (postArray.length)/3;
 		for (a=0 ; a < postLength; a++)
 				{
 				experimentJSON.steps.push(
 				{   "type": "step",
 					"name": "Final Step",
 					"temp": postArray.shift(),
-					"time": postArray.shift()
+					"time": postArray.shift(),
+					"rampDuration": postArray.shift()
 				});
 				}
 			
@@ -540,7 +547,8 @@
 					{   "type": "step",
 						"name": "Final Hold",
 						"time": 0,
-						"temp": holdArray.shift()
+						"temp": holdArray.shift(),
+						"rampDuration": 0
 					});
 				}
 					
@@ -665,11 +673,19 @@
 					step_name = step.steps[a].name;
 					step_temp = step.steps[a].temp;
 					step_time = step.steps[a].time;
+					step_rampDuration = step.steps[a].rampDuration;
+					if (step_rampDuration == null)
+						step_rampDuration = 0;
 					
 					// print HTML for the step
 					// min,max temp = -20, 105
 					// min,max time = 0, 6000, 1 decimal point
-					stepHTML += '<div class="step"><span id="step' + step_number + '_name" class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a><table><tr><th><label for="step' + step_number + '_temp">temp:</label> <div class="step' + step_number + '_temp"><input type="text" style="font-weight:normal;" class="required number textinput" name="step' + step_number + '_temp" id="step' + step_number + '_temp" value="' + step_temp + '" maxlength="4" min="-20" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th><th><label for="step' + step_number + '_time">time:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step' + step_number + '_time" id="step' + step_number + '_time" value="' + step_time + '" maxlength="4" min="0" max="6000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th></tr></table></div>';
+					stepHTML += '<div class="step"><span id="step' + step_number + '_name" class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>' +
+						'<table><tr>' +
+							'<th><label for="step' + step_number + '_temp">temp:</label> <div class="step' + step_number + '_temp"><input type="text" style="font-weight:normal;" class="required number textinput" name="step' + step_number + '_temp" id="step' + step_number + '_temp" value="' + step_temp + '" maxlength="4" min="-20" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>' +
+							'<th><label for="step' + step_number + '_time">step duration:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step' + step_number + '_time" id="step' + step_number + '_time" value="' + step_time + '" maxlength="4" min="0" max="6000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>' +
+							'<th><label for="step' + step_number + '_rampDuration">ramp duration:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step' + step_number + '_rampDuration" id="step' + step_number + '_rampDuration" value="' + step_rampDuration + '" maxlength="6" min="0" max="999999"  ></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">sec</span></th>' +
+						'</tr></table></div>';
 			
 					}
 		 }
@@ -681,14 +697,20 @@
 		 step_name = step.name;
 		 step_time = step.time;
 		 step_temp = step.temp;
+		 step_rampDuration = step.rampDuration;
+		 if (step_rampDuration == null)
+				 step_rampDuration = 0;
 		
 		// main HTML, includes name and temp
-		stepHTML += '<div class="step"><span id="' + step_number + '" class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a><table cellspacing="20"><tr><th><label>temp:</label> <div><input type="text" style="font-weight:normal;" class="required number textinput" value="'+ step_temp + '" maxlength="4" name="temp_' + step_number + '" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>';
+		stepHTML += '<div class="step"><span id="' + step_number + '" class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>' +
+			'<table cellspacing="20"><tr>' +
+				'<th><label>temp:</label> <div><input type="text" style="font-weight:normal;" class="required number textinput" value="'+ step_temp + '" maxlength="4" name="temp_' + step_number + '" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>';
 		
 		 // if the individual step has 0 time (or blank?) time, then it is a "hold" step and doesn't have a "time" component
 		if (step_time != 0)	
 				{
-				stepHTML += '<th><label>time:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="' + step_time + '" name="time_' + step_number + '" maxlength="4" min="0" max="6000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>';
+				stepHTML += '<th><label>step duration:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="' + step_time + '" name="time_' + step_number + '" maxlength="4" min="0" max="6000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>';
+				stepHTML += '<th><label>ramp duration:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="' + step_rampDuration + '" name="rampDuration_' + step_number + '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">sec</span></th>';
 				}
 		 }
 		else alert("Error #1986");
@@ -706,7 +728,8 @@
 			// if single step return something like (1[300|95|Denaturing])
 			if (inputJSON.type=="step")
 			{
-			stepString += "[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "]";			
+//			stepString += "[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "]";			
+			stepString += "[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "|" + inputJSON.rampDuration + "]";			
 			}
 			// if cycle return something like (35,[60|95|Step A],[30|95|Step B],[30|95|Step C])
 			else if (inputJSON.type=="cycle")
@@ -717,7 +740,8 @@
 				
 				for (a=0; a<inputJSON.steps.length; a++)
 						{
-						stepString += "[" + inputJSON.steps[a].time + "|" + inputJSON.steps[a].temp + "|" + inputJSON.steps[a].name.slice(0,13) + "]";
+//						stepString += "[" + inputJSON.steps[a].time + "|" + inputJSON.steps[a].temp + "|" + inputJSON.steps[a].name.slice(0,13) + "]";
+						stepString += "[" + inputJSON.steps[a].time + "|" + inputJSON.steps[a].temp + "|" + inputJSON.steps[a].name.slice(0,13) + "|" + inputJSON.steps[a].rampDuration + "]";
 						}
 				// close the stepString string
 				stepString += ")";
@@ -1479,7 +1503,18 @@
 			if (location=="postSteps") { step_name="Final Step" }
 			if (location=="cycleSteps") { step_name="Step" }
 			step_number = new Date().getTime();;
-			var step = '<div class="step"><span class="title">' + step_name + ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a><table cellspacing="20"><tr><th><label>temp</label> <div><input type="text" style="font-weight:normal;" class="required number textinput" value="" name="temp_' + step_number + '" maxlength="4" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th><th><label>time</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="time_' + step_number + '" maxlength="4" min="0" max="1000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th></tr></table></div>';
+			var step =
+				'<div class="step">' +
+					'<span class="title">' + step_name + ' </span>' +
+					'<a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>' +
+					'<table cellspacing="20">' +
+						'<tr>' +
+							'<th><label>temp</label><div><input type="text" style="font-weight:normal;" class="required number textinput" value="" name="temp_' + step_number + '" maxlength="4" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>' +
+							'<th><label>step duration</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="time_' + step_number + '" maxlength="4" min="0" max="1000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>' +
+							'<th><label>ramp duration</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="rampDuration_' + step_number + '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">sec</span></th>' +
+						'</tr>' +
+					'</table>' +
+				'</div>';
 				// append a new step to location
 				$('#' + location).append(step);
 				// make sure the form elements are editable
