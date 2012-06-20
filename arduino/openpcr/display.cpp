@@ -33,7 +33,7 @@ const char STOPPED_STR[] PROGMEM = "Ready";
 const char RUN_COMPLETE_STR[] PROGMEM = "*** Run Complete ***";
 const char OPENPCR_STR[] PROGMEM = "OpenPCR";
 const char POWERED_OFF_STR[] PROGMEM = "Powered Off";
-const char VERSION_STR[] PROGMEM = "Firmware v1.0.3";
+const char VERSION_STR[] PROGMEM = "Firmware v1.0.4";
 const char ETA_OVER_10H_STR[] PROGMEM = "ETA: >10h";
 
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";

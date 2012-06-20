@@ -344,7 +344,7 @@ void Thermocycler::CalcPlateTarget() {
   if (InControlledRamp()) {
     //controlled ramp
     double tempDelta = ipCurrentStep->GetTemp() - ipPreviousStep->GetTemp();
-    double rampPoint = iTotalElapsedRampDurationMs / (ipCurrentStep->GetRampDurationS() * 1000);
+    double rampPoint = (double)GetRampElapsedTimeMs() / (ipCurrentStep->GetRampDurationS() * 1000);
     iTargetPlateTemp = ipPreviousStep->GetTemp() + tempDelta * rampPoint;
     
   } else {
@@ -480,7 +480,6 @@ void Thermocycler::ProcessCommand(SCommand& command) {
       }
     }
     
-    //start program by persisting and resetting device to overcome memory leak in C library
     GetThermocycler().SetProgram(pProgram, pDisplayCycle, command.name, command.lidTemp);
     GetThermocycler().Start();
     
