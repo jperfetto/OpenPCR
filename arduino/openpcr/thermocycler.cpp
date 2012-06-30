@@ -59,12 +59,7 @@
 #define PLATE_PID_DEC_LOW_I 100
 #define PLATE_PID_DEC_LOW_D 200
 
-#define LID_PID_P 100
-#define LID_PID_I 50
-#define LID_PID_D 50
-
 #define PLATE_BANGBANG_THRESHOLD 2.0
-#define LID_BANGBANG_THRESHOLD 2.0
 
 #define MIN_PELTIER_PWM -1023
 #define MAX_PELTIER_PWM 1023
@@ -72,7 +67,14 @@
 #define MAX_LID_PWM 255
 #define MIN_LID_PWM 0
 
-#define STARTUP_DELAY 5000
+#define STARTUP_DELAY 4000
+
+//pid parameters
+const SPIDTuning LID_PID_GAIN_SCHEDULE[] = {
+  //maxTemp, kP, kI, kD
+  { 70, 40, 0.15, 60 },
+  { 200, 80, 1.1, 10 }
+};
 
 //public
 Thermocycler::Thermocycler(boolean restarted):
@@ -81,16 +83,15 @@ Thermocycler::Thermocycler(boolean restarted):
   ipProgram(NULL),
   ipDisplayCycle(NULL),
   ipSerialControl(NULL),
-  iProgramState(EOff),
+  iProgramState(EStartup),
   ipPreviousStep(NULL),
   ipCurrentStep(NULL),
   iThermalDirection(OFF),
   iPeltierPwm(0),
-  iLidPwm(0),
   iCycleStartTime(0),
   iRamping(true),
   iPlatePid(&iPlateThermistor.GetTemp(), &iPeltierPwm, &iTargetPlateTemp, PLATE_PID_INC_NORM_P, PLATE_PID_INC_NORM_I, PLATE_PID_INC_NORM_D, DIRECT),
-  iLidPid(&iLidThermistor.GetTemp(), &iLidPwm, &iTargetLidTemp, LID_PID_P, LID_PID_I, LID_PID_D, DIRECT),
+  iLidPid(LID_PID_GAIN_SCHEDULE, MIN_LID_PWM, MAX_LID_PWM),
   iTargetLidTemp(0) {
     
   ipDisplay = new Display();
@@ -113,8 +114,6 @@ Thermocycler::Thermocycler(boolean restarted):
   delay(10); 
 
   iPlatePid.SetOutputLimits(MIN_PELTIER_PWM, MAX_PELTIER_PWM);
-  iLidPid.SetOutputLimits(MIN_LID_PWM, MAX_LID_PWM);
-  iLidPid.SetMode(AUTOMATIC);
   
   // Peltier PWM
   TCCR1A |= (1<<WGM11) | (1<<WGM10);
@@ -143,7 +142,7 @@ int Thermocycler::GetCurrentCycleNum() {
 }
 
 Thermocycler::ThermalState Thermocycler::GetThermalState() {
-  if (iThermalDirection == EOff)
+  if (iProgramState == EStartup || iProgramState == EStopped)
     return EIdle;
   
   if (iRamping) {
@@ -164,12 +163,11 @@ void Thermocycler::SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char*
   ipDisplayCycle = pDisplayCycle;
 
   strcpy(iszProgName, szProgName);
-  SetLidTarget(lidTemp);
+  iTargetLidTemp = lidTemp;
 }
 
 void Thermocycler::Stop() {
-  if (iProgramState != EOff)
-    iProgramState = EStopped;
+  iProgramState = EStopped;
   
   ipProgram = NULL;
   ipPreviousStep = NULL;
@@ -184,8 +182,6 @@ void Thermocycler::Stop() {
 PcrStatus Thermocycler::Start() {
   if (ipProgram == NULL)
     return ENoProgram;
-  if (iProgramState == EOff)
-    return ENoPower;
   
   //advance to lid wait state
   iProgramState = ELidWait;
@@ -195,13 +191,9 @@ PcrStatus Thermocycler::Start() {
     
 // internal
 void Thermocycler::Loop() {
-  CheckPower();
-  iPlateThermistor.ReadTemp();
-  iLidThermistor.ReadTemp(); 
-  
   switch (iProgramState) {
   case EStartup:
-    if (millis() - iProgramStartTimeMs > STARTUP_DELAY) {
+    if (millis() > STARTUP_DELAY) {
       iProgramState = EStopped;
       
       if (!iRestarted && !ipSerialControl->CommandReceived()) {
@@ -255,27 +247,20 @@ void Thermocycler::Loop() {
       iRamping = false;
     break;
   }
- 
+  
+  //lid 
+  iLidThermistor.ReadTemp();
+  ControlLid();
+  
+  //plate  
+  iPlateThermistor.ReadTemp();
   CalcPlateTarget();
   ControlPeltier();
-  ControlLid();
-  UpdateEta();
   
+  //program
+  UpdateEta();
   ipDisplay->Update();
   ipSerialControl->Process();
-}
-
-void Thermocycler::CheckPower() {
-  float voltage = analogRead(0) * 5.0 / 1024 * 10 / 3; // 10/3 is for voltage divider
-  boolean externalPower = digitalRead(A0); //voltage > 7.0;
-  if (externalPower && iProgramState == EOff) {
-    iProgramState = EStartup;
-    iProgramStartTimeMs = millis();
-
-  } else if (!externalPower && iProgramState != EOff) {
-    Stop();
-    iProgramState = EOff;
-  }
 }
 
 //private
@@ -299,6 +284,9 @@ void Thermocycler::AdvanceToNextStep() {
 }
 
 void Thermocycler::SetPlateControlStrategy() {
+  if (InControlledRamp())
+    return;
+    
   if (absf(iTargetPlateTemp - GetPlateTemp()) >= PLATE_BANGBANG_THRESHOLD && !InControlledRamp()) {
     iPlateControlMode = EBangBang;
     iPlatePid.SetMode(MANUAL);
@@ -314,6 +302,7 @@ void Thermocycler::SetPlateControlStrategy() {
         iPlatePid.SetTunings(PLATE_PID_INC_LOW_P, PLATE_PID_INC_LOW_I, PLATE_PID_INC_LOW_D);
       else
         iPlatePid.SetTunings(PLATE_PID_INC_NORM_P, PLATE_PID_INC_NORM_I, PLATE_PID_INC_NORM_D);
+
     } else {
       iDecreasing = true;
       if (iTargetPlateTemp > PLATE_PID_DEC_HIGH_THRESHOLD)
@@ -323,17 +312,6 @@ void Thermocycler::SetPlateControlStrategy() {
       else
         iPlatePid.SetTunings(PLATE_PID_DEC_NORM_P, PLATE_PID_DEC_NORM_I, PLATE_PID_DEC_NORM_D);
     }
-  }
-}
-
-void Thermocycler::SetLidTarget(double target) {
-  iTargetLidTemp = target;
-  if (absf(iTargetLidTemp - GetLidTemp()) >= LID_BANGBANG_THRESHOLD) {
-    iLidControlMode = EBangBang;
-    iLidPid.SetMode(MANUAL);
-  } else {
-    iLidControlMode = EPIDLid;
-    iLidPid.SetMode(AUTOMATIC);
   }
 }
 
@@ -391,25 +369,10 @@ void Thermocycler::ControlPeltier() {
 }
 
 void Thermocycler::ControlLid() {
-  double drive = 0;
-  
-  if (iProgramState == ERunning || iProgramState == ELidWait) {
-    // Check whether we should switch to PID control
-    if (iLidControlMode == EBangBang && absf(iTargetLidTemp - GetLidTemp()) < LID_BANGBANG_THRESHOLD) {
-      iLidControlMode = EPIDLid;
-      iLidPid.SetMode(AUTOMATIC);
-      iLidPid.ResetI();
-    }
-    
-    if (iLidControlMode == EBangBang) {
-      iLidPwm = iTargetLidTemp > GetLidTemp() ? MAX_LID_PWM : MIN_LID_PWM;
-    }
-    iLidPid.Compute();
-    drive = iLidPwm;   
-  } else {
-    iLidPwm = 0;
-  }
-   
+  int drive = 0;  
+  if (iProgramState == ERunning || iProgramState == ELidWait)
+    drive = iLidPid.Compute(iTargetLidTemp, GetLidTemp());
+ 
   analogWrite(3, drive);
 }
 

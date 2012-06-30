@@ -125,34 +125,32 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
   uint8_t result = false;
   char* pCommandBuf;
   
-//  if (packetSeq != lastPacketSeq){ //not retransmission
-    switch(packetType){
-    case SEND_CMD:
-      data[datasize] = '\0';
-      SCommand command;
-      pCommandBuf = (char*)(data + sizeof(PCPPacket));
-      
-      //store start commands for restart
-      ProgramStore::StoreProgram(pCommandBuf);
-      
-      CommandParser::ParseCommand(command, pCommandBuf);
-      GetThermocycler().ProcessCommand(command);
-      iCommandId = command.commandId;
-      break;
-      
-    case STATUS_REQ:
-      iReceivedStatusRequest = true;
-      SendStatus();
-      break;
-    default:
-      break;
-   }
+  switch(packetType){
+  case SEND_CMD:
+    data[datasize] = '\0';
+    SCommand command;
+    pCommandBuf = (char*)(data + sizeof(PCPPacket));
+    
+    //store start commands for restart
+    ProgramStore::StoreProgram(pCommandBuf);
+    
+    CommandParser::ParseCommand(command, pCommandBuf);
+    GetThermocycler().ProcessCommand(command);
+    iCommandId = command.commandId;
+    break;
+    
+  case STATUS_REQ:
+    iReceivedStatusRequest = true;
+    SendStatus();
+    break;
+  default:
+    break;
+ }
 
-    lastPacketSeq = packetSeq;
-//  }
+  lastPacketSeq = packetSeq;
 }
 
-#define STATUS_FILE_LEN 128
+#define STATUS_FILE_LEN 80
 
 void SerialControl::SendStatus() {
   Thermocycler::ProgramState state = GetThermocycler().GetProgramState();
@@ -175,7 +173,7 @@ void SerialControl::SendStatus() {
     statusPtr = AddParam(statusPtr, 'r', tc.GetTimeRemainingS());
     statusPtr = AddParam(statusPtr, 'u', tc.GetNumCycles());
     statusPtr = AddParam(statusPtr, 'c', tc.GetCurrentCycleNum());
-    statusPtr = AddParam(statusPtr, 'n', tc.GetProgName());
+//    statusPtr = AddParam(statusPtr, 'n', tc.GetProgName());
     if (tc.GetCurrentStep() != NULL)
       statusPtr = AddParam(statusPtr, 'p', tc.GetCurrentStep()->GetName());
   }
@@ -189,7 +187,6 @@ void SerialControl::SendStatus() {
   Serial.write((byte*)statusBuf, statusBufLen);
   for (int i = statusBufLen; i < STATUS_FILE_LEN; i++)
     Serial.write(0x20);
-  Serial.flush();
 }
 
 char* SerialControl::AddParam(char* pBuffer, char key, int val, boolean init) {
@@ -260,7 +257,6 @@ const char STARTUP_STR[] PROGMEM = "startup";
 const char ERROR_STR[] PROGMEM = "error";
 const char* SerialControl::GetProgramStateString_P(Thermocycler::ProgramState state) {
   switch (state) {
-  case Thermocycler::EOff:
   case Thermocycler::EStopped:
     return STOPPED_STR;
   case Thermocycler::ELidWait:

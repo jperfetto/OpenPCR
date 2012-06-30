@@ -20,6 +20,7 @@
 #define _THERMOCYCLER_H_
 
 #include "PID_v1.h"
+#include "pid.h"
 #include "program.h"
 #include "thermistors.h"
 
@@ -31,8 +32,7 @@ class SerialControl;
 class Thermocycler {
 public:
   enum ProgramState {
-    EOff = 0,
-    EStartup,
+    EStartup = 0,
     EStopped,
     ELidWait,
     ERunning,
@@ -106,7 +106,6 @@ private:
   //util functions
   void AdvanceToNextStep();
   void SetPlateControlStrategy();
-  void SetLidTarget(double target);
   void SetPeltier(ThermalDirection dir, int pwm);
   
 private:
@@ -133,14 +132,12 @@ private:
   boolean iRestarted;
   
   ControlMode iPlateControlMode;
-  ControlMode iLidControlMode;
   
   // peltier control
   PID iPlatePid;
-  PID iLidPid;
+  CPIDController iLidPid;
   ThermalDirection iThermalDirection; //holds actual real-time state
   double iPeltierPwm;
-  double iLidPwm;
   
   // program eta calculation
   unsigned long iProgramStartTimeMs;

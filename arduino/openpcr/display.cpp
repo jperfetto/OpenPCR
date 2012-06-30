@@ -45,7 +45,7 @@ const char STATE_FORM_STR[] PROGMEM = "%-13s";
 
 Display::Display():
   iLcd(6, 7, 8, A5, 16, 17),
-  iLastState(Thermocycler::EOff) {
+  iLastState(Thermocycler::EStartup) {
 
   iLcd.begin(20, 4);
   iLastReset = millis();
@@ -109,18 +109,12 @@ void Display::Update() {
     }
     break;
   
-  case Thermocycler::EOff:
   case Thermocycler::EStartup:
     iLcd.setCursor(6, 1);
     iLcd.print(rps(OPENPCR_STR));
 
-    if (state == Thermocycler::EOff) {
-      iLcd.setCursor(4, 2);
-      iLcd.print(rps(POWERED_OFF_STR));
-    } else {
       iLcd.setCursor(2, 2);
       iLcd.print(rps(VERSION_STR));
-    }
     break;
   }
 }
