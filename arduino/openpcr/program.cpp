@@ -212,8 +212,8 @@ Step* CommandParser::ParseStep(char* pBuffer) {
   }
   *pEnd = '\0';
 	
-  unsigned int stepDuration = atol(pBuffer);
-  unsigned int rampDuration = pRampDuration == NULL ? 0 : atol(pRampDuration);
+  unsigned long stepDuration = atol(pBuffer);
+  unsigned long rampDuration = pRampDuration == NULL ? 0 : atol(pRampDuration);
   float temp = atof(pTemp);
 
   Step* pStep = gpThermocycler->GetStepPool().AllocateComponent();

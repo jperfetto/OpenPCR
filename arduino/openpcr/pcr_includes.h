@@ -20,6 +20,8 @@
 #define _PCR_INCLUDES_H_
 
 //#define DEBUG_DISPLAY
+#define OPENPCR_FIRMWARE_VERSION_STRING "1.0.5"
+#define PLATE_FAST_RAMP_THRESHOLD_MS 1000
 
 #include "Arduino.h"
 #include <avr/pgmspace.h>

@@ -150,7 +150,7 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
   lastPacketSeq = packetSeq;
 }
 
-#define STATUS_FILE_LEN 80
+#define STATUS_FILE_LEN 90
 
 void SerialControl::SendStatus() {
   Thermocycler::ProgramState state = GetThermocycler().GetProgramState();
@@ -167,13 +167,14 @@ void SerialControl::SendStatus() {
   statusPtr = AddParam(statusPtr, 'b', tc.GetPlateTemp(), 1, false);
   statusPtr = AddParam_P(statusPtr, 't', szThermState);
   statusPtr = AddParam(statusPtr, 'o', GetThermocycler().GetDisplay()->GetContrast());
+  statusPtr = AddParam(statusPtr, 'v', OPENPCR_FIRMWARE_VERSION_STRING);
 
   if (state == Thermocycler::ERunning || state == Thermocycler::EComplete) {
     statusPtr = AddParam(statusPtr, 'e', tc.GetElapsedTimeS());
     statusPtr = AddParam(statusPtr, 'r', tc.GetTimeRemainingS());
     statusPtr = AddParam(statusPtr, 'u', tc.GetNumCycles());
     statusPtr = AddParam(statusPtr, 'c', tc.GetCurrentCycleNum());
-//    statusPtr = AddParam(statusPtr, 'n', tc.GetProgName());
+    //statusPtr = AddParam(statusPtr, 'n', tc.GetProgName());
     if (tc.GetCurrentStep() != NULL)
       statusPtr = AddParam(statusPtr, 'p', tc.GetCurrentStep()->GetName());
   }
@@ -206,7 +207,7 @@ char* SerialControl::AddParam(char* pBuffer, char key, unsigned long val, boolea
     *pBuffer++ = '&';
   *pBuffer++ = key;
   *pBuffer++ = '=';
-  ltoa(val, pBuffer, 10);
+  ultoa(val, pBuffer, 10);
   while (*pBuffer != '\0')
     pBuffer++;
     

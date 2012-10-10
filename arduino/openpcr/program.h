@@ -51,8 +51,8 @@ public:
   boolean IsFinal() { return iStepDurationS == 0; }
 
   // mutators
-  void SetStepDurationS(unsigned int stepDurationS) { iStepDurationS = stepDurationS; }
-  void SetRampDurationS(unsigned int rampDurationS) { iRampDurationS = rampDurationS; }
+  void SetStepDurationS(unsigned long stepDurationS) { iStepDurationS = stepDurationS; }
+  void SetRampDurationS(unsigned long rampDurationS) { iRampDurationS = rampDurationS; }
   void SetTemp(float temp) { iTemp = temp; }
   void SetName(const char* szName);
   

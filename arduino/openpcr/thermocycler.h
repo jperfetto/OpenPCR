@@ -24,8 +24,6 @@
 #include "program.h"
 #include "thermistors.h"
 
-#define PLATE_FAST_RAMP_THRESHOLD_MS 1000
-
 class Display;
 class SerialControl;
 
@@ -82,7 +80,7 @@ public:
   unsigned long GetTimeRemainingS() { return iEstimatedTimeRemainingS; }
   unsigned long GetElapsedTimeS() { return (millis() - iProgramStartTimeMs) / 1000; }
   unsigned long GetRampElapsedTimeMs() { return millis() - iRampStartTime; }
-  boolean InControlledRamp() { return iRamping && ipCurrentStep->GetRampDurationS() * 1000 > PLATE_FAST_RAMP_THRESHOLD_MS && ipPreviousStep != NULL; }
+  boolean InControlledRamp() { return iRamping && ipCurrentStep->GetRampDurationS() > 0 && ipPreviousStep != NULL; }
   
   // control
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp); //takes ownership of cycles
@@ -100,7 +98,7 @@ private:
   void CalcPlateTarget();
   void ControlPeltier();
   void ControlLid();
-  void CalcInitEtaEstimate();
+  void PreprocessProgram();
   void UpdateEta();
  
   //util functions
@@ -142,9 +140,12 @@ private:
   // program eta calculation
   unsigned long iProgramStartTimeMs;
   unsigned long iProgramHoldDurationS;
-  double iProgramRampDegrees;
-  double iElapsedRampDegrees;
-  unsigned long iTotalElapsedRampDurationMs;
+  
+  unsigned long iProgramControlledRampDurationS;
+  double iProgramFastRampDegrees;
+  double iElapsedFastRampDegrees;
+  unsigned long iTotalElapsedFastRampDurationMs;
+  
   double iRampStartTemp;
   unsigned long iRampStartTime;
   unsigned long iEstimatedTimeRemainingS;

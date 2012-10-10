@@ -33,8 +33,7 @@ const char STOPPED_STR[] PROGMEM = "Ready";
 const char RUN_COMPLETE_STR[] PROGMEM = "*** Run Complete ***";
 const char OPENPCR_STR[] PROGMEM = "OpenPCR";
 const char POWERED_OFF_STR[] PROGMEM = "Powered Off";
-const char VERSION_STR[] PROGMEM = "Firmware v1.0.4";
-const char ETA_OVER_10H_STR[] PROGMEM = "ETA: >10h";
+const char ETA_OVER_1000H_STR[] PROGMEM = "ETA: >1000h";
 
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";
 const char CYCLE_FORM_STR[] PROGMEM = "%d of %d";
@@ -42,6 +41,7 @@ const char ETA_HOURMIN_FORM_STR[] PROGMEM = "ETA: %d:%02d";
 const char ETA_SEC_FORM_STR[] PROGMEM = "ETA:  %2ds";
 const char BLOCK_TEMP_FORM_STR[] PROGMEM = "%s C";
 const char STATE_FORM_STR[] PROGMEM = "%-13s";
+const char VERSION_FORM_STR[] PROGMEM = "Firmware v%s";
 
 Display::Display():
   iLcd(6, 7, 8, A5, 16, 17),
@@ -73,6 +73,8 @@ void Display::SetDebugMsg(char* szDebugMsg) {
 }
 
 void Display::Update() {
+  char buf[16];
+  
   Thermocycler::ProgramState state = GetThermocycler().GetProgramState();
   if (iLastState != state)
     iLcd.clear();
@@ -114,7 +116,8 @@ void Display::Update() {
     iLcd.print(rps(OPENPCR_STR));
 
       iLcd.setCursor(2, 2);
-      iLcd.print(rps(VERSION_STR));
+      sprintf_P(buf, VERSION_FORM_STR, OPENPCR_FIRMWARE_VERSION_STRING);
+      iLcd.print(buf);
     break;
   }
 }
@@ -126,14 +129,14 @@ void Display::DisplayEta() {
   int mins = (timeRemaining % 3600) / 60;
   int secs = timeRemaining % 60;
   
-  if (hours >= 10)
-    strcpy_P(timeString, ETA_OVER_10H_STR);
+  if (hours >= 1000)
+    strcpy_P(timeString, ETA_OVER_1000H_STR);
   else if (mins >= 1 || hours >= 1)
     sprintf_P(timeString, ETA_HOURMIN_FORM_STR, hours, mins);
   else
     sprintf_P(timeString, ETA_SEC_FORM_STR, secs);
-    
-  iLcd.setCursor(11, 3);
+  
+  iLcd.setCursor(20 - strlen(timeString), 3);
   iLcd.print(timeString);
 }
 
