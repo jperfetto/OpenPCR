@@ -36,7 +36,7 @@ void operator delete(void * ptr);
 extern "C" void __cxa_pure_virtual(void);
 
 //defines
-#define STEP_NAME_LENGTH       16
+#define STEP_NAME_LENGTH       14
 #define MAX_CYCLE_ITEMS        16
 #define MAX_COMMAND_SIZE      256
 
