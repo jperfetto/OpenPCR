@@ -150,7 +150,7 @@ void SerialControl::ProcessPacket(byte* data, int datasize)
   lastPacketSeq = packetSeq;
 }
 
-#define STATUS_FILE_LEN 90
+#define STATUS_FILE_LEN 100
 
 void SerialControl::SendStatus() {
   Thermocycler::ProgramState state = GetThermocycler().GetProgramState();
@@ -167,7 +167,6 @@ void SerialControl::SendStatus() {
   statusPtr = AddParam(statusPtr, 'b', tc.GetPlateTemp(), 1, false);
   statusPtr = AddParam_P(statusPtr, 't', szThermState);
   statusPtr = AddParam(statusPtr, 'o', GetThermocycler().GetDisplay()->GetContrast());
-  statusPtr = AddParam(statusPtr, 'v', OPENPCR_FIRMWARE_VERSION_STRING);
 
   if (state == Thermocycler::ERunning || state == Thermocycler::EComplete) {
     statusPtr = AddParam(statusPtr, 'e', tc.GetElapsedTimeS());
@@ -177,6 +176,9 @@ void SerialControl::SendStatus() {
     //statusPtr = AddParam(statusPtr, 'n', tc.GetProgName());
     if (tc.GetCurrentStep() != NULL)
       statusPtr = AddParam(statusPtr, 'p', tc.GetCurrentStep()->GetName());
+      
+  } else if (state == Thermocycler::EIdle) {
+    statusPtr = AddParam(statusPtr, 'v', OPENPCR_FIRMWARE_VERSION_STRING);
   }
   statusPtr++; //to include null terminator
   

@@ -146,10 +146,11 @@ Thermocycler::ThermalState Thermocycler::GetThermalState() {
     return EIdle;
   
   if (iRamping) {
-    if (iThermalDirection == HEAT)
-      return EHeating;
-    else
-      return ECooling;
+    if (ipPreviousStep != NULL) {
+      return ipCurrentStep->GetTemp() > ipPreviousStep->GetTemp() ? EHeating : ECooling;
+    } else {
+      return iThermalDirection == HEAT ? EHeating : ECooling;
+    }
   } else {
     return EHolding;
   }

@@ -49,7 +49,9 @@ Display::Display():
 
   iLcd.begin(20, 4);
   iLastReset = millis();
+#ifdef DEBUG_DISPLAY
   iszDebugMsg[0] = '\0';
+#endif
   
   // Set contrast
   iContrast = ProgramStore::RetrieveContrast();
@@ -67,7 +69,9 @@ void Display::SetContrast(uint8_t contrast) {
 }
   
 void Display::SetDebugMsg(char* szDebugMsg) {
+#ifdef DEBUG_DISPLAY
   strcpy(iszDebugMsg, szDebugMsg);
+#endif
   iLcd.clear();
   Update();
 }

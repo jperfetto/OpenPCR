@@ -45,7 +45,9 @@ private:
   
 private:
   LiquidCrystal iLcd;
+#ifdef DEBUG_DISPLAY
   char iszDebugMsg[21];
+#endif
   Thermocycler::ProgramState iLastState;
   unsigned long iLastReset;
   uint8_t iContrast;
