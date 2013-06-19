@@ -999,7 +999,8 @@
 				window.command_id_counter = 0;
 				air.trace(window.command_id_counter);
 				}
-				
+				if (Math.random()<0.01)
+					status["s"]="complete";
 				if (status["s"]=="running" || status["s"]=="lidwait")
 				{
 					//debug
