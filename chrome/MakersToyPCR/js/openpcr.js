@@ -47,11 +47,21 @@ function init() {
 	($("#Settings").hide());
 
 	// get the location of OpenPCR (can be null)
-	var deviceLocation = pluggedIn(function(port) {
+	scanAndDisplay();
+	listExperiments();
+}
+
+function checkPlug () {
+	scanAndDisplay(2500);
+};
+function scanAndDisplay (delay) {
+	chromeSerial.scan(function(port) {
 		var result = !!port;
 		var portMessage = (result)?("Device found on port " + port):"Device not found";
 		$("#portLabel").html(portMessage);
 		if (result) {
+			if (!window.checkPlugInterval)
+				window.clearInterval(window.checkPlugInterval);
 			window.pluggedIn = true;
 			console.log("Set #Start button visible.");
 			if($("#Unplugged").is(':visible')){
@@ -64,12 +74,13 @@ function init() {
 			checkFirmwareVersion(chromeSerial.firmwareVersion);
 		} else {
 			// Not plugged
+			if (!window.checkPlugInterval)
+				window.checkPlugInterval = setInterval(checkPlug, 2000);
 		}
-
 		$("#pcrForm").validate();
-	});
-	listExperiments();
+	}, delay);
 }
+
 
 function checkFirmwareVersion (version) {
 	console.log("Firmware version=" + version + ", Latest version=" + LATEST_FIRMWARE_VERSION);
@@ -121,14 +132,6 @@ function listSubmit() {
 	loadExperiment(experimentID);
 }
 
-/* pluggedIn()
- * Checks that a volume named "OpenPCR" is mounted on the computer
- * Sets up 2 listeners (MOUNT and UNMOUNT) and then checks to see if OpenPCR is already mounted
- * Returns: deviceLocation (null if not plugged in)
- */
-function pluggedIn(callback) {
-	chromeSerial.scan(callback);
-}
 
 /* loadExperiment();
  * loads the experiment with the given experimentID
@@ -856,7 +859,7 @@ function onReceiveStatus(message) {
 		if (status["d"] == window.command_id) {
 			window.command_id_counter = 0;
 		}
-		//if (Math.random()<0.05) status["s"]="complete"; //TODO debug
+		if (Math.random()<0.1) status["s"]="complete"; //TODO debug
 
 		var statusLid = status["x"].toFixed(1);
 		var statusPeltier = status["y"].toFixed(1);
