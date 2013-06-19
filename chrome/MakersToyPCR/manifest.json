@@ -1,0 +1,12 @@
+{
+	"name": "ChromePCR",
+	"description": "Simple Demo of chrome.serial",
+	"version": "0.1",
+	"app": {
+		"background": {
+			"scripts": ["background.js"]
+		}
+	},
+	"icons": { "16": "img/icon16.png", "128": "img/icon128.png" },
+	"permissions": ["serial","storage","fileSystem","fileSystem.write"]
+}

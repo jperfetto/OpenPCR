@@ -11,3 +11,5 @@
 *.s
 .dep
 usb/default
+.project
+.gitignore

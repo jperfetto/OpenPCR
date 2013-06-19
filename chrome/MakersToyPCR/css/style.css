@@ -1,0 +1,462 @@
+/*
+Theme Name: OpenPCR
+Author: Tito Jankowski
+*/
+
+image:active span {
+    padding: 7px 0 3px 22px; /* push text down 1px */
+}
+
+#dropdown {
+padding:4px 2px;
+border:solid 1px #aacfe4;
+height:50px;
+margin:2px 0 20px 10px;
+font-size: 20px;
+text-align:center;
+}
+
+/* The main containers for the OpenPCR Form ------------------------------------------ */
+
+#lidContainer
+	{
+	border-top: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+	}
+	
+#preContainer
+	{
+	border-top: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+	}
+#cycleContainer
+	{
+	border: 1px solid grey;
+	padding: 10px;
+	}
+#postContainer 
+	{
+	border-bottom: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+	}
+#holdContainer 
+	{
+	border-bottom: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+	}
+
+#runningUnplugged
+	{
+	text-align: center;
+	}
+/* Buttons on the OpenPCR Form  ------------------------------------------  */
+
+a.options_button
+{
+float: right;
+margin-top: 10px;
+}
+
+a.home_button
+{
+float: left;
+margin-top:10px;
+}
+
+a.edit_button
+{
+margin-top: 10px;
+margin-bottom: 10px;
+}
+
+.start{
+background-color: #6EABEB;
+border: #0064F4 1px solid;
+}
+
+.homeRunning{
+background-color: white;
+border: #0064F4 1px solid;
+}
+
+.unplugged
+{
+background-color: #bad9ff;
+border: #0054cd 1px dashed;
+}
+
+.save
+{
+background-color:#cccccc;
+border: #939791 1px solid;
+}
+
+.saveEdits{
+background-color:#98fe86;
+border: #C6C6C6 1px solid;
+}
+
+.cancel {
+float: right;
+border: #B8B8B8 solid 1px;
+}
+
+.stop {
+align: right;
+}
+
+#presetName{
+font-size: 24px;
+text-align:center;
+padding-bottom:10px;
+}
+
+#save_form{
+text-align:center;}
+
+.Header {
+font-size: 30px;
+padding-bottom: 10px;
+text-align: center;
+font-weight: bold;
+color: #4C4C4C;
+}
+
+#runningStats {
+border: 1px #959595 solid;
+margin: 0px;
+padding: 10px;
+    -webkit-border-radius: 9px;
+-moz-border-radius: 9px;
+border-radius: 9px;
+
+}
+
+.runningTable {
+	width: 100%;
+	margin-bottom:10px;
+}
+.runningTable td,.runningTable th {
+	vertical-align:top;
+	text-align:left;
+	padding:4px!important;
+}
+#statsTable meter {
+	width:160px;
+}
+.runningHeaders{
+font-size:17px;
+padding-bottom:20px;
+}
+
+.runningNums{
+font-size:14px;
+}
+
+
+/* Other styles  ------------------------------------------  */
+a.button {
+    -webkit-border-radius: 9px;
+-moz-border-radius: 9px;
+border-radius: 9px;
+width:315px;
+text-align:center;
+font-weight:;
+font-size:18px;
+outline:0;
+padding:16px;
+cursor:pointer;
+display: block;
+float: left;
+margin-top:10px;
+text-decoration: none;
+}
+
+a.button span {
+    display: block;
+    line-height: 14px;
+    padding: 5px 0 5px 18px;
+}
+
+a.button:active {
+background-color: #B3B3B3;
+outline: none; /* hide dotted outline in Firefox */
+}
+
+a.button:active span {
+    padding: 7px 0 3px 22px; /* push text down 1px */
+}
+
+
+a.small_button {
+    -webkit-border-radius: 9px;
+-moz-border-radius: 9px;
+border-radius: 9px;
+width:80px;
+text-align:center;
+font-size:12px;
+outline:0;
+padding:5px;
+border: #B8B8B8 solid 1px;
+color: #000000;
+cursor:pointer;
+vertical-align:middle;
+padding-right: 10px; /* sliding doors padding */
+padding-left: 10px;
+text-decoration: none;
+font-weight: normal;
+}
+
+a.small_button:active span {
+    background-position: bottom left;
+    padding: 11px 9px; /* push text down 1px */
+}
+
+a.med_button {
+    -webkit-border-radius: 9px;
+-moz-border-radius: 9px;
+border-radius: 9px;
+width:315px;
+text-align:center;
+font-size:18px;
+outline:0;
+padding:16px;
+border: #B8B8B8 solid 1px;
+color: #000000;
+cursor:pointer;
+vertical-align:middle;
+padding-right: 10px; /* sliding doors padding */
+padding-left: 10px;
+text-decoration: none;
+font-weight: normal;
+}
+
+a.med_button:active span {
+    background-position: bottom left;
+    padding: 11px 9px; /* push text down 1px */
+}
+
+a {
+  text-decoration:  none;
+  color: black;
+}
+
+.home_title {
+font-size: 24px;
+padding-left: 10px;
+}
+
+.title {
+font-weight: bold;
+padding-top: 10px;
+padding-left: 3px;
+padding-right: 50px;
+}
+
+/* Running Page  ------------------------------------------  */*/
+
+#running_header {
+width: 100%;
+}
+
+
+#minutesRemaining {
+font-size:48px;
+text-align: center;
+padding-top: 0px;
+padding-bottom: 15px;
+}
+#about_dialog {
+	margin-top: 6px;
+}
+/* =Reset default browser CSS. Based on work by Eric Meyer: http://meyerweb.com/eric/tools/css/reset/index.html
+-------------------------------------------------------------- */
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+form, label, legend,
+caption, tbody, tfoot, thead{
+	background: transparent;
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+img
+{
+	vertical-align:middle;
+}
+
+th
+{
+padding-right: 20px;
+padding-left: 40px;
+}
+
+h1
+{
+font-weight: bold;
+color: #333333;
+}
+
+fieldset {
+border: 1px solid grey;
+padding: 10px;
+}
+
+body {
+	line-height: 1;
+}
+h1, h2, h3, h4, h5, h6 {
+	clear: both;
+}
+
+ol, ul {
+	list-style: none;
+}
+blockquote {
+	quotes: none;
+}
+blockquote:before, blockquote:after {
+	content: '';
+	content: none;
+}
+del {
+	text-decoration: line-through;
+}
+
+label {
+  color: black;
+  font-weight: normal;
+}
+
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+a img {
+	border: none;
+}
+
+.clear{
+clear:both;
+}
+
+a{
+outline:0;}
+
+/* =Layout -------------------------------------------------------------- */
+
+
+html{
+overflow-y:scroll;
+}
+
+
+body{
+font-family:helvetica,arial,sans-serif;
+background-color:white;
+}
+
+#wrapper{
+margin:0 auto;
+min-height:1200px;
+height:auto !important;
+height:1200px;
+position:relative;
+}
+
+#header{
+}
+
+/* Dialogs shouldn't have titles/close buttons */
+.ui-dialog-titlebar { display: none; } 
+
+/*contentbox*/
+
+#main{
+padding:30px 0;
+}
+
+#content{
+padding:10px 50px;
+width:500px;
+margin:0 auto;
+}
+
+.openpcr-form-div label{
+display:block;
+margin:5px 0 0px -55px;}
+
+.openpcr-form-div .textinput{
+margin:0;
+-webkit-border-radius: 9px;
+-moz-border-radius: 9px;
+border-radius: 9px;
+font-size:18px;
+font-family:helvetica,arial,sans-serif;
+border:0;
+background:#F0F0F0;
+width:70px;
+padding:9px 10px 7px;
+border: #B8B8B8 solid 1px;
+text-align: center;
+}
+
+.openpcr-form-div .textinput:focus{
+border:#6EABEB solid 3px;
+padding:7px 8px 5px;
+outline:0;
+}
+
+.openpcr-form-div input.invalid,
+.openpcr-form-div textarea.invalid{
+background-color:pink;
+}
+
+.openpcr-form-div .reqdinput{
+position:relative;
+}
+
+/* Positions the C and "sec" labels on the form */
+.openpcr-form-div span.units{
+font-size:12px;
+font-weight:normal;
+position:relative;
+left:25px;
+top: -23px;
+}
+
+label.error{
+font-size: 11px;
+float: right;
+position: relative;
+left: -60px;
+top: 0	px;
+font-weight:bold;
+color: #FF0067;
+}
+
+
+.clear { /* generic container (i.e. div) for floating buttons */
+    overflow: hidden;
+    width: 100%;
+}
+
+.newline {
+	clear: both;
+}

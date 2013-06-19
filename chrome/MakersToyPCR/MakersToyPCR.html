@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+  <script type="text/javascript" src="js/lib/jquery-1.9.1.min.js"></script>
+  <script type="text/javascript" src="js/lib/jquery-ui-1.10.3.custom.min.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.validate.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.dialog.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.button.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.slider.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.progressbar.js"></script>
+  
+  <link type="text/css" href="css/redmond/jquery-ui-1.8.13.custom.css" rel="stylesheet" />	
+  <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
+  <link href="css/SprySlidingPanels.css" rel="stylesheet" type="text/css" />
+  <script type="text/javascript" src="js/lib/sprypanels.js"></script>
+ 
+  <script type="text/javascript" src="js/chromeUtil.js"></script>
+  <script type="text/javascript" src="js/chromeSerial.js"></script>
+  <script type="text/javascript" src="js/openpcr.js"></script>
+  <script type="text/javascript" src="js/first_run.js"></script>
+  <script type="text/javascript" src="js/experiments/default_experiment.js"></script>
+  <script type="text/javascript" src="js/experiments/new_experiment.js"></script>
+ 
+  <style type="text/css">
+hr, .clearAll {
+	clear: both;
+}
+#example2.SlidingPanels {
+	float: left;
+}
+#example2 .SlidingPanelsContentGroup {
+	float: left;
+	width: 10000px;
+}
+#example2 .SlidingPanelsContent {
+	float: left;
+	width: 500px;
+}
+div.deviceLabel {
+	float:left;
+	font-weight:bold;
+	text-align:right;
+	width: 60px;
+	display:block;
+}
+div.deviceStatus {
+	float:left;
+	font-weight:normal;
+	text-align:left;
+	width: 80px;
+	display:block;
+}
+
+meter { -webkit-appearance: none; }
+::-webkit-meter-bar {
+    height: 12px;
+    background: #fff;
+    border: 1px solid #888;
+    box-shadow: inset 0px 1px 2px rgba(0,0,0,0.25);
+}
+#meterBlock::-webkit-meter-optimum-value { background: -webkit-linear-gradient(top, #bcdb84 0%,#5ba009 100%); }
+#meterLid::-webkit-meter-optimum-value { background: -webkit-linear-gradient(top, #a4e3ff 0%,#01a4ea 100%); }
+</style>
+</head>
+<body>
+<div id="content" role="main">
+	<div id="example2" class="SlidingPanels">
+	<div class="SlidingPanelsContentGroup">
+	
+	<!-- PANEL 1: Home Screen -->
+		<div id="ex1_p1" class="SlidingPanelsContent p1">
+			<div id="homeHeader" class="Header">Makers Toy PCR</div>
+			<br />
+			<!-- Create a new blank experiment -->
+			<a href="#" id="newExperimentButton"><img src="images/new.png" style="vertical-align:middle;" ><span class="home_title">Add a new experiment</span></a>
+			<br /><br /><br />
+
+			<!-- Rerun an experiment -->
+			<a href="#" id="listSubmitButton"><img src="images/rerun.png" style="vertical-align:middle;"><span class="home_title">Re-run an experiment</span></a>
+			<div id="reRun" align="right"></div>
+			<div id="portLabel"></div>
+			<a class="small_button" id="About">About this app</a>   
+			<a class="small_button" id="Settings">Adjust the screen contrast</a><br /><br />
+			<a class="small_button" id="ClearData">Clear all data(Debug TODO)</a>
+		</div>
+	<!-- END PANEL 1 -->
+	
+	<!-- PANEL 2: Experiment Screen -->
+			<div id="ex2_p2" class="SlidingPanelsContent p2">
+				<form class="cmxform" id="pcrForm" method="get" action="">
+				<div class="openpcr-form-div"> 
+				
+				<div class="Header"><a id="deleteButton" href="#"><img src="images/delete.png" height="30"></a> <span id="ExperimentName"></span> <a id="editButton" class="small_button">Edit</a></div>
+				
+				<!--<a id="singleTemp" class="edit small_button" href="#">Heat Block mode</a>-->
+				
+				<div id="lidContainer" style="display:none;">
+					<div id="lidTemp"></div>
+					</div>
+				<div id="preContainer" style="display:none;">
+					<div id="preSteps"></div>
+					<a id="initialStep" class="edit"href="#"><img src="images/plus.png" height="30"> Initial Step</a>
+					</div>
+				<div id="cycleContainer" style="display:none;">
+					<div id="cycleSteps"></div>
+					<a id="addStepButton" class="edit" style="display:none;">
+						<span><img src="images/plus.png" height="30"> Step</span>
+					</a>
+					</div>
+				<div id="postContainer" style="display:none;">
+					<div id="postSteps"></div>
+					<a id="finalStep" class="edit" href="#"><img src="images/plus.png" height="30"> Final Step</a>
+					</div>
+				<div id="holdContainer" style="display:none;">
+					<div id="holdSteps"></div>
+					</div>
+				</form>
+					</div>
+					<a id="OptionsButton" class="small_button options_button">More options</a>
+				<a id="Start" type="submit" class="start button"><span>Start</span></a>
+				<a id="Unplugged" class="unplugged button"><span>Plug in Maers Toy PCR to Start</span></a>
+				<a id="Save" type="" class="save button"><span>Save Preset</span></a>
+				<a id="SaveEdits" type="submit" class="saveEdits button"><span>Save Edits</span></a>
+				<a id="Cancel" class="cancel button"><span>Cancel</span></a>
+			<div class="newline">
+				<a id="Home" class="small_button home_button"><img src="images/left_arrow.png"> Home</a>
+			</div>
+		</div>
+		<!-- save-dialog -->
+				<div id="save_form" title="Save">
+					<form id="saveForm">
+						<fieldset>
+							<label for="name">Name your experiment</label>
+							<input type="text" name="name" id="name" maxlength="20" class="required text ui-widget-content ui-corner-all" />
+						</fieldset>
+					</form>
+				</div>
+				<!-- save_confirmation_dialog -->
+			<div id="save_confirmation_dialog" title="Saved">
+				Experiment saved!<br />
+			</div>
+			<!-- delete_dialog -->
+			<div id="delete_dialog" title="Delete">
+				Delete Experiment?<br />
+			</div>
+			<div id="delete_confirmation_dialog" title="Deleted">
+				Deleted!<br />
+			</div>
+	<!-- END PANEL 2 -->
+	
+	<!-- PANEL 3: Running Screen
+	This page is opened when Makers Toy PCR is in "Running" mode -->
+		<div id="ex2_p3" class="SlidingPanelsContent p3">
+		
+			<div id="running_header" role="main">
+				<div id="runningHeader" class="Header"></div>
+				
+				<br /><br /><span id="timeRemaining">Time remaining:</span><br />
+				<div id="minutesRemaining"></div>
+				<div id="progressbar"></div>
+				<br />
+				<br />
+				<div id="runningStats">
+					<table id="statsTable" class="runningTable">
+						<tr>
+							<th style="width:110px">
+								Status
+							</th>
+							<th colspan="3">
+								Current Temperature
+							</th>
+						</tr>
+						<tr>
+							<td rowspan="3">
+									<div id="cycleNumOfNum">Cycle <br/><span id="cycleNumber">-</span> of 
+									<span id="totalCycles">-</span></div>
+							</td>
+							<td style="text-align:right;">Lid: </td>
+							<td>
+								<span id="lidTemperature"></span>C
+							</td>
+							<td>
+								<meter min="0" max="120" value="85" id="meterLid"></meter>
+							</td>
+						</tr>
+						<tr>
+							<td style="text-align:right;">Block:</td>
+							<td>
+								<span id="blockTemperature"></span>C
+							</td>
+							<td>
+								<meter min="0" max="120" value="25" id="meterBlock"></meter>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<div class="deviceLabel">Lid: </div>
+								<div class="deviceStatus" id="deviceStatusLid"></div>
+								<div class="deviceLabel">Peltier: </div>
+								<div class="deviceStatus" id="deviceStatusPeltier"></div>
+							</td>
+						</tr>
+					</table>
+					<div>
+						<div id="graph_container" style="width:400px;height:270px;padding:6px 8px 12px 8px;"></div>
+						<div style="text-align:center;">
+							<a href="#" id="graph_plus" class="small_button">&nbsp;+&nbsp;</a>
+							<a href="#" id="graph_minus" class="small_button">&nbsp;-&nbsp;</a>
+						</div>
+					</div>
+					<div id="runningPluggedIn">
+						<div id="cancelButton"><a href="#" id="stop_link" class="stop small_button">Stop</a></div><br />
+					</div>
+					<div id="runningUnplugged" class="unplugged">
+					<br /><br />
+					Your Makers Toy PCR is unplugged from the computer.
+					<br />Plug in your Makers Toy PCR to get updated information on your run.
+					</div>
+						
+				</div>
+				<script type="text/javascript" src="js/lib/flotr2.min.js"></script>
+				<script type="text/javascript" src="js/graph.js"></script>
+			<div id="homeButton">
+				<a id="Home" class="button homeRunning">Home</a>
+			</div>
+			<div>
+				<a class="small_button" id="download" style="display:none;">Download CSV</a>
+			</div>
+			<!-- stop-dialog -->
+			<div id="stop_dialog" title="Stop">
+				Stop PCR?<br />
+			</div>
+			<!-- about-dialog -->
+			<div id="about_dialog" title="About Makers Toy PCR">
+				Version 1.0.2<br />
+				Makers Toy PCR App<br />
+				http://www.tori.st<br />
+				email us: all@tori.st
+			</div>
+			<div id="alert_dialog" title="Alert">
+				<div id="alert_dialog_content"></div>
+			</div>
+			
+			<!-- settings-dialog -->
+			<div id="settings_dialog" title="Set Screen Contrast">
+				Drag the slider to adjust the screen's contrast.<br /><br />
+				<div id="contrast_slider"></div>
+			</div>	
+			
+			</div>
+		</div>
+	<!-- END PANEL 3 -->
+</div>
+
+<div id="starting" title="Starting">
+				Ready. Steady. Go!<br />
+			</div>
+
+<p>&nbsp;</p>
+
+
+</body>
+</html>
