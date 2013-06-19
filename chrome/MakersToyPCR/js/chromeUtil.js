@@ -23,6 +23,15 @@ chromeUtil.alert = function (message) {
 	}
 	$('#alert_dialog_content')[0].innerHTML = message;
 	$('#alert_dialog').dialog('open');
+};
+
+chromeUtil.alertUpdate = function (currentVersion, latestVersion) {
+	var message = "The latest firmware, version ___LATEST_VERSION___ is available now! (Installed version is ___INSTALLED_VERSION___)"
+		.replace("___LATEST_VERSION___", latestVersion)
+		.replace("___INSTALLED_VERSION___", currentVersion);
+	console.log(message);
+	$('#update_dialog_content')[0].innerHTML = message;
+	$('#update_dialog').show();
 }
 
 var Storage = function () {

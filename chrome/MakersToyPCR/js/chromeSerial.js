@@ -5,9 +5,9 @@ var Serial = function () {
 };
 
 /* Command Code */
-var SEND_CMD       = 0x10;
-var STATUS_REQ     = 0x40;
-var STATUS_RESP    = 0x80;
+var SEND_CMD = 0x10;
+var STATUS_REQ = 0x40;
+var STATUS_RESP = 0x80;
 var START_CODE = 0xFF;
 var END_CODE = 0xFE;
 
@@ -25,8 +25,9 @@ Serial.prototype.scan = function (callbackExternal) {
 		console.log("Start Scanning...");
 		console.log("------------------------------------------------");
 		new SerialPortScanner(ports).findPcrPort(
-			function (port, connectionId) {
+			function (port, connectionId, firmwareVersion) {
 				self.port = port;
+				self.firmwareVersion = firmwareVersion;
 				self.connectionId = connectionId;
 				callbackExternal(port);
 			});
@@ -234,7 +235,7 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 			self.currentPortIndex++;
 			if (self.foundPort) {
 				console.log("Finish scanning.");
-				callback(self.foundPort, self.connectionId);
+				callback(self.foundPort, self.connectionId, self.firmwareVersion);
 			} else {
 				self.findPcrPort(callback);
 			}
@@ -242,7 +243,7 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 	}
 };
 var PORT_TO_IGNORE = new RegExp("Bluetooth");
-var MESSAGE_FROM_DEVICE = new RegExp("prc");
+var MESSAGE_FROM_DEVICE = new RegExp("pcr(.+?)\\n");
 //Private
 SerialPortScanner.prototype._scan = function(callback) {
 	var port = this.ports[this.currentPortIndex];
@@ -268,7 +269,7 @@ SerialPortScanner.prototype._scan = function(callback) {
 		}
 	});
 };
-SerialPortScanner.DURATION_MSEC = 1000;
+SerialPortScanner.DURATION_MSEC = 1500;
 SerialPortScanner.BYTES_TO_READ = 64;
 
 SerialPortScanner.INITIAL_MESSAGE = "";
@@ -290,10 +291,11 @@ SerialPortScanner.prototype._read = function (connectionId, callback) {
 			self._read(connectionId, callback);
 		} else {
 			// Finish reading and check message
-			console.log(self.readMessage);
-			if (self.readMessage.match()) {
-				console.log("DEVICE FOUND! port=" + port);
+			if (self.readMessage.match(MESSAGE_FROM_DEVICE)) {
+				var version = RegExp.$1;
+				console.log("Firmware version " + version);
 				self.foundPort = port;
+				self.firmwareVersion = version;
 				self.connectionId = connectionId;
 				var data = getArrayBufferForString(SerialPortScanner.INITIAL_MESSAGE);
 				chrome.serial.write(connectionId, data, function (sendInfo){

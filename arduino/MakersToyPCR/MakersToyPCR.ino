@@ -73,6 +73,8 @@ void loop() {
 }
 void checkPlugged () {
     Serial.write("pcr");
+    Serial.write(OPENPCR_FIRMWARE_VERSION_STRING);
+    Serial.print("\n");
     int timeStart = millis();
     while (timeStart>millis()-INTERVAL_MSEC) {
       while (Serial.available()){

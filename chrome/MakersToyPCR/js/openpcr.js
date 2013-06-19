@@ -12,6 +12,8 @@
  * Extra. Buttons
  */
 
+var LATEST_FIRMWARE_VERSION = "1.0.6";
+
 /**************
  * Home screen*
  ***************/
@@ -20,10 +22,6 @@
  * Called when the app is loaded.
  * Checks to see if OpenPCR is plugged in (gets the device path if it is) and checks to see if there is an Air update available
  */
-
-// Application Updater code		
-// declare the appUpdater variable
-console.log("TODO TORI App updates is disabled because Chrome app will be automatically updated by Chrome Web Store.");
 
 var sp2;
 var pcrStorage;
@@ -53,7 +51,6 @@ function init() {
 		var result = !!port;
 		var portMessage = (result)?("Device found on port " + port):"Device not found";
 		$("#portLabel").html(portMessage);
-		
 		if (result) {
 			window.pluggedIn = true;
 			console.log("Set #Start button visible.");
@@ -63,14 +60,25 @@ function init() {
 				$("#Start").show();
 				//Read device
 			}
+			// Alert Firmware Update
+			checkFirmwareVersion(chromeSerial.firmwareVersion);
 		} else {
 			// Not plugged
 		}
 
-		listExperiments();
 		$("#pcrForm").validate();
 	});
+	listExperiments();
+}
 
+function checkFirmwareVersion (version) {
+	console.log("Firmware version=" + version + ", Latest version=" + LATEST_FIRMWARE_VERSION);
+	if (version==LATEST_FIRMWARE_VERSION) {
+		console.log("The firmware is up to date.");
+	} else {
+		console.log("Please update the firmware!");
+		chromeUtil.alertUpdate(version, LATEST_FIRMWARE_VERSION);
+	}
 }
 
 /* listExperiments()
@@ -119,7 +127,6 @@ function listSubmit() {
  * Returns: deviceLocation (null if not plugged in)
  */
 function pluggedIn(callback) {
-	console.log("TODO TORI pluggedIn");
 	chromeSerial.scan(callback);
 }
 
@@ -1169,7 +1176,6 @@ function activateDeleteButton() {
  ***************/
 function prepareButtons() {
 	
-	//$('#download').on('click', saveCSV);
 	/*  "About" button on the OpenPCR Home page
 	 * Displays about info
 	 */
@@ -1184,6 +1190,9 @@ function prepareButtons() {
 		$('#settings_dialog').dialog('open');
 	});
 
+	$('#OpenDownloadPage').on('click', function () {
+		window.open("http://www.tori.st");
+	});
 	/*  "Home" button on the OpenPCR Form page
 	 * Goes Home
 	 */

@@ -200,22 +200,26 @@ a.button:active span {
 
 
 a.small_button {
-    -webkit-border-radius: 9px;
--moz-border-radius: 9px;
 border-radius: 9px;
 width:80px;
 text-align:center;
 font-size:12px;
 outline:0;
-padding:5px;
+margin: 20px 4px;
 border: #B8B8B8 solid 1px;
 color: #000000;
 cursor:pointer;
 vertical-align:middle;
-padding-right: 10px; /* sliding doors padding */
-padding-left: 10px;
+padding:5px 10px;
 text-decoration: none;
 font-weight: normal;
+}
+
+#update_dialog {
+	border: 1px solid #44f;
+	background-color:#def;
+	padding:6px;
+	margin:12px;
 }
 
 a.small_button:active span {
