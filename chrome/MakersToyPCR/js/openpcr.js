@@ -943,13 +943,7 @@ function onReceiveStatus(message) {
 			// Current lid temp
 			var lid_temp = status["l"].toFixed(1);
 			$("#lidTemperature").html(lid_temp);
-			// For the debugger, write all 8 vars out to the history file
-			//writeCSV(document.getElementById("runningHeader").innerHTML, document.getElementById("minutesRemaining").innerHTML, 1, document.getElementById("cycleNumber").innerHTML, document.getElementById("totalCycles").innerHTML, document.getElementById("blockTemp").innerHTML, document.getElementById("lidTemp").innerHTML, document.getElementById("progressbar").innerHTML);
-			//writeCSV(prog_name, status["e"], secondsRemaining, 1, current_cycle, total_cycles, block_temp, lid_temp);
-			//for (var t=0; t<10; t++) { //Performance Test
-				graph.addTime(lid_temp,block_temp);
-				
-			//}
+			graph.addTime(lid_temp,block_temp);
 			$('#meterBlock')[0].value = block_temp;
 			$('#meterLid')[0].value = lid_temp;
 		}
@@ -1183,6 +1177,19 @@ function prepareButtons() {
 	 * Displays about info
 	 */
 	$('#About').on('click', function() {
+
+		$('#about_dialog').dialog({
+			autoOpen : false,
+			width : 400,
+			modal : true,
+			draggable : false,
+			resizable : false,
+			buttons : {
+				"Close" : function() {
+					$(this).dialog("close");
+				}
+			}
+		});
 		$('#about_dialog').dialog('open');
 	});
 
