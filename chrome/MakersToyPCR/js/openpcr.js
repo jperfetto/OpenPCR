@@ -785,6 +785,8 @@ function startPCR() {
 	$("#download").hide();
 	// show the "stop" button
 	$("#cancelButton").show();
+
+	console.log("OPEN STARTING DIALOG");
 	$('#starting').dialog('open');
 	// write out the file to the OpenPCR device
 	chromeSerial.startWithCommand(parsedProgram);
@@ -796,7 +798,7 @@ function startPCR() {
 	}, 5000);
 	setTimeout(function() {
 		$('#ex2_p3').show();
-	}, 5000);
+	}, 100);
 	// also, reset the command_id_counter
 	window.command_id_counter = 0;
 	// load the OpenPCR Running page
@@ -1723,3 +1725,4 @@ function createCSV () {
 }
 
 $(document).ready(init);
+

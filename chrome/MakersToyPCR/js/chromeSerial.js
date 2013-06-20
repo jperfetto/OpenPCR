@@ -282,6 +282,8 @@ SerialPortScanner.prototype._scan = function(callback) {
 			console.log("Connection error. ID=" + connectionId);
 			callback(null);
 		} else {
+			if (onSerialOpen)
+				onSerialOpen(connectionId);
 			self.scanStartTimestamp = new Date().getTime();
 			self.readMessage = "";
 			self._read(connectionId, callback);
