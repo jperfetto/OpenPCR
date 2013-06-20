@@ -23,7 +23,6 @@
 #include "program.h"
 #include "display.h"
 #include "thermistors.h"
-#include <SoftwareSerial.h>
 
 #define BAUD_RATE 4800
 
