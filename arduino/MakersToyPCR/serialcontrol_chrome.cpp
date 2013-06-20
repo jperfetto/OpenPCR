@@ -50,76 +50,7 @@ void SerialControl::Process() {
 
 /////////////////////////////////////////////////////////////////
 // Private
-/*
-boolean SerialControl::ReadPacket()
-{
-  int availableBytes = Serial.available();
-  int origAvailableBytes = availableBytes;
- 
-  if (packetState < STATE_PACKETHEADER_DONE) { //new packet
-    //sync with start code
-    while (availableBytes) {
-      byte incomingByte = Serial.read();
-      availableBytes--;
-      if (packetState == STATE_STARTCODE_FOUND){
-        packetLen = incomingByte;
-        packetState = STATE_PACKETLEN_LOW;
-      } 
-      else if (packetState == STATE_PACKETLEN_LOW) {
-        packetLen |= incomingByte << 8;
-        if (packetLen > MAX_COMMAND_SIZE)
-          packetLen = MAX_COMMAND_SIZE;
-        if (packetLen >= sizeof(struct PCPPacket) && packetLen <= MAX_COMMAND_SIZE) {
-          packetState = STATE_PACKETHEADER_DONE;
-          buf[0] = START_CODE;
-          buf[1] = packetLen & 0xff;
-          buf[2] = (packetLen & 0xff00)>>8;
-          bEscapeCodeFound = false;
-          packetRealLen = 3;
-          packetLen -= 3;
-        }
-        else{
-          packetState = STATE_START; //reset
-        }
-        break;
-      } 
-      else if (incomingByte == START_CODE && bEscapeCodeFound == false)
-        packetState = STATE_STARTCODE_FOUND;
-      else if (incomingByte == ESCAPE_CODE)
-        bEscapeCodeFound = true;
-      else
-        bEscapeCodeFound = false;
-    }
-  }
-  
-  if (packetState == STATE_PACKETHEADER_DONE){
-    while(availableBytes > 0 && packetLen > 0){
-      byte incomingByte = Serial.read();
-      availableBytes--;
-      packetLen--;
-      if (incomingByte == ESCAPE_CODE)
-        bEscapeCodeFound = true;
-      else if (bEscapeCodeFound && incomingByte == START_CODE)
-        packetRealLen--; //erase the escape char
-      else
-        bEscapeCodeFound = false;
-      buf[packetRealLen++] = incomingByte; 
-    }
-    
-    if (packetLen == 0) {
-      ProcessPacket(buf, packetRealLen);
-  
-      //reset, to find START_CODE again
-      packetState = STATE_START;
-    }
-  }
-  
-  if (availableBytes < origAvailableBytes)
-    return true;
-  else
-    return false;
-}
-*/
+
 int nextByteIndex = 0;
 unsigned char currentCommand = 0;
 unsigned char bodyLength = 0;
