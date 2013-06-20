@@ -277,9 +277,14 @@ function writeoutExperiment() {
 
 	// grab the cycle variables
 	cycleArray = [];
+	cycleNameArray = [];
 	$("#cycleContainer .textinput").each(function(index, elem) {
 		//just throw them in an array for now
 		cycleArray.push($(this).val());
+	});
+	$("#cycleContainer .step_name").each (function(index, elem){
+		console.log("Step Name="+$(this).text());
+		cycleNameArray.push($(this).text());
 	});
 
 	// grab the post cycle variables if any exist
@@ -339,7 +344,7 @@ function writeoutExperiment() {
 
 			experimentJSON.steps[current].steps.push({
 				"type" : "step",
-				"name" : "Step",
+				"name" : cycleNameArray.shift(),
 				"temp" : cycleArray.shift(),
 				"time" : cycleArray.shift(),
 				"rampDuration" : cycleArray.shift()
@@ -508,7 +513,7 @@ function stepToHTML(step) {
 			// min,max time = 0, 6000, 1 decimal point
 			stepHTML += '<div class="step"><span id="step'
 					+ step_number
-					+ '_name" class="title">'
+					+ '_name" class="title step_name">'
 					+ step_name
 					+ ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
 					+ '<table><tr>'
@@ -559,7 +564,7 @@ function stepToHTML(step) {
 		// main HTML, includes name and temp
 		stepHTML += '<div class="step"><span id="'
 				+ step_number
-				+ '" class="title">'
+				+ '" class="title step_name">'
 				+ step_name
 				+ ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
 				+ '<table cellspacing="20"><tr>'
@@ -669,7 +674,7 @@ function startPCR() {
 	window.command_id = Math.floor(Math.random() * 65534);
 	// command id can't be 0 
 	// where is OpenPCR
-	var devicePort = chromeSerial.getPort();
+	var devicePort = chromeSerial.port;
 	console.log("devicePort=" + devicePort);
 	/*
 	// name of the output file written to OpenPCR
@@ -723,7 +728,6 @@ function startPCR() {
 			window.lessthan20steps = pcrProgram.steps[i].steps.length;
 		}
 	}
-	console.log("parsedProgram=" + parsedProgram);
 	// verify that there are no more than 16 top level steps
 	console.log(pcrProgram.steps.length + " : top level steps");
 	console.log(window.lessthan20steps + " : cycle level steps");
@@ -731,9 +735,9 @@ function startPCR() {
 
 	// check that the entire protocol isn't >252 bytes
 	console.log("parsedProgram=" + parsedProgram);
-	if (parsedProgram.length > 252) {
+	if (parsedProgram.length > 512) {
 		chromeUtil
-				.alert("Oops, OpenPCR can't handle protocols longer than 252 characters, and this protocol is "
+				.alert("Oops, Makers Toy PCR can't handle protocols longer than 252 characters, and this protocol is "
 						+ parsedProgram.length
 						+ " characters. The fix? You can try trimming down the name of your protocol or removing unnecessary steps");
 		return 0;
@@ -1428,7 +1432,7 @@ function addStep(location) {
 	step_number = new Date().getTime();
 	;
 	var step = '<div class="step">'
-			+ '<span class="title">'
+			+ '<span class="title step_name">'
 			+ step_name
 			+ ' </span>'
 			+ '<a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
