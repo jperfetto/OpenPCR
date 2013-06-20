@@ -26,7 +26,6 @@
 
 #define BAUD_RATE 4800
 
-//  SoftwareSerial mySerial(8,9);
 
 SerialControl::SerialControl(Display* pDisplay)
 : ipDisplay(pDisplay)
@@ -38,7 +37,6 @@ SerialControl::SerialControl(Display* pDisplay)
 , iCommandId(0)
 , iReceivedStatusRequest(false)
 {
-  //mySerial.begin(BAUD_RATE);
 }
 
 SerialControl::~SerialControl() {
@@ -136,7 +134,6 @@ void SerialControl::ProcessPacket()
   default:
     break;
   }
-  //TODO TORI search for references
   //lastPacketSeq = packetSeq;
 }
 
