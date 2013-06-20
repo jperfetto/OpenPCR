@@ -49,6 +49,7 @@ function init() {
 	// get the location of OpenPCR (can be null)
 	scanAndDisplay();
 	listExperiments();
+	localize();
 }
 
 function checkPlug () {

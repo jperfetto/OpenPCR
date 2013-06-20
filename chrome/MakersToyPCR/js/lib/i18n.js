@@ -1,4 +1,4 @@
-LOCALIZE_CLASS_REGEXP = new RegExp('iinya_localize_([^ ]+)');
+LOCALIZE_CLASS_REGEXP = new RegExp('pcr_localize_([^ ]+)');
 function localize()
 {
 	var tags = [];
