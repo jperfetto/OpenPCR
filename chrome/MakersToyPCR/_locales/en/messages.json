@@ -76,7 +76,7 @@
 	"stepFinalHold":{"message":"Final Hold"},
 	"stepInitialStep":{"message":"Initial Step"},
 	"stepFinalStep":{"message":"Final Step"},
-	"TODO":{"message":"TODO"},
+	"temperature":{"message":"Temperature"},
 	"TODO":{"message":"TODO"},
 	"TODO":{"message":"TODO"}
 }

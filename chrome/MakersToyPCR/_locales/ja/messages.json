@@ -76,5 +76,6 @@
 	"stepFinalHold":{"message":"最終保持"},
 	"stepInitialStep":{"message":"初期ステップ"},
 	"stepFinalStep":{"message":"最終ステップ"},
+	"temperature":{"message":"温度"},
 	"TODO":{"message":"TODO"}
 }

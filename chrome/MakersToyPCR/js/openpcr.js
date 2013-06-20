@@ -39,6 +39,7 @@ function init() {
 	$('#saveForm').on('click', function() {
 		$('#Start').click();
 	});
+	$('#appVersion').html(chrome.runtime.getManifest().version);
 	
 	prepareButtons();
 	sp2 = new Spry.Widget.SlidingPanels('example2');
