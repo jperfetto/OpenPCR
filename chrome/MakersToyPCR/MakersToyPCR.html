@@ -71,25 +71,25 @@ meter { -webkit-appearance: none; }
 	
 	<!-- PANEL 1: Home Screen -->
 		<div id="ex1_p1" class="SlidingPanelsContent p1">
-			<div id="homeHeader" class="Header">Makers Toy PCR</div>
+			<div id="homeHeader" class="Header pcr_localize_appTitle">Makers Toy PCR</div>
 			<br />
 			<!-- Create a new blank experiment -->
-			<a href="#" id="newExperimentButton"><img src="images/new.png" style="vertical-align:middle;" ><span class="home_title">Add a new experiment</span></a>
+			<a href="#" id="newExperimentButton"><img src="images/new.png" style="vertical-align:middle;" ><span class="home_title pcr_localize_addNewExperiment">Add a new experiment</span></a>
 			<br /><br /><br />
 
 			<!-- Rerun an experiment -->
-			<a href="#" id="listSubmitButton"><img src="images/rerun.png" style="vertical-align:middle;"><span class="home_title">Re-run an experiment</span></a>
+			<a href="#" id="listSubmitButton"><img src="images/rerun.png" style="vertical-align:middle;"><span class="home_title pcr_localize_reRunExperiment">Re-run an experiment</span></a>
 			<div id="reRun" align="right"></div>
-			<div id="portLabel">Searching for device...</div>
+			<div id="portLabel" class="pcr_localize_searching">Searching for a device...</div>
 			<div id="update_dialog" style="display:none">
 				<div id="update_dialog_content"></div>
-				<a class="" id="OpenDownloadPage">Open Download Page</a>
+				<a class="pcr_localize_download" id="OpenDownloadPage">Open Download Page</a>
 			</div>
 			<div>
-				<a class="small_button" id="About">About this app</a>
+				<a class="small_button pcr_localize_about" id="About">About this app</a>
 			</div>
-			<a class="small_button" id="Settings" style="display:none">Adjust the screen contrast</a>
-			<a class="small_button" id="ClearData" style="display:none">Clear all data(Debug TODO)</a>
+			<a class="small_button pcr_localize_contrast" id="Settings" style="display:none">Adjust the screen contrast</a>
+			<a class="small_button pcr_localize_clearData" id="ClearData" style="display:none">Clear all data(For Developer)</a>
 		</div>
 	<!-- END PANEL 1 -->
 	
@@ -98,40 +98,40 @@ meter { -webkit-appearance: none; }
 				<form class="cmxform" id="pcrForm" method="get" action="">
 				<div class="openpcr-form-div"> 
 				
-				<div class="Header"><a id="deleteButton" href="#"><img src="images/delete.png" height="30"></a> <span id="ExperimentName"></span> <a id="editButton" class="small_button">Edit</a></div>
+				<div class="Header"><a id="deleteButton" href="#"><img src="images/delete.png" height="30"></a> <span id="ExperimentName"></span>
+				<a id="editButton" class="small_button pcr_localize_edit">Edit</a></div>
 				
-				<!--<a id="singleTemp" class="edit small_button" href="#">Heat Block mode</a>-->
 				
 				<div id="lidContainer" style="display:none;">
 					<div id="lidTemp"></div>
 					</div>
 				<div id="preContainer" style="display:none;">
 					<div id="preSteps"></div>
-					<a id="initialStep" class="edit"href="#"><img src="images/plus.png" height="30"> Initial Step</a>
+					<a id="initialStep" class="edit"href="#"><img src="images/plus.png" height="30"> <span class="pcr_localize_initialStep">Initial Step</span></a>
 					</div>
 				<div id="cycleContainer" style="display:none;">
 					<div id="cycleSteps"></div>
 					<a id="addStepButton" class="edit" style="display:none;">
-						<span><img src="images/plus.png" height="30"> Step</span>
+						<span><img src="images/plus.png" height="30"> <span class="pcr_localize_step">Step</span></span>
 					</a>
 					</div>
 				<div id="postContainer" style="display:none;">
 					<div id="postSteps"></div>
-					<a id="finalStep" class="edit" href="#"><img src="images/plus.png" height="30"> Final Step</a>
+					<a id="finalStep" class="edit" href="#"><img src="images/plus.png" height="30"> <span class="pcr_localize_finalStep">Final Step</span></a>
 					</div>
 				<div id="holdContainer" style="display:none;">
 					<div id="holdSteps"></div>
 					</div>
 				</form>
 					</div>
-					<a id="OptionsButton" class="small_button options_button">More options</a>
-				<a id="Start" type="submit" class="start button"><span>Start</span></a>
-				<a id="Unplugged" class="unplugged button"><span>Plug in Maers Toy PCR to Start</span></a>
-				<a id="Save" type="" class="save button"><span>Save Preset</span></a>
-				<a id="SaveEdits" type="submit" class="saveEdits button"><span>Save Edits</span></a>
-				<a id="Cancel" class="cancel button"><span>Cancel</span></a>
+					<a id="OptionsButton" class="small_button options_button"><span class="pcr_localize_moreOptions">More options</span></a>
+				<a id="Start" type="submit" class="start button"><span class="pcr_localize_start">Start</span></a>
+				<a id="Unplugged" class="unplugged button"><span class="pcr_localize_pleasePlug">Plug in your Toy PCR to Start</span></a>
+				<a id="Save" type="" class="save button"><span class="pcr_localize_savePreset">Save Preset</span></a>
+				<a id="SaveEdits" type="submit" class="saveEdits button"><span class="pcr_localize_saveEdits">Save Edits</span></a>
+				<a id="Cancel" class="cancel button"><span class="pcr_localize_cancel">Cancel</span></a>
 			<div class="newline">
-				<a id="Home" class="small_button home_button"><img src="images/left_arrow.png"> Home</a>
+				<a id="Home" class="small_button home_button"><img src="images/left_arrow.png"> <span class="pcr_localize_home">Home</span></a>
 			</div>
 		</div>
 		<!-- save-dialog -->
@@ -145,14 +145,14 @@ meter { -webkit-appearance: none; }
 				</div>
 				<!-- save_confirmation_dialog -->
 			<div id="save_confirmation_dialog" title="Saved">
-				Experiment saved!<br />
+				<span class="pcr_localize_saved">Experiment saved!</span><br />
 			</div>
 			<!-- delete_dialog -->
 			<div id="delete_dialog" title="Delete">
-				Delete Experiment?<br />
+				<span class="pcr_localize_confirmDelete">Delete Experiment?</span><br />
 			</div>
 			<div id="delete_confirmation_dialog" title="Deleted">
-				Deleted!<br />
+				<span class="pcr_localize_deleted">Deleted!</span><br />
 			</div>			
 	<!-- END PANEL 2 -->
 	
@@ -163,7 +163,7 @@ meter { -webkit-appearance: none; }
 			<div id="running_header" role="main">
 				<div id="runningHeader" class="Header"></div>
 				
-				<span id="timeRemaining">Time remaining:</span><br />
+				<span id="timeRemaining" class="pcr_localize_timeRemaining">Time remaining:</span><br />
 				<div id="minutesRemaining"></div>
 				<div id="progressbar"></div>
 				<br />
@@ -171,29 +171,29 @@ meter { -webkit-appearance: none; }
 					<table id="statsTable" class="runningTable">
 						<tr>
 							<th style="width:110px">
-								Status
+								<span class="pcr_localize_status">Status</span>
 							</th>
 							<th colspan="3">
-								Current Temperature
+								<span class="pcr_localize_currentTemp">Current Temperature</span>
 							</th>
 						</tr>
 						<tr>
 							<td rowspan="3">
-									<div id="cycleNumOfNum">Cycle <br/><span id="cycleNumber">-</span> of 
+									<div id="cycleNumOfNum"><span class="pcr_localize_cycle">Cycle</span><br/><span id="cycleNumber">-</span> / 
 									<span id="totalCycles">-</span></div>
 							</td>
-							<td style="text-align:right;">Lid: </td>
+							<td style="text-align:right;"><span class="pcr_localize_lid">Lid</span>: </td>
 							<td>
-								<span id="lidTemperature"></span>C
+								<span id="lidTemperature"></span>&deg;C
 							</td>
 							<td>
 								<meter min="0" max="120" value="85" id="meterLid"></meter>
 							</td>
 						</tr>
 						<tr>
-							<td style="text-align:right;">Block:</td>
+							<td style="text-align:right;"><span class="pcr_localize_block">Block</span>:</td>
 							<td>
-								<span id="blockTemperature"></span>C
+								<span id="blockTemperature"></span>&deg;C
 							</td>
 							<td>
 								<meter min="0" max="120" value="25" id="meterBlock"></meter>
@@ -201,9 +201,9 @@ meter { -webkit-appearance: none; }
 						</tr>
 						<tr>
 							<td colspan="3">
-								<div class="deviceLabel">Lid: </div>
+								<div class="deviceLabel"><span class="pcr_localize_lid">Lid</span>: </div>
 								<div class="deviceStatus" id="deviceStatusLid"></div>
-								<div class="deviceLabel">Peltier: </div>
+								<div class="deviceLabel"><span class="pcr_localize_peltier">Peltier</span>: </div>
 								<div class="deviceStatus" id="deviceStatusPeltier"></div>
 							</td>
 						</tr>
@@ -216,34 +216,32 @@ meter { -webkit-appearance: none; }
 						</div>
 					</div>
 					<div id="runningPluggedIn">
-						<div id="cancelButton"><a href="#" id="stop_link" class="stop small_button">Stop</a></div><br />
+						<div id="cancelButton"><a href="#" id="stop_link" class="stop small_button"><span class="pcr_localize_stop">Stop</span></a></div><br />
 					</div>
-					<div id="runningUnplugged" class="unplugged">
-					<br /><br />
-					Your Makers Toy PCR is unplugged from the computer.
-					<br />Plug in your Makers Toy PCR to get updated information on your run.
+					<div id="runningUnplugged" class="unplugged pcr_localize_unplugged">
+					Your Makers Toy PCR is unplugged from the computer.<br />Plug in your Makers Toy PCR to get updated information on your run.
 					</div>
 						
 				</div>
 				<script type="text/javascript" src="js/lib/flotr2.min.js"></script>
 				<script type="text/javascript" src="js/graph.js"></script>
 			<div id="homeButton">
-				<a id="Home" class="button homeRunning">Home</a>
+				<a id="Home" class="button homeRunning pcr_localize_home">Home</a>
 			</div>
 			<div style="clear:both;"></div>
 			<div style="margin-top:6px;">
-				<a class="small_button" id="download" style="display:none;">Save CSV</a>
+				<a class="small_button pcr_localize_saveCsv" id="download" style="display:none;">Save CSV</a>
 			</div>
 			<!-- stop-dialog -->
 			<div id="stop_dialog" title="Stop">
-				Stop PCR?<br />
+				<span class="pcr_localize_stopPcr">Stop PCR?</span>
 			</div>
 			<!-- about-dialog -->
 			<div id="about_dialog" title="About Makers Toy PCR">
 				Version 1.0.2<br />
 				Makers Toy PCR App<br />
 				http://www.tori.st<br />
-				email us: all@tori.st
+				Email us: all@tori.st
 			</div>
 
 			<div id="alert_dialog" title="Alert">
@@ -252,7 +250,7 @@ meter { -webkit-appearance: none; }
 			
 			<!-- settings-dialog -->
 			<div id="settings_dialog" title="Set Screen Contrast">
-				Drag the slider to adjust the screen's contrast.<br /><br />
+				<span class="pcr_localize_dragSlider">Drag the slider to adjust the screen's contrast.</span>
 				<div id="contrast_slider"></div>
 			</div>	
 			
@@ -261,7 +259,7 @@ meter { -webkit-appearance: none; }
 	<!-- END PANEL 3 -->
 </div>
 			<div id="starting" title="Starting">
-				Ready. Steady. Go!<br />
+				<span class="pcr_localize_readySteadyGo">Ready. Steady. Go!</span>
 			</div>
 
 </body>

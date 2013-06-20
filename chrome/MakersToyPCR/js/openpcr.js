@@ -26,7 +26,6 @@ var LATEST_FIRMWARE_VERSION = "1.0.6";
 var sp2;
 var pcrStorage;
 function init() {
-	console.log("INIT");
 	pcrStorage = new Storage();
 	$(document).keypress(function(event) {
 		return disableEnterKey(event);
@@ -256,7 +255,7 @@ function newExperimentButtons() {
 	startOrUnplugged("inline");
 	$('#singleTemp').hide();
 	// make sure the "More options" button says so
-	$('#OptionsButton').html("More options");
+	$('#OptionsButton').html(chrome.i18n.getMessage('moreOptions'));
 }
 
 /* writeoutExperiment
@@ -1347,7 +1346,7 @@ function prepareButtons() {
 							$("#postContainer").hide();
 						}
 						// flip the Options button text between "More options" and "Less options"
-						var buttonText = (buttonText != 'More options' ? 'More options'
+						var buttonText = (buttonText != chrome.i18n.getMessage('moreOptions') ? chrome.i18n.getMessage('moreOptions')
 								: 'Less options');
 						$('#OptionsButton').html(buttonText);
 					});
