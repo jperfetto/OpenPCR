@@ -126,7 +126,7 @@ text-align:center;}
 
 .Header {
 font-size: 30px;
-padding-bottom: 10px;
+padding-bottom: 14px;
 text-align: center;
 font-weight: bold;
 color: #4C4C4C;
@@ -275,7 +275,7 @@ width: 100%;
 
 
 #minutesRemaining {
-font-size:48px;
+font-size:32px;
 text-align: center;
 padding-top: 0px;
 padding-bottom: 15px;

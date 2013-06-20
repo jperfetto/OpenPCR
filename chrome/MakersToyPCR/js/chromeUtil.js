@@ -26,7 +26,7 @@ chromeUtil.alert = function (message) {
 };
 
 chromeUtil.alertUpdate = function (currentVersion, latestVersion) {
-	var message = "The latest firmware, version ___LATEST_VERSION___ is available now! (Installed version is ___INSTALLED_VERSION___)"
+	var message = chrome.i18n.getMessage('firmwareVersionDialog')
 		.replace("___LATEST_VERSION___", latestVersion)
 		.replace("___INSTALLED_VERSION___", currentVersion);
 	console.log(message);
@@ -74,11 +74,9 @@ Storage.prototype.insertDefaultExperiment = function (callback) {
 }
 Storage.prototype.loadExperiment = function (experimentId, callback) {
 	var key = this.getKeyForId(experimentId);
-	console.log("key=" + key);
 	var self = this;
 	chrome.storage.sync.get(key, function(data){
 		var dataStr = data[key];
-		//TODO TORI process error
 		console.log("Data str=" + dataStr);
 		var experiment = null;
 		

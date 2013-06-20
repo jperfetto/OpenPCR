@@ -57,7 +57,8 @@ function checkPlug () {
 function scanAndDisplay (delay) {
 	chromeSerial.scan(function(port) {
 		var result = !!port;
-		var portMessage = (result)?("Device found on port " + port):"Device not found";
+		var portMessage = (result)?
+				(chrome.i18n.getMessage('deviceFound').replace('___PORT___',port)):chrome.i18n.getMessage('deviceNotFound');
 		$("#portLabel").html(portMessage);
 		if (result) {
 			if (!window.checkPlugInterval)
@@ -111,7 +112,7 @@ function listExperiments() {
 		}
 		// if blank, add a "No Saved Experiments" item
 		if (presetsHTML == "<select id='dropdown'>") {
-			presetsHTML += '<option value=1>-none-</option>';
+			presetsHTML += '<option value=1>-'+chrome.i18n.getMessage('none')+'-</option>';
 		}
 
 		// close the drop down HTML tags
@@ -282,8 +283,9 @@ function writeoutExperiment() {
 		cycleArray.push($(this).val());
 	});
 	$("#cycleContainer .step_name").each (function(index, elem){
-		console.log("Step Name="+$(this).text());
-		cycleNameArray.push($(this).text());
+		var stepName = globalizeStepName($(this).text());
+		console.log("Step Name=" + stepName);
+		cycleNameArray.push(stepName);
 	});
 
 	// grab the post cycle variables if any exist
@@ -418,7 +420,6 @@ function Save(name, isNew) {
 function experimentToHTML(inputJSON) {
 	// store the experiment to the JSON. This can be modified using the interface buttons, sent to OpenPCR, or saved
 	window.experiment = inputJSON;
-	console.log("experimentToHTML 1");
 	// clear the Form
 	clearForm();
 	// Update the experiment name
@@ -436,7 +437,7 @@ function experimentToHTML(inputJSON) {
 	// max temp 120, min temp 0 (off)
 	$('#lidTemp')
 			.html(
-					'<span class="title">Heated Lid</span>'
+					'<span class="title">'+chrome.i18n.getMessage('heaterLid')+'</span>'
 							+ '<input type="text" name="lid_temp" id="lid_temp" class="required integer textinput" maxlength="3" min="0" max="120"  value="'
 							+ inputJSON.lidtemp + '">');
 	// 4 possibile DIVs
@@ -481,6 +482,31 @@ function experimentToHTML(inputJSON) {
 	activateDeleteButton();
 }
 
+var STEP_NAMES = [
+              	["stepStep","Step"],
+            	["stepDenaturing","Denaturing"],
+            	["stepAnnealing","Annealing"],
+            	["stepExtending","Extending"],
+            	["stepFinalHold","Final Hold"],
+            	["stepInitialStep","Initial Step"],
+            	["stepFinalStep","Final Step"]
+                  ];
+function localizeStepName (stepName) {
+	for (var i=0; i<STEP_NAMES.length; i++) {
+		if (STEP_NAMES[i][1]==stepName)
+			return chrome.i18n.getMessage(STEP_NAMES[i][0]);
+	}
+	return stepName;
+}
+function globalizeStepName (_stepName) {
+	var stepName = _stepName.replace(/^[ \t\n]+/g,'').replace(/[ \t\n]+$/g, '');
+	for (var i=0; i<STEP_NAMES.length; i++) {
+		if (chrome.i18n.getMessage(STEP_NAMES[i][0])==stepName)
+			return STEP_NAMES[i][1];
+	}
+	return stepName;
+}
+
 /* stepToHTML(step)
  * Turns a step into HTML. However, this HTML doesn't have a container div/fieldset
  * If the step is a cycle, it will return html with all the cycles represented.
@@ -493,14 +519,14 @@ function stepToHTML(step) {
 	if (step.type == "cycle") {
 		// printhe "Number of Cycles" div
 		// max 99 cycles
-		stepHTML += '<label for="number_of_cycles"></label><div><span class="title">Number of Cycles:</span><input type="text" name="number_of_cycles" id="number_of_cycles" class="required number textinput" maxlength="2" min="0" max="99"  value="'
+		stepHTML += '<label for="number_of_cycles"></label><div><span class="title">'+chrome.i18n.getMessage('numberOfCycles')+':</span><input type="text" name="number_of_cycles" id="number_of_cycles" class="required number textinput" maxlength="2" min="0" max="99"  value="'
 				+ step.count + '"></div><br />';
 		// steps container
 		// print each individual step
 		for (a = 0; a < step.steps.length; a++) {
 			// make the js code a little easier to read
 			step_number = a;
-			step_name = step.steps[a].name;
+			step_name = localizeStepName(step.steps[a].name);
 			step_temp = step.steps[a].temp;
 			step_time = step.steps[a].time;
 			step_rampDuration = step.steps[a].rampDuration;
@@ -518,7 +544,7 @@ function stepToHTML(step) {
 					+ '<table><tr>'
 					+ '<th><label for="step'
 					+ step_number
-					+ '_temp">temp:</label> <div class="step'
+					+ '_temp">'+chrome.i18n.getMessage('tempShort')+':</label> <div class="step'
 					+ step_number
 					+ '_temp"><input type="text" style="font-weight:normal;" class="required number textinput" name="step'
 					+ step_number
@@ -529,22 +555,22 @@ function stepToHTML(step) {
 					+ '" maxlength="4" min="-20" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>'
 					+ '<th><label for="step'
 					+ step_number
-					+ '_time">step duration:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step'
+					+ '_time">'+chrome.i18n.getMessage('stepDuration')+':</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step'
 					+ step_number
 					+ '_time" id="step'
 					+ step_number
 					+ '_time" value="'
 					+ step_time
-					+ '" maxlength="4" min="0" max="6000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>'
+					+ '" maxlength="4" min="0" max="6000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
 					+ '<th><label for="step'
 					+ step_number
-					+ '_rampDuration">ramp duration:</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step'
+					+ '_rampDuration">'+chrome.i18n.getMessage('rampDuration')+':</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step'
 					+ step_number
 					+ '_rampDuration" id="step'
 					+ step_number
 					+ '_rampDuration" value="'
 					+ step_rampDuration
-					+ '" maxlength="6" min="0" max="999999"  ></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">sec</span></th>'
+					+ '" maxlength="6" min="0" max="999999"  ></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
 					+ '</tr></table></div>';
 
 		}
@@ -553,7 +579,7 @@ function stepToHTML(step) {
 	else if (step.type == "step") {
 		// make the js code a little easier to read
 		step_number = new Date().getTime();
-		step_name = step.name;
+		step_name = localizeStepName(step.name);
 		step_time = step.time;
 		step_temp = step.temp;
 		step_rampDuration = step.rampDuration;
@@ -567,7 +593,7 @@ function stepToHTML(step) {
 				+ step_name
 				+ ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
 				+ '<table cellspacing="20"><tr>'
-				+ '<th><label>temp:</label> <div><input type="text" style="font-weight:normal;" class="required number textinput" value="'
+				+ '<th><label>'+chrome.i18n.getMessage('tempShort')+':</label> <div><input type="text" style="font-weight:normal;" class="required number textinput" value="'
 				+ step_temp
 				+ '" maxlength="4" name="temp_'
 				+ step_number
@@ -575,20 +601,20 @@ function stepToHTML(step) {
 
 		// if the individual step has 0 time (or blank?) time, then it is a "hold" step and doesn't have a "time" component
 		if (step_time != 0) {
-			stepHTML += '<th><label>step duration:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="'
+			stepHTML += '<th><label>'+chrome.i18n.getMessage('stepDuration')+':</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="'
 					+ step_time
 					+ '" name="time_'
 					+ step_number
-					+ '" maxlength="4" min="0" max="6000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>';
+					+ '" maxlength="4" min="0" max="6000"></div><span htmlfor="openpcr_time" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>';
 			stepHTML += '<th><label>ramp duration:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="'
 					+ step_rampDuration
 					+ '" name="rampDuration_'
 					+ step_number
-					+ '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">sec</span></th>';
+					+ '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>';
 		}
 	}
 	else
-		chromeUtil.alert("Error #1986");
+		chromeUtil.alert(chrome.i18n.getMessage('error')+" #1986");
 	stepHTML += '</tr></table></div>';
 	return stepHTML;
 }
@@ -736,39 +762,21 @@ function startPCR() {
 	console.log("parsedProgram=" + parsedProgram);
 	if (parsedProgram.length > 512) {
 		chromeUtil
-				.alert("Oops, Makers Toy PCR can't handle protocols longer than 252 characters, and this protocol is "
-						+ parsedProgram.length
-						+ " characters. The fix? You can try trimming down the name of your protocol or removing unnecessary steps");
+				.alert(chrome.i18n.getMessage('lengthLimit').replace('___LENGTH___', parsedProgram.length));
 		return 0;
 	}
-
-	// and check there aren't more than 16 steps at the top level
-
-	// this is wrong
-	// there can be up to 16 initial, 16 cycle, and 16 final steps, but the total can't be more than 30
-	// else if (pcrProgram.steps.length > 16)
-	// 			{
-	// 				console.log(parsedProgram);
-	// 			alert("OpenPCR can handle a maximum of 16 top-level steps, you have " + pcrProgram.steps.length + " steps");
-	// 				return 0;
-	// 			}
-	// 			
 
 	// verify the cycle step has no more than 16 steps
 	else if (window.lessthan20steps > 16) {
 		console.log(parsedProgram);
-		chromeUtil
-				.alert("OpenPCR can handle a maximum of 20 cycle steps, you have "
-						+ window.lessthan20steps + " steps");
+		chromeUtil.alert(chrome.i18n.getMessage('stepLimit').replace('___STEPS___',window.lessthan20steps));
 		return 0;
 	}
 
 	// and check that the total overall is less than 25
 	else if (totalSteps > 25) {
 		console.log(parsedProgram);
-		chromeUtil
-				.alert("OpenPCR can handle a maximum of 25 total steps, you have "
-						+ totalSteps + " steps");
+		chromeUtil.alert(chrome.i18n.getMessage('totalStepLimit').replace('___STEPS___',totalSteps));
 		return 0;
 	}
 
@@ -785,7 +793,6 @@ function startPCR() {
 	// show the "stop" button
 	$("#cancelButton").show();
 
-	console.log("OPEN STARTING DIALOG");
 	$('#starting').dialog('open');
 	// write out the file to the OpenPCR device
 	chromeSerial.startWithCommand(parsedProgram);
@@ -869,22 +876,22 @@ function onReceiveStatus(message) {
 
 		var statusLid = status["x"].toFixed(1);
 		var statusPeltier = status["y"].toFixed(1);
-		$("#deviceStatusLid").html((statusLid>0)?"Heating":"Stop");
+		$("#deviceStatusLid").html((statusLid>0)?chrome.i18n.getMessage('statusHeating'):chrome.i18n.getMessage('statusStop'));
 		$("#deviceStatusLid").css("color", (statusLid>0)?COLOR_HEATING:COLOR_STOP);
 		{
 			var color;
 			var text;
 			if (statusPeltier>0) {
 				color = COLOR_HEATING;
-				text = "Heating";
+				text = chrome.i18n.getMessage('statusHeating');
 			}
 			else if (statusPeltier<0) {
 				color = COLOR_COOLING;
-				text = "Cooling"
+				text = chrome.i18n.getMessage('statusCooling');
 			} 
 			else {
 				color = COLOR_STOP;
-				text = "Stop";
+				text = chrome.i18n.getMessage('statusStop');
 			}
 			$("#deviceStatusPeltier").html(text);
 			$("#deviceStatusPeltier").css("color",color);
@@ -902,7 +909,7 @@ function onReceiveStatus(message) {
 				$("#progressbar").hide();
 				$("#cycleNumOfNum").hide();
 				$("#timeRemaining").html("");
-				$("#minutesRemaining").html("Lid is heating");
+				$("#minutesRemaining").html(chrome.i18n.getMessage('lidHeating'));
 
 				// during lidwait, no protocol name is included, so include the protocol name from the previous page
 				$("#runningHeader").html(
@@ -910,7 +917,7 @@ function onReceiveStatus(message) {
 			}
 
 			if (status["s"] == "running") {
-				$("#timeRemaining").html("Time remaining:");
+				$("#timeRemaining").html(chrome.i18n.getMessage('timeRemaining'));
 				// otherwise, if running set variable for percentComplete
 				// never display less than 2% for UI purposes
 				var percentComplete = 100 * status["e"]
@@ -967,7 +974,7 @@ function onReceiveStatus(message) {
 				value : 100
 			});
 			// show the completed message
-			minutesRemaining = '<span style="color:#04B109;">Done!</span>';
+			minutesRemaining = '<span style="color:#04B109;">'+chrome.i18n.getMessage('done')+'</span>';
 			$("#minutesRemaining").html(minutesRemaining);
 			// update the "current temp"
 			var block_temp = status["b"];
@@ -976,7 +983,7 @@ function onReceiveStatus(message) {
 			var lid_temp = status["l"];
 			$("#lidTemperature").html(lid_temp);
 			// replace the "cycle # of total#" span with "PCR took..."
-			$("#cycleNumOfNum").html("PCR took " + humanTime(status["e"]));
+			$("#cycleNumOfNum").html(chrome.i18n.getMessage('tookTime').replace('___TIME___', humanTime(status["e"])));
 			// i.e. hide the "Holding for 10 sec", just show "Holding"
 			$("#stepRemaining").hide();
 			// Current step name
@@ -1012,64 +1019,6 @@ function onReceiveStatus(message) {
 
 }
 
-/* readDevice()
- * Checks the OS (Mac or PC) and runs the appropriate middleman app (NCC) to grab info off the USB drive
- */
-function readDevice(filePath) {
-	if (filePath.exists) {
-		// are native processes supported?
-		if (air.NativeProcess.isSupported) {
-			var nativeProcessStartup = new air.NativeProcessStartupInfo();
-			nativeProcess = new air.NativeProcess();
-			// setup arguments
-			var args = new air.Vector["<String>"]();
-			// PC or Mac?
-			if (air.Capabilities.os.toLowerCase().indexOf("win") > -1) {
-				processName = air.File.applicationDirectory
-						.resolvePath("ncc.exe");
-				//alert("win");
-			}
-			else if (air.Capabilities.os.toLowerCase().indexOf("mac") > -1) {
-				// in application directory
-				processName = air.File.applicationDirectory.resolvePath("ncc");
-				//processName = new air.File("/bin/cat");
-				//alert("mac");
-			}
-			else if (air.Capabilities.os.toLowerCase().indexOf("Linux") > -1) {
-				// in application directory
-				processName = air.File.applicationDirectory
-						.resolvePath("ncc_linx");
-				//processName = new air.File("/bin/cat");
-				//alert("linux");
-			}
-			else {
-				chromeUtil
-						.alert("Error #810 - Can't tell if this is a Mac, PC, or Linux");
-			}
-
-			nativeProcessStartup.executable = processName;
-
-			// add the path as an argument
-			args.push(filePath.nativePath);
-			nativeProcessStartup.arguments = args;
-			nativeProcess.addEventListener(
-					air.ProgressEvent.STANDARD_OUTPUT_DATA, outputHandler);
-			// start the process
-			nativeProcess.start(nativeProcessStartup);
-		}
-		else {
-			chromeUtil.alert("NativeProcess not supported");
-		}
-		// will return the value of the outputHandler if it's NULL or blank
-		if (window.deviceFile != null || window.deviceFile != "") {
-			return window.deviceFile;
-		}
-	}
-	else {
-		// otherwise do nothing if the file doesn't exist
-		//alert("File doesn't exist");
-	}
-}
 
 /* outputHandler()
  * Grabs stdout from the middleman USB app, used in readDevice()
@@ -1129,28 +1078,22 @@ function humanTime(secondsRemaining) {
 	var minutesRemaining = Math.floor(secondsRemaining / 60);
 	var hoursRemaining = Math.floor(minutesRemaining / 60);
 	if (hoursRemaining > 0) {
-		timeRemaining += hoursRemaining + " hour";
-		if (hoursRemaining > 1) {
-			timeRemaining += "s ";
-		}
-		else {
-			timeRemaining += " ";
-		}
-		timeRemaining += "<br />";
+		timeRemaining += hoursRemaining + " " + chrome.i18n.getMessage((hoursRemaining>1)?'hours':'hour');
+		timeRemaining += " <br />";
 		minutesRemaining -= (hoursRemaining) * 60;
 	}
 	if (minutesRemaining > 1) {
-		timeRemaining += minutesRemaining + " minutes";
+		timeRemaining += minutesRemaining + " " + chrome.i18n.getMessage('minutes');
 	}
 	else if (minutesRemaining == 1) {
-		timeRemaining += "1 minute";
+		timeRemaining += chrome.i18n.getMessage('minute1');
 	}
 	else if (secondsRemaining <= 60) {
 		// should say "less than a minute" but font is too big
-		timeRemaining += "1 minute";
+		timeRemaining += chrome.i18n.getMessage('minute1');
 	}
 	else if (secondsRemaining == 0) {
-		timeRemaining = "Done!";
+		timeRemaining = chrome.i18n.getMessage('done');
 	}
 	return timeRemaining;
 }
@@ -1207,7 +1150,7 @@ function prepareButtons() {
 	});
 
 	$('#OpenDownloadPage').on('click', function () {
-		window.open("http://www.tori.st");
+		window.open(chrome.i18n.getMessage('downloadUrl'));
 	});
 	/*  "Home" button on the OpenPCR Form page
 	 * Goes Home
@@ -1335,19 +1278,19 @@ function prepareButtons() {
 						// get current state
 						buttonText = document.getElementById("OptionsButton").innerHTML;
 						// if we're hiding the options and there are no pre-steps or post-steps, hide those sections appropriately
-						if (buttonText == 'Less options'
+						if (buttonText == chrome.i18n.getMessage('lessOptions')
 								&& $("#preSteps").html() == "") {
 							// hide pre steps
 							$("#preContainer").hide();
 						}
-						if (buttonText == 'Less options'
+						if (buttonText == chrome.i18n.getMessage('lessOptions')
 								&& $("#postSteps").html() == "") {
 							// hide post steps
 							$("#postContainer").hide();
 						}
 						// flip the Options button text between "More options" and "Less options"
 						var buttonText = (buttonText != chrome.i18n.getMessage('moreOptions') ? chrome.i18n.getMessage('moreOptions')
-								: 'Less options');
+								: chrome.i18n.getMessage('lessOptions'));
 						$('#OptionsButton').html(buttonText);
 					});
 
@@ -1422,13 +1365,13 @@ function addStep(location) {
 	}
 	// add to HTML
 	if (location == "preSteps") {
-		step_name = "Initial Step"
+		step_name = localizeStepName("Initial Step");
 	}
 	if (location == "postSteps") {
-		step_name = "Final Step"
+		step_name = localizeStepName("Final Step");
 	}
 	if (location == "cycleSteps") {
-		step_name = "Step"
+		step_name = localizeStepName("Step");
 	}
 	step_number = new Date().getTime();
 	;
@@ -1439,15 +1382,15 @@ function addStep(location) {
 			+ '<a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
 			+ '<table cellspacing="20">'
 			+ '<tr>'
-			+ '<th><label>temp</label><div><input type="text" style="font-weight:normal;" class="required number textinput" value="" name="temp_'
+			+ '<th><label>'+chrome.i18n.getMessage('tempShort')+'</label><div><input type="text" style="font-weight:normal;" class="required number textinput" value="" name="temp_'
 			+ step_number
 			+ '" maxlength="4" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>'
-			+ '<th><label>step duration</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="time_'
+			+ '<th><label>'+chrome.i18n.getMessage('stepDuration')+'</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="time_'
 			+ step_number
-			+ '" maxlength="4" min="0" max="1000"></div><span htmlfor="openpcr_time" generated="true" class="units">sec</span></th>'
-			+ '<th><label>ramp duration</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="rampDuration_'
+			+ '" maxlength="4" min="0" max="1000"></div><span htmlfor="openpcr_time" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
+			+ '<th><label>'+chrome.i18n.getMessage('rampDuration')+'</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="rampDuration_'
 			+ step_number
-			+ '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">sec</span></th>'
+			+ '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
 			+ '</tr>' + '</table>' + '</div>';
 	// append a new step to location
 	$('#' + location).append(step);
@@ -1499,7 +1442,7 @@ $(function() {
 	 */
 	// Settings Dialog			
 	$('#settings_dialog')
-			.dialog(
+			.dialog( //TODO Control LCD
 					{
 						autoOpen : false,
 						width : 400,
@@ -1507,7 +1450,7 @@ $(function() {
 						draggable : false,
 						resizable : false,
 						buttons : {
-							"Apply" : function() {
+							"Apply" : function() { //TODO localize
 								// grab the value of the slider
 								contrast = $("#contrast_slider")
 										.slider("value");
@@ -1536,7 +1479,7 @@ $(function() {
 									fileStream.close();
 								}
 							},
-							"OK" : function() {
+							"OK" : function() { //TODO localize
 								// grab the value of the slider
 								contrast = $("#contrast_slider")
 										.slider("value");
@@ -1582,7 +1525,7 @@ $(function() {
 		draggable : false,
 		resizable : false,
 		position : 'center',
-		buttons : {
+		buttons : { //TODO localize
 			"Cancel" : function() {
 				$(this).dialog("close");
 				$("#name").val("");
@@ -1617,7 +1560,7 @@ $(function() {
 		modal : true,
 		draggable : false,
 		resizable : false,
-		buttons : {
+		buttons : { //TODO localize
 			"No" : function() {
 				$(this).dialog("close");
 			},
@@ -1652,7 +1595,7 @@ $(function() {
 		modal : true,
 		draggable : false,
 		resizable : false,
-		buttons : {
+		buttons : { //TODO localize
 			"No" : function() {
 				$(this).dialog("close");
 			},
