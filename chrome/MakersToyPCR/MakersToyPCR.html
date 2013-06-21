@@ -3,7 +3,9 @@
 <head>
 <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
   <link type="text/css" href="css/redmond/jquery-ui-1.8.13.custom.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/reset.css" />
   <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/buttons.css" />
   <link href="css/SprySlidingPanels.css" rel="stylesheet" type="text/css" />
   
   <script type="text/javascript" src="js/lib/jquery-1.9.1.min.js"></script>
@@ -24,46 +26,6 @@
   <script type="text/javascript" src="js/experiments/new_experiment.js"></script>
  
   <style type="text/css">
-hr, .clearAll {
-	clear: both;
-}
-#example2.SlidingPanels {
-	float: left;
-}
-#example2 .SlidingPanelsContentGroup {
-	float: left;
-	width: 10000px;
-}
-#example2 .SlidingPanelsContent {
-	float: left;
-	width: 500px;
-}
-div.deviceLabel {
-	float:left;
-	font-weight:bold;
-	text-align:right;
-	width: 68px;
-	display:block;
-	font-size:80%;
-}
-div.deviceStatus {
-	float:left;
-	font-weight:normal;
-	text-align:left;
-	width: 80px;
-	display:block;
-	font-size:90%;
-}
-
-meter { -webkit-appearance: none; }
-::-webkit-meter-bar {
-    height: 12px;
-    background: #fff;
-    border: 1px solid #888;
-    box-shadow: inset 0px 1px 2px rgba(0,0,0,0.25);
-}
-#meterBlock::-webkit-meter-optimum-value { background: -webkit-linear-gradient(top, #bcdb84 0%,#5ba009 100%); }
-#meterLid::-webkit-meter-optimum-value { background: -webkit-linear-gradient(top, #a4e3ff 0%,#01a4ea 100%); }
 </style>
 </head>
 <body>
@@ -80,7 +42,8 @@ meter { -webkit-appearance: none; }
 			<br /><br /><br />
 
 			<!-- Rerun an experiment -->
-			<a href="#" id="listSubmitButton"><img src="images/rerun.png" style="vertical-align:middle;"><span class="home_title pcr_localize_reRunExperiment">Re-run an experiment</span></a>
+			<a href="#" id="listSubmitButton"><img src="images/rerun.png" style="vertical-align:middle;">
+				<span class="home_title pcr_localize_reRunExperiment">Re-run an experiment</span></a>
 			<div id="reRun" align="right"></div>
 			<div id="portLabel" class="pcr_localize_searching">Searching for a device...</div>
 			<div id="update_dialog" style="display:none">
@@ -88,7 +51,7 @@ meter { -webkit-appearance: none; }
 				<a class="pcr_localize_download" id="OpenDownloadPage">Open Download Page</a>
 			</div>
 			<div>
-				<a class="small_button pcr_localize_about" id="About">About this app</a>
+				<input type="button" id="About" value="About this app" class="small_button pcr_localize_about"/>
 			</div>
 			<a class="small_button pcr_localize_contrast" id="Settings" style="display:none">Adjust the screen contrast</a>
 			<a class="small_button pcr_localize_clearData" id="ClearData" style="display:none">Clear all data(For Developer)</a>
@@ -101,7 +64,9 @@ meter { -webkit-appearance: none; }
 				<div class="openpcr-form-div"> 
 				
 				<div class="Header"><a id="deleteButton" href="#"><img src="images/delete.png" height="30"></a> <span id="ExperimentName"></span>
-				<a id="editButton" class="small_button pcr_localize_edit">Edit</a></div>
+				
+				<input type="button" id="editButton" class="small_button edit pcr_localize_edit" value="Edit">
+				</div>
 				
 				
 				<div id="lidContainer" style="display:none;">
@@ -126,14 +91,14 @@ meter { -webkit-appearance: none; }
 					</div>
 				</form>
 					</div>
-					<a id="OptionsButton" class="small_button options_button"><span class="pcr_localize_moreOptions">More options</span></a>
-				<a id="Start" type="submit" class="start button"><span class="pcr_localize_start">Start</span></a>
-				<a id="Unplugged" class="unplugged button"><span class="pcr_localize_pleasePlug">Plug in your Toy PCR to Start</span></a>
-				<a id="Save" type="" class="save button"><span class="pcr_localize_savePreset">Save Preset</span></a>
-				<a id="SaveEdits" type="submit" class="saveEdits button"><span class="pcr_localize_saveEdits">Save Edits</span></a>
-				<a id="Cancel" class="cancel button"><span class="pcr_localize_cancel">Cancel</span></a>
+					<input type="button" class="small_button moreoptions pcr_localize_moreOptions" value="More Options" id="OptionsButton"/>
+					<input type="button" class="start button pcr_localize_start" id="Start" value="Start"/>
+				<input type="button" id="Unplugged" class="unplugged button pcr_localize_pleasePlug" value="Plug in your Toy PCR to Start"/>
+				<input type="button" id="Save" class="save button pcr_localize_savePreset" value="Save Preset"/>
+				<input type="button" id="SaveEdits" class="saveEdits button pcr_localize_saveEdits" value="Save Edits"/>
+				<input type="button" id="Cancel" class="cancel button pcr_localize_cancel" value="Cancel"/>
 			<div class="newline">
-				<a id="Home" class="small_button home_button"><img src="images/left_arrow.png"> <span class="pcr_localize_home">Home</span></a>
+				<input type="button" id="Home" class="small_button home_button pcr_localize_home" value="Home"/>
 			</div>
 		</div>
 		<!-- save-dialog -->
@@ -213,26 +178,30 @@ meter { -webkit-appearance: none; }
 					<div>
 						<div id="graph_container" style="width:420px;height:240px;padding:6px 8px 12px 8px;"></div>
 						<div style="text-align:center;">
-							<a href="#" id="graph_plus" class="small_button">&nbsp;+&nbsp;</a>
-							<a href="#" id="graph_minus" class="small_button">&nbsp;-&nbsp;</a>
+							<input type="button" id="graph_plus" class="small_button" value=" + "/>
+							<input type="button" id="graph_minus" class="small_button" value=" - "/>
 						</div>
 					</div>
 					<div id="runningPluggedIn">
-						<div id="cancelButton"><a href="#" id="stop_link" class="stop small_button"><span class="pcr_localize_stop">Stop</span></a></div><br />
+						<div id="cancelButton">
+							<input type="button" id="stop_link" class="stop small_button pcr_localize_stop" value="Stop"/>
+						</div>
 					</div>
 					<div id="runningUnplugged" class="unplugged pcr_localize_unplugged">
-					Your Makers Toy PCR is unplugged from the computer.<br />Plug in your Makers Toy PCR to get updated information on your run.
+						Your Makers Toy PCR is unplugged from the computer.<br />
+						Plug in your Makers Toy PCR to get updated information on your run.
 					</div>
 						
 				</div>
 				<script type="text/javascript" src="js/lib/flotr2.min.js"></script>
 				<script type="text/javascript" src="js/graph.js"></script>
+				
 			<div id="homeButton">
-				<a id="Home" class="button homeRunning pcr_localize_home">Home</a>
+				<input type="button" id="Home" class="button homeRunning pcr_localize_home" value="Home"/>
 			</div>
 			<div style="clear:both;"></div>
 			<div style="margin-top:6px;">
-				<a class="small_button pcr_localize_saveCsv" id="download" style="display:none;">Save CSV</a>
+				<input type="button" class="small_button pcr_localize_saveCsv" id="download" style="display:none;" value="Save CSV"/>
 			</div>
 			<!-- stop-dialog -->
 			<div id="stop_dialog" title="Stop">

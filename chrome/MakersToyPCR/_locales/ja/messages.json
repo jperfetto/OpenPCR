@@ -45,7 +45,7 @@
 	"deleted":{"message":"削除しました!"},
 	"deviceNotFound":{"message":"デバイスが見つかりませんでした。"},
 	"deviceFound":{"message":"ポート ___PORT___ にデバイスが接続されています。"},
-	"firmwareVersionDialog":{"message":"最新バージョン ___LATEST_VERSION___ が公開されています! (現在インストールされているバージョンは ___INSTALLED_VERSION___ です)"},
+	"firmwareVersionDialog":{"message":"最新のファームウェア、バージョン ___LATEST_VERSION___ が公開されています! (現在インストールされているバージョンは ___INSTALLED_VERSION___ です)"},
 	"heaterLid":{"message":"蓋の温度"},
 	"numberOfCycles":{"message":"サイクル数"},
 	"tempShort":{"message":"温度"},

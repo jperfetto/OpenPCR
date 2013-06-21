@@ -1,0 +1,76 @@
+/* =Reset default browser CSS. Based on work by Eric Meyer: http://meyerweb.com/eric/tools/css/reset/index.html
+-------------------------------------------------------------- */
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,form,label,legend,caption,tbody,tfoot,thead
+{
+	background: transparent;
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+
+img {
+	vertical-align: middle;
+}
+
+th {
+	padding-right: 20px;
+	padding-left: 40px;
+}
+
+h1 {
+	font-weight: bold;
+	color: #333333;
+}
+
+fieldset {
+	border: 1px solid grey;
+	padding: 10px;
+}
+
+body {
+	line-height: 1;
+}
+
+h1,h2,h3,h4,h5,h6 {
+	clear: both;
+}
+
+ol,ul {
+	list-style: none;
+}
+
+blockquote {
+	quotes: none;
+}
+
+blockquote:before,blockquote:after {
+	content: '';
+	content: none;
+}
+
+del {
+	text-decoration: line-through;
+}
+
+label {
+	color: black;
+	font-weight: normal;
+}
+
+/* tables still need 'cellspacing="0"' in the markup */
+table {
+	border-collapse: collapse;
+	border-spacing: 0;
+}
+
+a img {
+	border: none;
+}
+
+.clear {
+	clear: both;
+}
+
+a {
+	outline: 0;
+}

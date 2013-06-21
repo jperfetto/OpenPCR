@@ -1277,7 +1277,7 @@ function prepareButtons() {
 						$("#postContainer").show();
 						$("#lidContainer").show();
 						// get current state
-						buttonText = document.getElementById("OptionsButton").innerHTML;
+						buttonText = document.getElementById("OptionsButton").value;
 						// if we're hiding the options and there are no pre-steps or post-steps, hide those sections appropriately
 						if (buttonText == chrome.i18n.getMessage('lessOptions')
 								&& $("#preSteps").html() == "") {
@@ -1292,7 +1292,7 @@ function prepareButtons() {
 						// flip the Options button text between "More options" and "Less options"
 						var buttonText = (buttonText != chrome.i18n.getMessage('moreOptions') ? chrome.i18n.getMessage('moreOptions')
 								: chrome.i18n.getMessage('lessOptions'));
-						$('#OptionsButton').html(buttonText);
+						$('#OptionsButton')[0].value = buttonText;
 					});
 
 	// Presets page
