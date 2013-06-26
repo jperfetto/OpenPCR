@@ -1,4 +1,4 @@
-MakersToyPCR
+NinjaPCR
 ============
 
 Open Thermocycler Implementation
