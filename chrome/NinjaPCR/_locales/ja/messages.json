@@ -3,12 +3,12 @@
 		"message": "ja"
 	},
 	"extTitle": {
-		"message": "Makers Toy PCR"
+		"message": "NinjaPCR"
 	},
 	"extDescription": {
-		"message": "オープンソースなPCRサーマルサイクラー「Makers Toy PCR」の操作用アプリ"
+		"message": "オープンソースなPCRサーマルサイクラー「NinjaPCR」の操作用アプリ"
 	},
-	"appTitle":{"message":"Makers Toy PCR"},
+	"appTitle":{"message":"NinjaPCR"},
 	"addNewExperiment":{"message":"実験を新規作成"},
 	"reRunExperiment":{"message":"実験を再実行"},
 	"searching":{"message":"デバイスを検索しています..."},
@@ -21,7 +21,7 @@
 	"step":{"message":"ステップ"},
 	"finalStep":{"message":"最終ステップ"},
 	"moreOptions":{"message":"詳細設定"},
-	"pleasePlug":{"message":"Makers Toy PCRを接続してください"},
+	"pleasePlug":{"message":"NinjaPCRを接続してください"},
 	"savePreset":{"message":"実験を保存"},
 	"saveEdits":{"message":"編集を保存"},
 	"cancel":{"message":"キャンセル"},
@@ -35,7 +35,7 @@
 	"lid":{"message":"蓋"},
 	"block":{"message":"ウェル"},
 	"peltier":{"message":"ペルチエ"},
-	"unplugged":{"message":"Makers Toy PCRがコンピュータから取り外されました。<br />再度接続してください。"},
+	"unplugged":{"message":"NinjaPCRがコンピュータから取り外されました。<br />再度接続してください。"},
 	"saveCsv":{"message":"実験記録をCSVで保存"},
 	"stopPcr":{"message":"PCRを終了しますか?"},
 	"dragSlider":{"message":"スライダーを動かしてコントラストを調整します。"},
@@ -53,9 +53,9 @@
 	"sec":{"message":"秒"},
 	"rampDuration":{"message":"ランプ時間"},
 	"error":{"message":"エラー"},
-	"lengthLimit":{"message":"Makers Toy PCRが送信できるコマンドは252文字までですが、この設定は___LENGTH___文字のコマンドとなります。名前を短くするか、不要なステップを削除してください。"},
-	"stepLimit":{"message":"___STEPS___ステップ含まれていますが、Makers Toy PCRが扱えるのは20サイクルステップまでです。"},
-	"totalStepLimit":{"message":"___STEPS___ ステップ含まれていますが、Makers Toy PCRが扱えるのは最大25ステップです"},
+	"lengthLimit":{"message":"NinjaPCRが送信できるコマンドは252文字までですが、この設定は___LENGTH___文字のコマンドとなります。名前を短くするか、不要なステップを削除してください。"},
+	"stepLimit":{"message":"___STEPS___ステップ含まれていますが、NinjaPCRが扱えるのは20サイクルステップまでです。"},
+	"totalStepLimit":{"message":"___STEPS___ ステップ含まれていますが、NinjaPCRが扱えるのは最大25ステップです"},
 	"statusHeating":{"message":"加熱"},
 	"statusStop":{"message":"停止"},
 	"statusCooling":{"message":"冷却"},

@@ -1,7 +1,7 @@
 var connectionId = null;
 chrome.app.runtime.onLaunched.addListener(function() {
 	chrome.app.window.create(
-		'MakersToyPCR.html', 
+		'PCR.html', 
 		{
 			'bounds': {
 				'width': 700,
