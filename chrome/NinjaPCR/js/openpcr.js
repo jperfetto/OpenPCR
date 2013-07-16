@@ -873,7 +873,7 @@ function onReceiveStatus(message) {
 		if (status["d"] == window.command_id) {
 			window.command_id_counter = 0;
 		}
-		if (Math.random()<0.1) status["s"]="complete"; //TODO debug
+		//if (Math.random()<0.1) status["s"]="complete"; //TODO debug
 
 		var statusLid = status["x"].toFixed(1);
 		var statusPeltier = status["y"].toFixed(1);
