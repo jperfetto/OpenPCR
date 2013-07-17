@@ -77,6 +77,7 @@ public:
   int GetPeltierPwm() { return iPeltierPwm; }
   double GetLidTemp() { return iLidThermistor.GetTemp(); }
   double GetPlateTemp() { return iPlateThermistor.GetTemp(); }
+  double GetPlateResistance() { return iPlateThermistor.GetResistance(); }
   unsigned long GetTimeRemainingS() { return iEstimatedTimeRemainingS; }
   unsigned long GetElapsedTimeS() { return (millis() - iProgramStartTimeMs) / 1000; }
   unsigned long GetRampElapsedTimeMs() { return millis() - iRampStartTime; }

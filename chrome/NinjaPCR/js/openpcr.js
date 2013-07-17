@@ -876,6 +876,7 @@ function onReceiveStatus(message) {
 		//if (Math.random()<0.1) status["s"]="complete"; //TODO debug
 
 		var statusLid = status["x"].toFixed(1);
+		console.log("Resistance="+status["x"]);
 		var statusPeltier = status["y"].toFixed(1);
 		$("#deviceStatusLid").html((statusLid>0)?chrome.i18n.getMessage('statusHeating'):chrome.i18n.getMessage('statusStop'));
 		$("#deviceStatusLid").css("color", (statusLid>0)?COLOR_HEATING:COLOR_STOP);
