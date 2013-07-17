@@ -170,7 +170,7 @@ void SerialControl::SendStatus() {
   statusPtr = AddParam(statusPtr, 'x', tc.getAnalogValueLid());
   statusPtr = AddParam(statusPtr, 'y', tc.getAnalogValuePeltier());
   unsigned long resistance = (unsigned long)tc.GetPlateResistance();
-  statusPtr = AddParam(statusPtr, 'z', resistance, true);
+  statusPtr = AddParam(statusPtr, 'z', resistance, false);
   statusPtr++; //to include null terminator
   
   //send packet

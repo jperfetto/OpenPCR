@@ -23,26 +23,26 @@ class CLidThermistor {
 public:
   CLidThermistor();
   double& GetTemp() { return iTemp; }
-  long& GetResistance() { return resistance; }
+  unsigned long& GetResistance() { return resistance; }
   void ReadTemp();
   
 private:
   double iTemp;
-  long resistance;
+  unsigned long resistance;
 };
 
 class CPlateThermistor {
 public:
   CPlateThermistor();
   double& GetTemp() { return iTemp; }
-  long& GetResistance() { return resistance; }
+  unsigned long& GetResistance() { return resistance; }
   void ReadTemp();
 private:
    char SPITransfer(volatile char data);
    
 private:
   double iTemp;
-  long resistance;
+  unsigned long resistance;
 };
 
 #endif

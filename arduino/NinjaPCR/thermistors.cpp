@@ -134,7 +134,7 @@ CLidThermistor::CLidThermistor():
 //------------------------------------------------------------------------------
 void CLidThermistor::ReadTemp() {
   unsigned long voltage_mv = (unsigned long)analogRead(1) * 5000 / 1024;
-  long resistance = voltage_mv * 2200 / (5000 - voltage_mv);
+  resistance = voltage_mv * 2200 / (5000 - voltage_mv);
   iTemp = TableLookup(LID_RESISTANCE_TABLE, sizeof(LID_RESISTANCE_TABLE) / sizeof(LID_RESISTANCE_TABLE[0]), 0, resistance);
 }
 
@@ -174,7 +174,7 @@ void CPlateThermistor::ReadTemp() {
   digitalWrite(SLAVESELECT, HIGH);
   
   unsigned long voltage_mv = voltage * 1000;
-  unsigned long resistance = voltage_mv * 22000 / (5000 - voltage_mv); // in hecto ohms
+  resistance = voltage_mv * 22000 / (5000 - voltage_mv); // in hecto ohms
  
   iTemp = TableLookup(PLATE_RESISTANCE_TABLE, sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]), -40, resistance);
 }
