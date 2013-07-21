@@ -20,7 +20,6 @@
 #include "program.h"
 
 #include <EEPROM.h>
-
 #include "display.h"
 
 ////////////////////////////////////////////////////////////////////
@@ -121,7 +120,10 @@ void CommandParser::ParseCommand(SCommand& command, char* pCommandBuf) {
     pParam = strtok(NULL, "&");
   }
 }
-
+const char STATUS_START[] PROGMEM = "start";
+const char STATUS_STOP[] PROGMEM = "stop";
+const char STATUS_CFG[] PROGMEM = "cfg";
+const char PAREHTHESES[] PROGMEM = "()";
 void CommandParser::AddComponent(SCommand* pCommand, char key, char* szValue) {
   switch(key) {
   case 'n':
@@ -129,11 +131,11 @@ void CommandParser::AddComponent(SCommand* pCommand, char key, char* szValue) {
     pCommand->name[sizeof(pCommand->name) - 1] = '\0';
     break;
   case 'c':
-    if (strcmp(szValue, "start") == 0)
+    if (strcmp(szValue, STATUS_START) == 0)
       pCommand->command = SCommand::EStart;
-    else if (strcmp(szValue, "stop") == 0)
+    else if (strcmp(szValue, STATUS_STOP) == 0)
       pCommand->command = SCommand::EStop;
-    else if (strcmp(szValue, "cfg") == 0)
+    else if (strcmp(szValue, STATUS_CFG) == 0)
       pCommand->command = SCommand::EConfig;
     break;
   case 'l':
@@ -154,10 +156,10 @@ Cycle* CommandParser::ParseProgram(char* pBuffer) {
   Cycle* pProgram = gpThermocycler->GetCyclePool().AllocateComponent();
   pProgram->SetNumCycles(1);
 	
-  char* pCycBuf = strtok(pBuffer, "()");
+  char* pCycBuf = strtok(pBuffer, PAREHTHESES);
   while (pCycBuf != NULL) {
     pProgram->AddComponent(ParseCycle(pCycBuf));
-    pCycBuf = strtok(NULL, "()");
+    pCycBuf = strtok(NULL, PAREHTHESES);
   }
   
   return pProgram;
@@ -236,13 +238,16 @@ uint8_t ProgramStore::RetrieveContrast() {
   return EEPROM.read(0);
 }
 
-#define PROG_START_STR "&c=start"
-const char PROG_START_STR_P[] PROGMEM = PROG_START_STR;
+//#define PROG_START_STR "&c=start"
+const char PROG_START_STR[] PROGMEM = "&c=start";
+//const char PROG_START_STR[] PROGMEM = "&c=start";
+//const char PROG_START_STR_P[] PROGMEM = PROG_START_STR;
 boolean ProgramStore::RetrieveProgram(SCommand& command, char* pBuffer) {
   for (int i = 0; i < MAX_COMMAND_SIZE; i++)
     pBuffer[i] = EEPROM.read(i + 1);
   
-  if (strncmp_P(pBuffer, PROG_START_STR_P, strlen(PROG_START_STR)) == 0) {
+//  if (strncmp_P(pBuffer, PROG_START_STR_P, strlen(PROG_START_STR)) == 0) {
+  if (strncmp_P(pBuffer, PROG_START_STR, strlen(PROG_START_STR)) == 0) {
     //previous program stored
     CommandParser::ParseCommand(command, pBuffer);   
     return true;

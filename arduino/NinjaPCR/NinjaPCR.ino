@@ -48,8 +48,10 @@ void setup() {
   gpThermocycler = new Thermocycler(restarted);
   //mySerial.begin(4800);
   Serial.begin(4800);
+  /*
   pinMode(7, OUTPUT);
   digitalWrite(7,LOW);
+  */
 }
  
 bool connected = false;
@@ -58,12 +60,14 @@ short INTERVAL_MSEC = 1000;
 void loop() {
   if (connected) {
     if (!initDone) {
+      /*
       for (int i=0; i<2; i++) {
         digitalWrite(7,HIGH);
         delay(300);
         digitalWrite(7,LOW);
         delay(300);
       }
+      */
       initDone = true;
     }
     gpThermocycler->Loop();
@@ -72,7 +76,7 @@ void loop() {
   }
 }
 void checkPlugged () {
-    Serial.write("pcr");
+    Serial.write(SERIAL_PREFIX);
     Serial.write(OPENPCR_FIRMWARE_VERSION_STRING);
     Serial.print("\n");
     int timeStart = millis();

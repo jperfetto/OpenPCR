@@ -24,6 +24,7 @@
 #include "program.h"
 #include "thermistors.h"
 
+
 class Display;
 class SerialControl;
 

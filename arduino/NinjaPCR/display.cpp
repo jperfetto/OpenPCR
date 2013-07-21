@@ -30,9 +30,9 @@ const char HEATING_STR[] PROGMEM = "Heating";
 const char COOLING_STR[] PROGMEM = "Cooling";
 const char LIDWAIT_STR[] PROGMEM = "Heating Lid";
 const char STOPPED_STR[] PROGMEM = "Ready";
-const char RUN_COMPLETE_STR[] PROGMEM = "*** Run Complete ***";
+const char RUN_COMPLETE_STR[] PROGMEM = "Complete";
 const char OPENPCR_STR[] PROGMEM = "OpenPCR";
-const char POWERED_OFF_STR[] PROGMEM = "Powered Off";
+const char POWERED_OFF_STR[] PROGMEM = "PWR Off";
 const char ETA_OVER_1000H_STR[] PROGMEM = "ETA: >1000h";
 
 const char LID_FORM_STR[] PROGMEM = "Lid: %3d C";
@@ -41,7 +41,7 @@ const char ETA_HOURMIN_FORM_STR[] PROGMEM = "ETA: %d:%02d";
 const char ETA_SEC_FORM_STR[] PROGMEM = "ETA:  %2ds";
 const char BLOCK_TEMP_FORM_STR[] PROGMEM = "%s C";
 const char STATE_FORM_STR[] PROGMEM = "%-13s";
-const char VERSION_FORM_STR[] PROGMEM = "Firmware v%s";
+const char VERSION_FORM_STR[] PROGMEM = "Firm v%s";
 
 Display::Display():
   iLcd(6, 7, 8, A5, 16, 17),

@@ -197,12 +197,12 @@ void Thermocycler::Stop() {
 }
 
 PcrStatus Thermocycler::Start() {
-	Serial.print("st");
+	//Serial.print("st");
   if (ipProgram == NULL) {
-	Serial.print("nu");
+	//Serial.print("nu");
     return ENoProgram;
   }
-	Serial.print("ok");
+	//Serial.print("ok");
 
   //advance to lid wait state
   iProgramState = ELidWait;
@@ -218,8 +218,6 @@ void Thermocycler::Loop() {
 	Serial.print(millis() > STARTUP_DELAY);
     if (millis() > STARTUP_DELAY) {
       iProgramState = EStopped;
-      Serial.print(iRestarted);
-      Serial.print(ipSerialControl->CommandReceived());
       if (!iRestarted && !ipSerialControl->CommandReceived()) {
         //check for stored program
         SCommand command;
@@ -297,7 +295,6 @@ void Thermocycler::Loop() {
 
 //private
 void Thermocycler::AdvanceToNextStep() {
-  Serial.print("ADV");
   ipPreviousStep = ipCurrentStep;
   ipCurrentStep = ipProgram->GetNextStep();
   if (ipCurrentStep == NULL)
