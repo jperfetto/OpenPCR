@@ -119,16 +119,24 @@ iTargetLidTemp(0) {
   clr=SPDR;
   delay(10); 
 
+//#define ATMEGA328
+#define LEONARDO
+
   iPlatePid.SetOutputLimits(MIN_PELTIER_PWM, MAX_PELTIER_PWM);
 
+TCCR1A |= (1<<WGM11) | (1<<WGM10);
   // Peltier PWM
-  TCCR1A |= (1<<WGM11) | (1<<WGM10);
+#ifdef LEONARDO
+  TCCR1B = _BV(CS11);
+  // Lid PWM
+  TCCR1A = _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11) | _BV(WGM10);
+  TCCR1B = _BV(CS12);
+#else
   TCCR1B = _BV(CS21);
-
   // Lid PWM
   TCCR2A = _BV(COM2A1) | _BV(COM2B1) | _BV(WGM21) | _BV(WGM20);
   TCCR2B = _BV(CS22);
-
+#endif
   iszProgName[0] = '\0';
 }
 
