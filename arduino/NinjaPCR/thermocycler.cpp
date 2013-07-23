@@ -127,10 +127,12 @@ iTargetLidTemp(0) {
 TCCR1A |= (1<<WGM11) | (1<<WGM10);
   // Peltier PWM
 #ifdef LEONARDO
+/*
   TCCR1B = _BV(CS11);
   // Lid PWM
   TCCR1A = _BV(COM1A1) | _BV(COM1B1) | _BV(WGM11) | _BV(WGM10);
   TCCR1B = _BV(CS12);
+ */
 #else
   TCCR1B = _BV(CS21);
   // Lid PWM
@@ -210,14 +212,30 @@ PcrStatus Thermocycler::Start() {
   return ESuccess;
 }
 
+/*
+
+  enum ProgramState {
+    EStartup = 0,
+    EStopped, //1
+    ELidWait, //2
+    ERunning, //3
+    EComplete, //4
+    EError, //5
+    EClear //6
+  };
+ 
+ */
 // internal
 void Thermocycler::Loop() {
-	  Serial.print(iProgramState);
   switch (iProgramState) {
   case EStartup:
-	Serial.print(millis() > STARTUP_DELAY);
+	//Serial.print("b");
+	//Serial.print(millis() > STARTUP_DELAY);
     if (millis() > STARTUP_DELAY) {
       iProgramState = EStopped;
+      	iRestarted = false;
+  		//Serial.print(iRestarted); //true->これはどこから?
+  		//Serial.print(ipSerialControl->CommandReceived()); //false
       if (!iRestarted && !ipSerialControl->CommandReceived()) {
         //check for stored program
         SCommand command;
@@ -483,6 +501,7 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
 }
 
 void Thermocycler::ProcessCommand(SCommand& command) {
+	Serial.print("LOG");
   if (command.command == SCommand::EStart) {
     //find display cycle
     Cycle* pProgram = command.pProgram;

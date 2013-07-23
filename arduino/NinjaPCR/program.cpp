@@ -120,10 +120,12 @@ void CommandParser::ParseCommand(SCommand& command, char* pCommandBuf) {
     pParam = strtok(NULL, "&");
   }
 }
+/*
 const char STATUS_START[] PROGMEM = "start";
 const char STATUS_STOP[] PROGMEM = "stop";
 const char STATUS_CFG[] PROGMEM = "cfg";
 const char PAREHTHESES[] PROGMEM = "()";
+*/
 void CommandParser::AddComponent(SCommand* pCommand, char key, char* szValue) {
   switch(key) {
   case 'n':
@@ -131,11 +133,11 @@ void CommandParser::AddComponent(SCommand* pCommand, char key, char* szValue) {
     pCommand->name[sizeof(pCommand->name) - 1] = '\0';
     break;
   case 'c':
-    if (strcmp(szValue, STATUS_START) == 0)
+    if (strcmp(szValue, "start") == 0)
       pCommand->command = SCommand::EStart;
-    else if (strcmp(szValue, STATUS_STOP) == 0)
+    else if (strcmp(szValue, "stop") == 0)
       pCommand->command = SCommand::EStop;
-    else if (strcmp(szValue, STATUS_CFG) == 0)
+    else if (strcmp(szValue, "cfg") == 0)
       pCommand->command = SCommand::EConfig;
     break;
   case 'l':
@@ -156,10 +158,10 @@ Cycle* CommandParser::ParseProgram(char* pBuffer) {
   Cycle* pProgram = gpThermocycler->GetCyclePool().AllocateComponent();
   pProgram->SetNumCycles(1);
 	
-  char* pCycBuf = strtok(pBuffer, PAREHTHESES);
+  char* pCycBuf = strtok(pBuffer, "()");
   while (pCycBuf != NULL) {
     pProgram->AddComponent(ParseCycle(pCycBuf));
-    pCycBuf = strtok(NULL, PAREHTHESES);
+    pCycBuf = strtok(NULL, "()");
   }
   
   return pProgram;

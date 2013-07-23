@@ -262,7 +262,7 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 	}
 };
 var PORT_TO_IGNORE = new RegExp("Bluetooth");
-var MESSAGE_FROM_DEVICE = new RegExp("pcr(.+?)\\n");
+var MESSAGE_FROM_DEVICE = new RegExp("pcr(.+?).");
 //Private
 SerialPortScanner.prototype._scan = function(callback) {
 	var port = this.ports[this.currentPortIndex];
@@ -290,7 +290,7 @@ SerialPortScanner.prototype._scan = function(callback) {
 		}
 	});
 };
-SerialPortScanner.DURATION_MSEC = 2000;
+SerialPortScanner.DURATION_MSEC = 3000;
 SerialPortScanner.BYTES_TO_READ = 64;
 
 SerialPortScanner.INITIAL_MESSAGE = "";

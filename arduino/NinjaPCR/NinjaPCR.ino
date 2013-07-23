@@ -59,18 +59,7 @@ bool initDone = false;
 short INTERVAL_MSEC = 1000;
 void loop() {
   if (connected) {
-    if (!initDone) {
-      /*
-      for (int i=0; i<2; i++) {
-        digitalWrite(7,HIGH);
-        delay(300);
-        digitalWrite(7,LOW);
-        delay(300);
-      }
-      */
-      initDone = true;
-    }
-  gpThermocycler->Loop();
+    gpThermocycler->Loop();
   } else {
     checkPlugged();
   }
@@ -86,7 +75,7 @@ void checkPlugged () {
     while (timeStart>millis()-INTERVAL_MSEC) {
       while (Serial.available()){
         char ch = Serial.read();
-        if (ch=='a') {
+        if (ch=='a'&&!connected) {
           connected = true;
         }
       }

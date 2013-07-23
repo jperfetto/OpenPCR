@@ -127,6 +127,8 @@ void Display::Update() {
 }
 
 void Display::DisplayEta() {
+//TODO TORI remove comment
+/*
   char timeString[16];
   unsigned long timeRemaining = GetThermocycler().GetTimeRemainingS();
   int hours = timeRemaining / 3600;
@@ -142,6 +144,7 @@ void Display::DisplayEta() {
   
   iLcd.setCursor(20 - strlen(timeString), 3);
   iLcd.print(timeString);
+  */
 }
 
 void Display::DisplayLidTemp() {
