@@ -20,16 +20,14 @@
 #define _PCR_INCLUDES_H_
 
 //#define DEBUG_DISPLAY
-/*
+
 #define SERIAL_PREFIX "pcr"
 #define OPENPCR_FIRMWARE_VERSION_STRING "1.0.5"
-*/
+
 
 #include "Arduino.h"
 #include <avr/pgmspace.h>
 
-const char OPENPCR_FIRMWARE_VERSION_STRING[] PROGMEM = "1.0.5";
-const char SERIAL_PREFIX[] PROGMEM = "pcr";
 #define PLATE_FAST_RAMP_THRESHOLD_MS 1000
 
 class Thermocycler;

@@ -119,8 +119,8 @@ iTargetLidTemp(0) {
   clr=SPDR;
   delay(10); 
 
-//#define ATMEGA328
-#define LEONARDO
+#define ATMEGA328
+//#define LEONARDO
 
   iPlatePid.SetOutputLimits(MIN_PELTIER_PWM, MAX_PELTIER_PWM);
 

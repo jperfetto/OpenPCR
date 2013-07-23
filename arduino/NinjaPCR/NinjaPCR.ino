@@ -70,14 +70,17 @@ void loop() {
       */
       initDone = true;
     }
-    gpThermocycler->Loop();
+  gpThermocycler->Loop();
   } else {
     checkPlugged();
   }
 }
+
+
+
 void checkPlugged () {
-    Serial.write(SERIAL_PREFIX);
-    Serial.write(OPENPCR_FIRMWARE_VERSION_STRING);
+    Serial.write("pcr");
+    Serial.write("1.0.5");
     Serial.print("\n");
     int timeStart = millis();
     while (timeStart>millis()-INTERVAL_MSEC) {
