@@ -47,7 +47,7 @@ image:active span {
 	border-bottom: 1px solid grey;
 	border-left: 1px solid grey;
 	border-right: 1px solid grey;
-	padding: 10px;
+	padding: 5px 10px;
 }
 
 #runningUnplugged {
@@ -134,10 +134,11 @@ a {
 }
 
 #minutesRemaining {
-	font-size: 32px;
+	font-size: 24px;
 	text-align: center;
 	padding-top: 0px;
 	padding-bottom: 15px;
+	white-space: nowrap;
 }
 
 #about_dialog {
@@ -203,14 +204,14 @@ body {
 	border: 0;
 	background: #F0F0F0;
 	width: 70px;
-	padding: 9px 10px 7px;
+	padding: 8px 9px 6px;
 	border: #B8B8B8 solid 1px;
 	text-align: center;
 }
 
 .openpcr-form-div .textinput:focus {
 	border: #6EABEB solid 3px;
-	padding: 7px 8px 5px;
+	padding: 6px 7px 4px;
 	outline: 0;
 }
 

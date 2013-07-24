@@ -81,7 +81,7 @@ input.button {
 	font-weight:bold;
 	font-size: 18px;
 	outline: 0;
-	padding: 16px;
+	padding: 12px;
 	cursor: pointer;
 	display: block;
 	float: left;
@@ -98,7 +98,7 @@ a.button {
 	font-weight:;
 	font-size: 18px;
 	outline: 0;
-	padding: 16px;
+	padding: 12px;
 	cursor: pointer;
 	display: block;
 	float: left;
