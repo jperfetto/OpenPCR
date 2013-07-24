@@ -32,7 +32,7 @@ function init() {
 	});
 
 	$('#newExperimentButton').on('click', newExperiment);
-	console.log($('#newExperimentButton'));
+	Log.v($('#newExperimentButton'));
 	$('#listSubmitButton').on('click', listSubmit);
 	$('#initialStep').on('click', addInitialStep);
 	$('#finalStep').on('click', addFinalStep);
@@ -65,7 +65,7 @@ function scanAndDisplay (delay) {
 			if (!window.checkPlugInterval)
 				window.clearInterval(window.checkPlugInterval);
 			window.pluggedIn = true;
-			console.log("Set #Start button visible.");
+			Log.v("Set #Start button visible.");
 			if($("#Unplugged").is(':visible')){
 				// if the "Unplugged" button is visible, switch it to "Start"
 				$("#Unplugged").hide();
@@ -85,11 +85,11 @@ function scanAndDisplay (delay) {
 
 
 function checkFirmwareVersion (version) {
-	console.log("Firmware version=" + version + ", Latest version=" + LATEST_FIRMWARE_VERSION);
+	Log.v("Firmware version=" + version + ", Latest version=" + LATEST_FIRMWARE_VERSION);
 	if (version==LATEST_FIRMWARE_VERSION) {
-		console.log("The firmware is up to date.");
+		Log.v("The firmware is up to date.");
 	} else {
-		console.log("Please update the firmware!");
+		Log.v("Please update the firmware!");
 		chromeUtil.alertUpdate(version, LATEST_FIRMWARE_VERSION);
 	}
 }
@@ -139,7 +139,7 @@ function listSubmit() {
  * loads the experiment with the given experimentID
  */
 function loadExperiment(experimentID) {
-	console.log("loadExperiment id=" + experimentID);
+	Log.v("loadExperiment id=" + experimentID);
 	pcrStorage.loadExperiment(experimentID, function(experiment) {
 		// Now we've made all the modifications needed, display the Form page
 		sp2.showPanel(1);
@@ -285,7 +285,7 @@ function writeoutExperiment() {
 	});
 	$("#cycleContainer .step_name").each (function(index, elem){
 		var stepName = globalizeStepName($(this).text());
-		console.log("Step Name=" + stepName);
+		Log.v("Step Name=" + stepName);
 		cycleNameArray.push(stepName);
 	});
 
@@ -387,7 +387,7 @@ function writeoutExperiment() {
  * Input: name, name of the file to be written out (add .pcr extension)
  */
 function Save(name, isNew) {
-	console.log("Save " + name + ", isNew=" + isNew);
+	Log.v("Save " + name + ", isNew=" + isNew);
 	// grab the current experiment and update window.experiment
 	pcrProgram = writeoutExperiment();
 	// update the name of the experiment
@@ -395,7 +395,7 @@ function Save(name, isNew) {
 	// turn the pcrProgram into a string
 	if (isNew) {
 		pcrStorage.insertExperiment(name, pcrProgram, function(result) {
-			console.log("result=" + result);
+			Log.v("result=" + result);
 			$('#save_confirmation_dialog').dialog('open');
 			// then close it after 1 second
 			setTimeout(function() {
@@ -405,7 +405,7 @@ function Save(name, isNew) {
 	}
 	else {
 		pcrStorage.updateCurrentExperiment(name, pcrProgram, function(result) {
-			console.log("result=" + result);
+			Log.v("result=" + result);
 			$('#save_confirmation_dialog').dialog('open');
 			// then close it after 1 second
 			setTimeout(function() {
@@ -680,7 +680,7 @@ function clearForm() {
  * The Enter/Return key doesn't do anything right now
  */
 function disableEnterKey(e) {
-	console.log("disableEnterKey");
+	Log.v("disableEnterKey");
 	var key;
 	if (window.event)
 		key = window.event.keyCode; //IE
@@ -701,11 +701,11 @@ function startPCR() {
 	// command id can't be 0 
 	// where is OpenPCR
 	var devicePort = chromeSerial.port;
-	console.log("devicePort=" + devicePort);
+	Log.v("devicePort=" + devicePort);
 	/*
 	// name of the output file written to OpenPCR
 	var controlFile = devicePath.resolvePath("CONTROL.TXT");
-	console.log("controlFile=" + controlFile);
+	Log.v("controlFile=" + controlFile);
 	// grab all the variables from the form in JSON format
 	*/
 	pcrProgram = writeoutExperiment();
@@ -755,12 +755,12 @@ function startPCR() {
 		}
 	}
 	// verify that there are no more than 16 top level steps
-	console.log(pcrProgram.steps.length + " : top level steps");
-	console.log(window.lessthan20steps + " : cycle level steps");
+	Log.v(pcrProgram.steps.length + " : top level steps");
+	Log.v(window.lessthan20steps + " : cycle level steps");
 	var totalSteps = window.lessthan20steps + pcrProgram.steps.length;
 
 	// check that the entire protocol isn't >252 bytes
-	console.log("parsedProgram=" + parsedProgram);
+	Log.v("parsedProgram=" + parsedProgram);
 	if (parsedProgram.length > 512) {
 		chromeUtil
 				.alert(chrome.i18n.getMessage('lengthLimit').replace('___LENGTH___', parsedProgram.length));
@@ -769,20 +769,20 @@ function startPCR() {
 
 	// verify the cycle step has no more than 16 steps
 	else if (window.lessthan20steps > 16) {
-		console.log(parsedProgram);
+		Log.v(parsedProgram);
 		chromeUtil.alert(chrome.i18n.getMessage('stepLimit').replace('___STEPS___',window.lessthan20steps));
 		return 0;
 	}
 
 	// and check that the total overall is less than 25
 	else if (totalSteps > 25) {
-		console.log(parsedProgram);
+		Log.v(parsedProgram);
 		chromeUtil.alert(chrome.i18n.getMessage('totalStepLimit').replace('___STEPS___',totalSteps));
 		return 0;
 	}
 
 	//debug
-	console.log(parsedProgram);
+	Log.v(parsedProgram);
 	// go to the Running dashboard
 	sp2.showPanel(2);
 	$("#ex2_p3").hide();
@@ -876,7 +876,7 @@ function onReceiveStatus(message) {
 		//if (Math.random()<0.1) status["s"]="complete"; //TODO debug
 
 		var statusLid = status["x"].toFixed(1);
-		console.log("Resistance="+status["z"]);
+		Log.v("Resistance="+status["z"]);
 		var statusPeltier = status["y"].toFixed(1);
 		$("#deviceStatusLid").html((statusLid>0)?chrome.i18n.getMessage('statusHeating'):chrome.i18n.getMessage('statusStop'));
 		$("#deviceStatusLid").css("color", (statusLid>0)?COLOR_HEATING:COLOR_STOP);
@@ -1015,8 +1015,8 @@ function onReceiveStatus(message) {
 		($("#Settings").show());
 	}
 	else {
-		console.log("doesn't have an o");
-		console.log(window.runningFile);
+		Log.v("doesn't have an o");
+		Log.v(window.runningFile);
 	}
 
 }
@@ -1054,7 +1054,7 @@ function stopPCR() {
 	// increment the window.command id and send the new command to the device
 	window.command_id++;
 	stopPCR += '&d=' + window.command_id;
-	console.log(stopPCR);
+	Log.v(stopPCR);
 	// Write out the STOP command to CONTROL.TXT
 	// name of the output file
 	//var file = window.path.resolvePath("CONTROL.TXT");
@@ -1242,7 +1242,7 @@ function prepareButtons() {
 	 * Delete the step
 	 */
 	$('.deleteStepButton').on('click', function() {
-		console.log("deleteStepButton");
+		Log.v("deleteStepButton");
 		$(this).parent().slideUp('slow', function() {
 			// after animation is complete, remove parent step
 			$(this).remove();
@@ -1464,7 +1464,7 @@ $(function() {
 										+ '&d=' + command_id;
 
 								// trace it
-								console.log("string: " + contrast_string);
+								Log.v("string: " + contrast_string);
 
 								// Write out the  command to CONTROL.TXT
 								// name of the output file
@@ -1490,7 +1490,7 @@ $(function() {
 								contrast_string = 's=ACGTC&c=cfg&o=' + contrast
 										+ '&d=' + command_id;
 								// trace it
-								console.log("string: " + contrast_string);
+								Log.v("string: " + contrast_string);
 								// Write out the  command to CONTROL.TXT
 								// name of the output file
 								if (window.path != null) {

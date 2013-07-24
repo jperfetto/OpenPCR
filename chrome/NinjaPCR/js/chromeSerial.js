@@ -28,7 +28,7 @@ Serial.prototype.scan = function (callbackExternal, _wait) {
 			}
 			if (!found) {
 				// New Port Found!
-				console.log("New Port Found! " + ports[i]);
+				Log.v("New Port Found! " + ports[i]);
 				portsToSearch.push(ports[i]);
 			}
 		}
@@ -58,10 +58,10 @@ Serial.prototype._getScanFunc = function (callbackExternal, portsToSearch) {
 
 Serial.prototype.startWithCommand = function (commandBody) {
 	this.complete = false;
-	console.log("------------------------------------------------");
-	console.log("Start Communication");
-	console.log("------------------------------------------------");
-	console.log("Program=" + commandBody);
+	Log.v("------------------------------------------------");
+	Log.v("Start Communication");
+	Log.v("------------------------------------------------");
+	Log.v("Program=" + commandBody);
 	var port = this.port;
 	var options = {
 			bitrate:BAUD_RATE
@@ -69,7 +69,7 @@ Serial.prototype.startWithCommand = function (commandBody) {
 	var self = this;
 	var connectionId = self.connectionId;
 	if (connectionId<0) {
-		console.log("Connection error.");
+		Log.v("Connection error.");
 	} else {
 		var data = getFullCommand(commandBody, SEND_CMD);
 		chrome.serial.write(connectionId, data, function (sendInfo){
@@ -107,7 +107,7 @@ Serial.prototype.sendStopCommand = function (command, callback) {
 	var self = this;
 	var connectionId = self.connectionId;
 	if (connectionId<0) {
-		console.log("Connection error. ID=" + connectionId);
+		Log.v("Connection error. ID=" + connectionId);
 	} else {
 		var data = getFullCommand(command, SEND_CMD);
 		chrome.serial.write(connectionId, data, function (sendInfo){
@@ -193,7 +193,7 @@ Serial.prototype.processByte= function(readByte) {
 	} 
 	else	{
 		// Other messages
-		console.log("byte=" + String.fromCharCode(readByte));
+		Log.v("byte=" + String.fromCharCode(readByte));
 		this.finishReading();
 	}
 }
@@ -202,7 +202,7 @@ Serial.prototype.processPacket = function () {
 	for (var i=0; i<bodyLength; i++) {
 		message += String.fromCharCode(commandBody[i]);
 	};
-	console.log(message);
+	Log.v(message);
 	if (this.onReceiveStatus)
 		onReceiveStatus(message);
 }
@@ -226,7 +226,7 @@ Serial.prototype.listenPort = function (port, connectionId) {
 			var message = String.fromCharCode.apply(null, new Uint8Array(readInfo.data));
 			self.readMessage += message;
 			self.readMessage = self.readMessage.replace(Serial.REMOVE_SIGNAL,'');
-			console.log(self.readMessage);
+			Log.v(self.readMessage);
 		}
 		self.listenPort(port, connectionId);
 	});
@@ -253,7 +253,7 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 		this._scan(function(){
 			self.currentPortIndex++;
 			if (self.foundPort) {
-				console.log("Finish scanning.");
+				Log.v("Finish scanning.");
 				callback(self.foundPort, self.connectionId, self.firmwareVersion);
 			} else {
 				self.findPcrPort(callback);
@@ -267,7 +267,7 @@ var MESSAGE_FROM_DEVICE = new RegExp("pcr(.+?).");
 SerialPortScanner.prototype._scan = function(callback) {
 	var port = this.ports[this.currentPortIndex];
 	if (port.match(PORT_TO_IGNORE)) {
-		console.log("Ignore port " + port);
+		Log.v("Ignore port " + port);
 		callback(null);
 		return;
 	}
@@ -275,11 +275,11 @@ SerialPortScanner.prototype._scan = function(callback) {
 	var options = {
 			bitrate:BAUD_RATE
 	};
-	console.log("Opening port " + port);
+	Log.v("Opening port " + port);
 	chrome.serial.open(port, options, function (openInfo) {
 		var connectionId = openInfo.connectionId;
 		if (connectionId<0) {
-			console.log("Connection error. ID=" + connectionId);
+			Log.v("Connection error. ID=" + connectionId);
 			callback(null);
 		} else {
 			if (onSerialOpen)
@@ -312,10 +312,10 @@ SerialPortScanner.prototype._read = function (connectionId, callback) {
 			self._read(connectionId, callback);
 		} else {
 			// Finish reading and check message
-			console.log("Message=" + self.readMessage);
+			Log.v("Message=" + self.readMessage);
 			if (self.readMessage.match(MESSAGE_FROM_DEVICE)) {
 				var version = RegExp.$1;
-				console.log("Firmware version " + version);
+				Log.v("Firmware version " + version);
 				self.foundPort = port;
 				self.firmwareVersion = version;
 				self.connectionId = connectionId;
@@ -327,7 +327,7 @@ SerialPortScanner.prototype._read = function (connectionId, callback) {
 				});
 			} else {
 				chrome.serial.close(connectionId, function () {
-					console.log("Device was not found on port " + port);
+					Log.v("Device was not found on port " + port);
 					callback();
 				});
 			}

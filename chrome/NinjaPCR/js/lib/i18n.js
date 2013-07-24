@@ -13,7 +13,7 @@ function localize() {
 		if (element.className && element.className.match(LOCALIZE_CLASS_REGEXP)) {
 			element.innerHTML = chrome.i18n.getMessage(RegExp.$1);
 			if (!chrome.i18n.getMessage(RegExp.$1)) {
-				console.log("I18N ERROR. NO MESSAGE FOUND FOR THE KEY " + RegExp.$1);
+				Log.e("I18N ERROR. NO MESSAGE FOUND FOR THE KEY " + RegExp.$1);
 			}
 		}
 	}
