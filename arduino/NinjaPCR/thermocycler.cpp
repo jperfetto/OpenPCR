@@ -209,30 +209,13 @@ PcrStatus Thermocycler::Start() {
   return ESuccess;
 }
 
-/*
-
-  enum ProgramState {
-    EStartup = 0,
-    EStopped, //1
-    ELidWait, //2
-    ERunning, //3
-    EComplete, //4
-    EError, //5
-    EClear //6
-  };
- 
- */
 // internal
 void Thermocycler::Loop() {
   switch (iProgramState) {
   case EStartup:
-	//Serial.print("b");
-	//Serial.print(millis() > STARTUP_DELAY);
     if (millis() > STARTUP_DELAY) {
       iProgramState = EStopped;
       	iRestarted = false;
-  		//Serial.print(iRestarted); //true->これはどこから?
-  		//Serial.print(ipSerialControl->CommandReceived()); //false
       if (!iRestarted && !ipSerialControl->CommandReceived()) {
         //check for stored program
         SCommand command;
