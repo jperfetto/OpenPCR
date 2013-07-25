@@ -7,13 +7,28 @@ Log.Level =
 		WARNING: 4,
 		ERROR: 5
 };
-Log.FILTER_LEVEL = Log.Level.WARNING;
+Log.FILTER_LEVEL = Log.Level.VERBOSE;
 
-Log._write = function (message, level, label)
-{
+Log._getDate = function () {
+
+	var time = new Date();
+	var str = fillZero(time.getFullYear(),4);
+	str += "/";
+	str += fillZero(time.getMonth()+1,2);
+	str += "/";
+	str += fillZero(time.getDate(),2);
+	str += " ";
+	str += fillZero(time.getHours(),2);
+	str += ":";
+	str += fillZero(time.getMinutes(),2);
+	str += ":";
+	str += fillZero(time.getSeconds(),2);
+	return str;
+}
+Log._write = function (message, level, label) {
 	if (level >= Log.FILTER_LEVEL)
 	{
-		console.log ("[Blocker]\t" + "[" + label + "]\t" + new Date() + "\t" + message);
+		console.log ("[NinjaPCR]\t" + "[" + label + "]\t" + Log._getDate() + "\t" + message);
 	}
 }
 Log.v = function (message) { Log._write(message, Log.Level.VERBOSE, "v"); };

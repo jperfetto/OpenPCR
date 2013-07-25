@@ -29,7 +29,7 @@ input.home_button {
 	background-repeat:no-repeat!important;
 }
 
-.edit {
+input.edit {
 	background: -webkit-linear-gradient(top, #ffffff, #dddddd);
 }
 

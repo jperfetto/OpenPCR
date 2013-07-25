@@ -207,6 +207,7 @@ function startOrUnplugged(display) {
  * puts Form buttons in the state they should be immediately following loading an experiment
  */
 function reRunButtons() {
+	Log.d("reRunButtons");
 	// Hide the Delete button
 	$('#deleteButton').hide();
 	// Start with the edit button shown
@@ -876,7 +877,6 @@ function onReceiveStatus(message) {
 		//if (Math.random()<0.1) status["s"]="complete"; //TODO debug
 
 		var statusLid = status["x"].toFixed(1);
-		Log.v("Resistance="+status["z"]);
 		var statusPeltier = status["y"].toFixed(1);
 		$("#deviceStatusLid").html((statusLid>0)?chrome.i18n.getMessage('statusHeating'):chrome.i18n.getMessage('statusStop'));
 		$("#deviceStatusLid").css("color", (statusLid>0)?COLOR_HEATING:COLOR_STOP);

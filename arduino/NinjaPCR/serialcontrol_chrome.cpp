@@ -43,7 +43,6 @@ SerialControl::~SerialControl() {
 }
 
 void SerialControl::Process() {
-	Serial.print("P");
   while (ReadPacket()) {}
 }
 
@@ -63,7 +62,6 @@ boolean firstDone = false;
 boolean SerialControl::ReadPacket(){
 	if (Serial.available()) {
 		unsigned char readByte = Serial.read();
-		Serial.write(readByte);
         unsigned char startCode = 0xFF;
         unsigned char endCode = 0xFE;
 		if (waitingForMessage && readByte==startCode) {
