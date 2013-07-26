@@ -75,9 +75,12 @@ function scanAndDisplay (delay) {
 			// Alert Firmware Update
 			checkFirmwareVersion(chromeSerial.firmwareVersion);
 		} else {
-			// Not plugged
-			if (!window.checkPlugInterval)
-				window.checkPlugInterval = setInterval(checkPlug, 2000);
+			// Not plugged in.
+			// Send "request_status" command and check ongoing experiment
+			chromeSerial.scanOngoingExperiment (function () {
+				if (!window.checkPlugInterval)
+					//window.checkPlugInterval = setInterval(checkPlug, 2000);
+				});
 		}
 		$("#pcrForm").validate();
 	}, delay);
