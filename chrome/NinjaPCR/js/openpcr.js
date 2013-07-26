@@ -78,8 +78,7 @@ function scanAndDisplay (delay) {
 			// Not plugged in.
 			// Send "request_status" command and check ongoing experiment
 			chromeSerial.scanOngoingExperiment (function () {
-				if (!window.checkPlugInterval)
-					//window.checkPlugInterval = setInterval(checkPlug, 2000);
+				//if (!window.checkPlugInterval) {window.checkPlugInterval = setInterval(checkPlug, 2000); }
 				});
 		}
 		$("#pcrForm").validate();
