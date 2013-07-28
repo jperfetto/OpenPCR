@@ -56,7 +56,7 @@ void setup() {
  
 bool connected = false;
 bool initDone = false;
-short INTERVAL_MSEC = 1000;
+short INTERVAL_MSEC = 750;
 void loop() {
   if (connected) {
     gpThermocycler->Loop();
@@ -72,7 +72,7 @@ void checkPlugged () {
     Serial.write("1.0.5");
     Serial.print("\n");
     int timeStart = millis();
-    while (timeStart>millis()-INTERVAL_MSEC) {
+    while (millis()<timeStart+INTERVAL_MSEC) {
       while (Serial.available()){
         char ch = Serial.read();
         if (ch=='a'&&!connected) {
