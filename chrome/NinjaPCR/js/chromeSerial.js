@@ -136,6 +136,7 @@ Serial.prototype.requestStatus = function (callback) {
 	var self = this;
 	var connectionId = self.connectionId;
 	var data = getFullCommand("", STATUS_REQ);
+	Log.v("Request status...");
 	chrome.serial.write(connectionId, data, function (sendInfo){
 		self.txBusy = false;
 		self.startListeningStatus(port, connectionId);
@@ -154,7 +155,7 @@ Serial.prototype.listenStatus = function (port, connectionId) {
 	var now = new Date();
 	if (this.lastResponseTime && RESPONSE_TIMEOUT_MSEC<now.getTime() - this.lastResponseTime.getTime() && !this.connectionAlertDone) {
 		this.connectionAlertDone = true;
-		Log.d("Connection lost?");
+		Log.w("Connection lost?");
 	}
 	chrome.serial.read(connectionId, Serial.BYTES_TO_READ, function (readInfo) {
 		if (readInfo.bytesRead>0) {
@@ -180,7 +181,6 @@ Serial.prototype.processByte= function(readByte) {
 	this.connectionAlertDone = false;
 	if (waitingForMessage && START_CODE==readByte) {
 		// Start code found.
-		Log.v("Start Code Found!");
 		startFound = true;
 		waitingForMessage = false;
 		nextByteIndex++;
@@ -204,14 +204,13 @@ Serial.prototype.processByte= function(readByte) {
 	} 
 	else if (END_CODE==readByte) {
 		// Finish
-		Log.v("End Code Found!");
 		this.lastResponseTime = new Date();
 		this.processPacket();
 		this.finishReading();
 	} 
 	else	{
 		// Other messages
-		Log.v("byte=" + String.fromCharCode(readByte));
+		Log.v("Debug byte=" + String.fromCharCode(readByte));
 		this.finishReading();
 	}
 }
