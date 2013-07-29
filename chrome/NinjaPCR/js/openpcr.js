@@ -966,6 +966,7 @@ function onReceiveStatus(message) {
 		}
 		else if (status["s"] == "complete") {
 			chromeSerial.stopOnComplete();
+			window.clearInterval(window.updateRunningPage);
 			// if the status of OpenPCR comes back as "complete"		
 			// show the "Home" button
 			$("#homeButton").show();
@@ -1057,19 +1058,13 @@ function stopPCR() {
 	window.command_id++;
 	stopPCR += '&d=' + window.command_id;
 	Log.v(stopPCR);
-	// Write out the STOP command to CONTROL.TXT
-	// name of the output file
-	//var file = window.path.resolvePath("CONTROL.TXT");
-	// write out all the variables, command id + PCR settings
-	/*var fileStream = new window.runtime.flash.filesystem.FileStream();
-	fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE);
-	fileStream.writeUTFBytes(stopPCR);
-	fileStream.close();
-	*/
+	// Send out the STOP command by serial
 	chromeSerial.sendStopCommand(stopPCR, function(){
+		window.clearInterval(window.updateRunningPage);
+		createCSV();
 	});
 	// go back to the Form page
-	sp2.showPanel(1);
+	//sp2.showPanel(1);
 	return false;
 }
 
