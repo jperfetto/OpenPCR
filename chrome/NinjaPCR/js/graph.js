@@ -67,6 +67,14 @@ TempGraph.prototype.addTime = function (tempLid, tempBlock) {
 	this.drawCurrentData ();
 	this.time ++;
 };
+
+TempGraph.prototype.clear = function () {
+	this.dataLid = [];
+	this.dataBlock = [];
+	this.time = 0;
+	this.drawCurrentData ();
+};
+
 TempGraph.prototype.drawCurrentData = function () {
 	var min = Math.max(0, this.time-this.getScale());
 	max = min + this.getScale();

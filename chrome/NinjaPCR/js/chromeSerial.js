@@ -119,7 +119,7 @@ Serial.prototype.sendStopCommand = function (command, callback) {
 	} else {
 		var data = getFullCommand(command, SEND_CMD);
 		chrome.serial.write(connectionId, data, function (sendInfo){
-			self.startListeningStatus(self.port, connectionId);
+			self.startListeningStatus(self.port, connectionId, callback);
 		});
 	}
 };

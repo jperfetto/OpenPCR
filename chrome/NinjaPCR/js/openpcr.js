@@ -971,10 +971,6 @@ function onReceiveStatus(message) {
 			// Current lid temp
 			var lid_temp = status["l"].toFixed(1);
 			$("#lidTemperature").html(lid_temp);
-			/*
-			chromeSerial.stopOnComplete();
-			window.clearInterval(window.updateRunningPage);
-			*/
 			// if the status of OpenPCR comes back as "complete"		
 			// show the "Home" button
 			$("#homeButton").show();
@@ -1067,10 +1063,12 @@ function stopPCR() {
 	stopPCR += '&d=' + window.command_id;
 	Log.v(stopPCR);
 	// Send out the STOP command by serial
+	chromeSerial.stopOnComplete();
 	chromeSerial.sendStopCommand(stopPCR, function(){
-		window.clearInterval(window.updateRunningPage);
-		createCSV();
 	});
+	window.clearInterval(window.updateRunningPage);
+	createCSV();
+	$("#homeButton").show();
 	// go back to the Form page
 	//sp2.showPanel(1);
 	return false;
@@ -1171,6 +1169,7 @@ function prepareButtons() {
 	/*  "Home" button on the OpenPCR Running page */
 	$('#homeButton').on('click', function() {
 		stopPCR();
+		if (graph) graph.clear();
 		listExperiments();
 		sp2.showPanel(0);
 		setTimeout(clearForm, 500);
