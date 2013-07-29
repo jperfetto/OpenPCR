@@ -48,10 +48,6 @@ void setup() {
   gpThermocycler = new Thermocycler(restarted);
   //mySerial.begin(4800);
   Serial.begin(4800);
-  /*
-  pinMode(7, OUTPUT);
-  digitalWrite(7,LOW);
-  */
 }
  
 bool connected = false;

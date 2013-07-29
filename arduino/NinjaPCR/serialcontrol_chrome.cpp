@@ -41,9 +41,13 @@ SerialControl::SerialControl(Display* pDisplay)
 
 SerialControl::~SerialControl() {
 }
-
+int SERIAL_TIMEOUT_MSEC = 2000;
+int serialStart = 0;
 void SerialControl::Process() {
-  while (ReadPacket()) {}
+  serialStart = millis();
+  while (ReadPacket()) {
+
+  }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -94,6 +98,10 @@ boolean SerialControl::ReadPacket(){
 			//Finish successfully
 			ProcessPacket();
 			finishReading();
+			return false;
+		}
+		else if (millis() > serialStart+SERIAL_TIMEOUT_MSEC) {
+			Serial.println("TIMEOUT");
 			return false;
 		}
 		else {
