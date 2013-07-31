@@ -12,7 +12,8 @@
  * Extra. Buttons
  */
 
-var LATEST_FIRMWARE_VERSION = "1.0.6";
+var LATEST_FIRMWARE_VERSION = "1.0.5";
+var MIN_FINAL_HOLD_TEMP = 16;
 
 /**************
  * Home screen*
@@ -211,11 +212,11 @@ function startOrUnplugged(display) {
 function reRunButtons() {
 	Log.d("reRunButtons");
 	// Hide the Delete button
-	$('#deleteButton').hide();
+	$('#deleteButton').show();
 	// Start with the edit button shown
 	$("#editButton").show();
 	// Start with the edit buttons hidden
-	$(".edit").hide();
+	$(".edit").show();
 	// hide the lid temp fields
 	$("#lidContainer").hide();
 	// all fields locked
@@ -601,7 +602,7 @@ function stepToHTML(step) {
 				+ step_temp
 				+ '" maxlength="4" name="temp_'
 				+ step_number
-				+ '" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>';
+				+ '" min="'+MIN_FINAL_HOLD_TEMP+'" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>';
 
 		// if the individual step has 0 time (or blank?) time, then it is a "hold" step and doesn't have a "time" component
 		if (step_time != 0) {
@@ -901,7 +902,6 @@ function onReceiveStatus(message) {
 			$("#deviceStatusPeltier").css("color",color);
 			
 		}
-		
 		if (status["s"] == "running" || status["s"] == "lidwait") {
 			//debug
 			// preset name
@@ -965,7 +965,12 @@ function onReceiveStatus(message) {
 			$('#meterLid')[0].value = lid_temp;
 		}
 		else if (status["s"] == "complete") {
-			chromeSerial.stopOnComplete();
+			// Current temp
+			var block_temp = status["b"].toFixed(1);
+			$("#blockTemperature").html(block_temp);
+			// Current lid temp
+			var lid_temp = status["l"].toFixed(1);
+			$("#lidTemperature").html(lid_temp);
 			// if the status of OpenPCR comes back as "complete"		
 			// show the "Home" button
 			$("#homeButton").show();
@@ -1057,19 +1062,15 @@ function stopPCR() {
 	window.command_id++;
 	stopPCR += '&d=' + window.command_id;
 	Log.v(stopPCR);
-	// Write out the STOP command to CONTROL.TXT
-	// name of the output file
-	//var file = window.path.resolvePath("CONTROL.TXT");
-	// write out all the variables, command id + PCR settings
-	/*var fileStream = new window.runtime.flash.filesystem.FileStream();
-	fileStream.open(file, window.runtime.flash.filesystem.FileMode.WRITE);
-	fileStream.writeUTFBytes(stopPCR);
-	fileStream.close();
-	*/
+	// Send out the STOP command by serial
+	chromeSerial.stopOnComplete();
 	chromeSerial.sendStopCommand(stopPCR, function(){
 	});
+	window.clearInterval(window.updateRunningPage);
+	createCSV();
+	$("#homeButton").show();
 	// go back to the Form page
-	sp2.showPanel(1);
+	//sp2.showPanel(1);
 	return false;
 }
 
@@ -1168,6 +1169,7 @@ function prepareButtons() {
 	/*  "Home" button on the OpenPCR Running page */
 	$('#homeButton').on('click', function() {
 		stopPCR();
+		if (graph) graph.clear();
 		listExperiments();
 		sp2.showPanel(0);
 		setTimeout(clearForm, 500);
@@ -1309,7 +1311,7 @@ function prepareButtons() {
 		// Show the Delete button
 		$('#deleteButton').show();
 		// Start with the Edit button hidden
-		$("#editButton").hide();
+		$("#editButton").show();
 		// show the edit buttons
 		$(".edit").show();
 		// show the lid temp fields

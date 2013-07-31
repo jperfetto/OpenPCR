@@ -396,7 +396,6 @@ void Thermocycler::ControlPeltier() {
   else {
     iPeltierPwm = 0;
   }
-
   iThermalDirection = newDirection;
   SetPeltier(newDirection, abs(iPeltierPwm));
 }
@@ -481,7 +480,6 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
 }
 
 void Thermocycler::ProcessCommand(SCommand& command) {
-	Serial.print("LOG");
   if (command.command == SCommand::EStart) {
     //find display cycle
     Cycle* pProgram = command.pProgram;

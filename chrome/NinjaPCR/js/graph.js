@@ -1,5 +1,5 @@
 var TempGraph = function (container) {
-	this.scaleIndex = 2; // Default stale: 30sec
+	this.scaleIndex = 4; // Default stale: 30sec
 	var options, start, i;
 	
 	this.container = container;
@@ -46,7 +46,7 @@ TempGraph.prototype.getScale = function () {
 	return TempGraph.SCALES[this.scaleIndex];
 };
 
-TempGraph.SCALES =  [10, 20, 30, 60, 60*3, 60*8, 60*20, 60*60 ];
+TempGraph.SCALES =  [10, 20, 30, 60, 60*3, 60*8, 60*20, /*1h*/60*60, /*2h*/60*60*2, /*4h*/60*60*2, /*8h*/60*60*8 ];
 
 TempGraph.prototype.drawGraph = function (opts) {
 	var o = Flotr._.extend(Flotr._.clone(this.options), opts || {});
@@ -67,6 +67,14 @@ TempGraph.prototype.addTime = function (tempLid, tempBlock) {
 	this.drawCurrentData ();
 	this.time ++;
 };
+
+TempGraph.prototype.clear = function () {
+	this.dataLid = [];
+	this.dataBlock = [];
+	this.time = 0;
+	this.drawCurrentData ();
+};
+
 TempGraph.prototype.drawCurrentData = function () {
 	var min = Math.max(0, this.time-this.getScale());
 	max = min + this.getScale();
