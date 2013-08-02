@@ -902,6 +902,7 @@ function onReceiveStatus(message) {
 			$("#deviceStatusPeltier").css("color",color);
 			
 		}
+		
 		if (status["s"] == "running" || status["s"] == "lidwait") {
 			//debug
 			// preset name
@@ -1074,34 +1075,6 @@ function stopPCR() {
 	return false;
 }
 
-/* humanTime()
- * Input: seconds (integer)
- * Returns: time in a human friendly format, i.e. 2 hours, 10 minutes, 1 hour, 10 minutes, 1 hour, 1 minute, 60 minutes, 1 minute
- */
-function humanTime(secondsRemaining) {
-	var timeRemaining = "";
-	var minutesRemaining = Math.floor(secondsRemaining / 60);
-	var hoursRemaining = Math.floor(minutesRemaining / 60);
-	if (hoursRemaining > 0) {
-		timeRemaining += hoursRemaining + " " + chrome.i18n.getMessage((hoursRemaining>1)?'hours':'hour');
-		timeRemaining += " <br />";
-		minutesRemaining -= (hoursRemaining) * 60;
-	}
-	if (minutesRemaining > 1) {
-		timeRemaining += minutesRemaining + " " + chrome.i18n.getMessage('minutes');
-	}
-	else if (minutesRemaining == 1) {
-		timeRemaining += chrome.i18n.getMessage('minute1');
-	}
-	else if (secondsRemaining <= 60) {
-		// should say "less than a minute" but font is too big
-		timeRemaining += chrome.i18n.getMessage('minute1');
-	}
-	else if (secondsRemaining == 0) {
-		timeRemaining = chrome.i18n.getMessage('done');
-	}
-	return timeRemaining;
-}
 
 function _deleteStep () {
 	$(this).parent().slideUp('slow', function() {
@@ -1179,6 +1152,7 @@ function prepareButtons() {
 	 * Sends an experiment to OpenPCR and switches to the Running page
 	 */
 	$('#Start').on('click', function() {
+		Log.d("#Start.click");
 		startPCR();
 	});
 

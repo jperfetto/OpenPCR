@@ -29,6 +29,7 @@
 	"stop":{"message":"Stop"},
 	"home":{"message":"Home"},
 	"timeRemaining":{"message":"Time remaining:"},
+	"elapsedTime":{"message":"Elapsed time:"},
 	"status":{"message":"Status"},
 	"currentTemp":{"message":"Current Temperature"},
 	"cycle":{"message":"Cycle"},

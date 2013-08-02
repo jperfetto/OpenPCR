@@ -25,6 +25,35 @@ chromeUtil.alert = function (message) {
 	$('#alert_dialog').dialog('open');
 };
 
+/* humanTime()
+ * Input: seconds (integer)
+ * Returns: time in a human friendly format, i.e. 2 hours, 10 minutes, 1 hour, 10 minutes, 1 hour, 1 minute, 60 minutes, 1 minute
+ */
+function humanTime(secondsRemaining) {
+	var timeRemaining = "";
+	var minutesRemaining = Math.floor(secondsRemaining / 60);
+	var hoursRemaining = Math.floor(minutesRemaining / 60);
+	if (hoursRemaining > 0) {
+		timeRemaining += hoursRemaining + " " + chrome.i18n.getMessage((hoursRemaining>1)?'hours':'hour');
+		timeRemaining += " ";
+		minutesRemaining -= (hoursRemaining) * 60;
+	}
+	if (minutesRemaining > 1) {
+		timeRemaining += minutesRemaining + " " + chrome.i18n.getMessage('minutes');
+	}
+	else if (minutesRemaining == 1) {
+		timeRemaining += chrome.i18n.getMessage('minute1');
+	}
+	else if (secondsRemaining <= 60) {
+		// should say "less than a minute" but font is too big
+		timeRemaining += chrome.i18n.getMessage('minute1');
+	}
+	else if (secondsRemaining == 0) {
+		timeRemaining = chrome.i18n.getMessage('done');
+	}
+	return timeRemaining;
+};
+
 chromeUtil.alertUpdate = function (currentVersion, latestVersion) {
 	var message = chrome.i18n.getMessage('firmwareVersionDialog')
 		.replace("___LATEST_VERSION___", latestVersion)
@@ -182,8 +211,9 @@ Storage.prototype.updateExperiment = function (experiment) {
 };
 
 Storage.prototype.getLogFileName = function () {
+	Log.d("Storage.getLogFileName experiment=" + this.currentExperiment);
 	var time = new Date();
-	var experimentName = this.currentExperiment.name;
+	var experimentName = (this.currentExperiment)?this.currentExperiment.name:'New Experiment';
 	var fileName = experimentName.replace(/ /g, "_");
 	fileName += "_";
 	fileName += fillZero(time.getFullYear(),4);

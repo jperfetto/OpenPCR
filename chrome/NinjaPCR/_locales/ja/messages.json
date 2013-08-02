@@ -29,6 +29,7 @@
 	"stop":{"message":"停止"},
 	"home":{"message":"ホーム"},
 	"timeRemaining":{"message":"残り時間:"},
+	"elapsedTime":{"message":"経過時間:"},
 	"status":{"message":"ステータス"},
 	"currentTemp":{"message":"現在の温度"},
 	"cycle":{"message":"サイクル"},

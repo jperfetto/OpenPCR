@@ -82,7 +82,7 @@ SerialPortScanner.prototype._read = function (connectionId, callback) {
 			Log.d("Message=" + self.readMessage);
 			if (self.readMessage.match(MESSAGE_FROM_DEVICE)) {
 				var version = RegExp.$1;
-				Log.i("Firmware version " + version);
+				Log.i("Device found. Firmware version " + version);
 				self.foundPort = port;
 				self.firmwareVersion = version;
 				self.connectionId = connectionId;
