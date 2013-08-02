@@ -21,9 +21,7 @@
 
 #include "pcr_includes.h"
 #include "thermocycler.h"
-//#include <SoftwareSerial.h>
 
-//SoftwareSerial mySerial(8,9); // RX, TX
 
 Thermocycler* gpThermocycler = NULL;
 
@@ -37,6 +35,10 @@ boolean InitialStart() {
 }
 
 void setup() {
+  pinMode(5,OUTPUT);
+  pinMode(6,OUTPUT);
+  digitalWrite(5,LOW);
+  digitalWrite(6,LOW);
   //init factory settings
   if (InitialStart()) {
     EEPROM.write(0, 100); // set contrast to 100
@@ -46,13 +48,13 @@ void setup() {
   boolean restarted = !(MCUSR & 1);
   MCUSR &= 0xFE;
   gpThermocycler = new Thermocycler(restarted);
-  //mySerial.begin(4800);
   Serial.begin(4800);
+  digitalWrite(5, HIGH);
 }
  
 bool connected = false;
 bool initDone = false;
-short INTERVAL_MSEC = 750;
+short INTERVAL_MSEC = 500;
 void loop() {
   if (connected) {
     gpThermocycler->Loop();
@@ -61,17 +63,18 @@ void loop() {
   }
 }
 
-
-
+bool startLamp = false;
 void checkPlugged () {
-    Serial.write("pcr");
-    Serial.write("1.0.5");
+    Serial.print("pcr1.0.5");
     Serial.print("\n");
+    digitalWrite(5, (startLamp)?HIGH:LOW);
+    startLamp = !startLamp;
     int timeStart = millis();
     while (millis()<timeStart+INTERVAL_MSEC) {
       while (Serial.available()){
         char ch = Serial.read();
         if (ch=='a'&&!connected) {
+          digitalWrite(5, LOW);
           connected = true;
         }
       }
