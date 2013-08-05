@@ -12,7 +12,7 @@
  * Extra. Buttons
  */
 
-var LATEST_FIRMWARE_VERSION = "1.0.5";
+var LATEST_FIRMWARE_VERSION = "1.0.6";
 var MIN_FINAL_HOLD_TEMP = 16;
 
 /**************
@@ -48,15 +48,15 @@ function init() {
 	($("#Settings").hide());
 
 	// get the location of OpenPCR (can be null)
-	scanAndDisplay();
+	scanPortsAndDisplay();
 	listExperiments();
 	localize();
 }
 
 function checkPlug () {
-	scanAndDisplay(2500);
+	scanPortsAndDisplay(2500);
 };
-function scanAndDisplay (delay) {
+function scanPortsAndDisplay (delay) {
 	chromeSerial.scan(function(port) {
 		var result = !!port;
 		var portMessage = (result)?
@@ -183,6 +183,7 @@ function newExperiment() {
  * Returns: nothing
  */
 function startOrUnplugged(display) {
+	Log.d("############ startOrUnplugged ##########");
 	//pick the Start or Unplugged button based on whether the device is plugged in or not
 	// if plugged in then
 	if (window.pluggedIn == true) {
