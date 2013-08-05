@@ -52,6 +52,7 @@ image:active span {
 
 #runningUnplugged {
 	text-align: center;
+	color: red;
 }
 
 #portLabel {
@@ -311,4 +312,7 @@ meter {
 	text-decoration:underline;
 	cursor:pointer;
 }
+#minutesRemaining {
+	text-align:center;
+	font-size:22px;
 }
