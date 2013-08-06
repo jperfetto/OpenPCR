@@ -52,6 +52,7 @@ image:active span {
 
 #runningUnplugged {
 	text-align: center;
+	color: red;
 }
 
 #portLabel {
@@ -133,7 +134,7 @@ a {
 	width: 100%;
 }
 
-#minutesRemaining {
+.timer {
 	font-size: 24px;
 	text-align: center;
 	padding-top: 0px;
@@ -305,4 +306,13 @@ meter {
 
 #meterLid::-webkit-meter-optimum-value {
 	background: -webkit-linear-gradient(top, #a4e3ff 0%, #01a4ea 100%);
+}
+
+#OpenDownloadPage {
+	text-decoration:underline;
+	cursor:pointer;
+}
+#minutesRemaining {
+	text-align:center;
+	font-size:22px;
 }

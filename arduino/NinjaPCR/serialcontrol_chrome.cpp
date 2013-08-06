@@ -42,7 +42,7 @@ SerialControl::SerialControl(Display* pDisplay)
 SerialControl::~SerialControl() {
 }
 int SERIAL_TIMEOUT_MSEC = 2000;
-int serialStart = 0;
+unsigned long serialStart = 0;
 void SerialControl::Process() {
   serialStart = millis();
   while (ReadPacket()) {
@@ -61,7 +61,6 @@ boolean startFound = false;
 boolean waitingForMessage = true;
 unsigned char commandBody[256];
 
-boolean hoge = true;
 boolean firstDone = false;
 boolean SerialControl::ReadPacket(){
 	if (Serial.available()) {
@@ -99,14 +98,16 @@ boolean SerialControl::ReadPacket(){
 			ProcessPacket();
 			finishReading();
 			return false;
-		}
-		else if (millis() > serialStart+SERIAL_TIMEOUT_MSEC) {
-			Serial.println("TIMEOUT");
+		} else if (millis() > serialStart+SERIAL_TIMEOUT_MSEC) {
+			Serial.println("T");
 			return false;
 		}
 		else {
 			finishReading(); // Refresh and wait for valid message
 		}
+	} else if (millis() > serialStart+SERIAL_TIMEOUT_MSEC) {
+		Serial.println("T");
+		return false;
 	}
 	return true;
 }

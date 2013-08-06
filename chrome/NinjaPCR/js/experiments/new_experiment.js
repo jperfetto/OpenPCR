@@ -26,7 +26,7 @@
 		}, {
 			"type" : "step",
 			"name" : "Final Hold",
-			"temp" : "4",
+			"temp" : "20",
 			"time" : 0,
 			"rampDuration" : 0
 		} ],

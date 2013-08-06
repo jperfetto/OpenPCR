@@ -209,8 +209,13 @@ PcrStatus Thermocycler::Start() {
   return ESuccess;
 }
 
+static boolean lamp = false;
+
 // internal
 void Thermocycler::Loop() {
+	digitalWrite(6, (lamp)?HIGH:LOW);
+	digitalWrite(5, (!lamp)?HIGH:LOW);
+	lamp = !lamp;
   switch (iProgramState) {
   case EStartup:
     if (millis() > STARTUP_DELAY) {
@@ -289,6 +294,7 @@ void Thermocycler::Loop() {
   UpdateEta();
   ipDisplay->Update();
   ipSerialControl->Process();
+
 }
 
 //private

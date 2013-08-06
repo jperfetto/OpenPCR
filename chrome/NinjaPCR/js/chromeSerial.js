@@ -13,7 +13,7 @@ var START_CODE = 0xFF;
 var END_CODE = 0xFE;
 
 Serial.prototype.scan = function (callbackExternal, _wait) {
-	var wait = _wait || 100;
+	var wait = _wait || 100; //TODO change to 100
 	if (this.locked) {
 		callbackExternal();
 	}
@@ -136,7 +136,7 @@ Serial.prototype.requestStatus = function (callback) {
 	var self = this;
 	var connectionId = self.connectionId;
 	var data = getFullCommand("", STATUS_REQ);
-	Log.v("Request status...");
+	Log.v("Request status... connectionId=" + connectionId);
 	chrome.serial.write(connectionId, data, function (sendInfo){
 		self.txBusy = false;
 		self.startListeningStatus(port, connectionId);
@@ -155,7 +155,22 @@ Serial.prototype.listenStatus = function (port, connectionId) {
 	var now = new Date();
 	if (this.lastResponseTime && RESPONSE_TIMEOUT_MSEC<now.getTime() - this.lastResponseTime.getTime() && !this.connectionAlertDone) {
 		this.connectionAlertDone = true;
-		Log.w("Connection lost?");
+		Log.w("Connection on port " + this.port + " seems to be lost. Reconnect...");
+		var self = this;
+		var options = {
+				bitrate:BAUD_RATE
+		};
+		chrome.serial.open(this.port, options, function (openInfo) {
+			var connectionId = openInfo.connectionId;
+			if (connectionId<0) {
+				Log.e("Connection error. ID=" + connectionId);
+				callback(null);
+			} else {
+				self.connectionId = connectionId;
+				Log.d("Reconnected. conenctionId=" + connectionId);
+			}
+		});
+		
 	}
 	chrome.serial.read(connectionId, Serial.BYTES_TO_READ, function (readInfo) {
 		if (readInfo.bytesRead>0) {

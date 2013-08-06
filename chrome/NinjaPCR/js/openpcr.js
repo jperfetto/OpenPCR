@@ -12,7 +12,7 @@
  * Extra. Buttons
  */
 
-var LATEST_FIRMWARE_VERSION = "1.0.5";
+var LATEST_FIRMWARE_VERSION = "1.0.6";
 var MIN_FINAL_HOLD_TEMP = 16;
 
 /**************
@@ -31,58 +31,56 @@ function init() {
 	$(document).keypress(function(event) {
 		return disableEnterKey(event);
 	});
-
-	$('#newExperimentButton').on('click', newExperiment);
-	Log.v($('#newExperimentButton'));
-	$('#listSubmitButton').on('click', listSubmit);
-	$('#initialStep').on('click', addInitialStep);
-	$('#finalStep').on('click', addFinalStep);
-	$('#saveForm').on('click', function() {
-		$('#Start').click();
-	});
-	$('#appVersion').html(chrome.runtime.getManifest().version);
-	
 	prepareButtons();
 	sp2 = new Spry.Widget.SlidingPanels('example2');
+	
 	// hide Settings button by default
 	($("#Settings").hide());
 
-	// get the location of OpenPCR (can be null)
-	scanAndDisplay();
+	// Scan serial ports and look for a device
+	scanPortsAndDisplay();
+	// Get experiments from the local storage
 	listExperiments();
+	
+	// i18n
 	localize();
 }
 
 function checkPlug () {
-	scanAndDisplay(2500);
+	scanPortsAndDisplay(2500);
 };
-function scanAndDisplay (delay) {
+function scanPortsAndDisplay (delay) {
 	chromeSerial.scan(function(port) {
-		var result = !!port;
-		var portMessage = (result)?
+		var deviceFound = !!port;
+		
+		var portMessage = (deviceFound)?
 				(chrome.i18n.getMessage('deviceFound').replace('___PORT___',port)):chrome.i18n.getMessage('deviceNotFound');
 		$("#portLabel").html(portMessage);
-		if (result) {
-			if (!window.checkPlugInterval)
+		
+		if (deviceFound) {
+			$("#runningUnplugged").hide();
+			$("#runningPluggedIn").show();
+			if (!window.checkPlugInterval) {
 				window.clearInterval(window.checkPlugInterval);
+			}
 			window.pluggedIn = true;
-			Log.v("Set #Start button visible.");
+			
 			if($("#Unplugged").is(':visible')){
 				// if the "Unplugged" button is visible, switch it to "Start"
 				$("#Unplugged").hide();
 				$("#Start").show();
-				//Read device
 			}
 			// Alert Firmware Update
 			checkFirmwareVersion(chromeSerial.firmwareVersion);
 		} else {
+			$("#runningUnplugged").show();
+			$("#runningPluggedIn").hide();
 			// Not plugged in.
-			// Send "request_status" command and check ongoing experiment
+			Log.d('Send "request_status" command and check ongoing experiment (TODO)');
 			chromeSerial.scanOngoingExperiment (function () {
 				//if (!window.checkPlugInterval) {window.checkPlugInterval = setInterval(checkPlug, 2000); }
 				});
 		}
-		$("#pcrForm").validate();
 	}, delay);
 }
 
@@ -183,26 +181,19 @@ function newExperiment() {
  * Returns: nothing
  */
 function startOrUnplugged(display) {
+	Log.d("############ startOrUnplugged ##########");
 	//pick the Start or Unplugged button based on whether the device is plugged in or not
 	// if plugged in then
 	if (window.pluggedIn == true) {
 		// then we definitely want to hide the "Unplugged" button
+		$("#Start").css("display", display);
 		$("#Unplugged").hide();
-		// and maybe want to show/hide the "Start" button, whatever was submitted as the "display" var
-		$("#Start").css("display", display)
-		// and, change the running screen to plugged in
-		$("#runningUnplugged").hide();
-		$("#runningPluggedIn").show();
 	}
 	else {
 		// else, device is unplugged
 		// then we definitely want to hide the "Start" button
 		$("#Start").hide();
-		// and maybe want to show/hide the "Unplugged" button, whatever was submitted as the "display" var
-		$("#Unplugged").css("display", display)
-		// change the running screen to unplugged
-		$("#runningUnplugged").show();
-		$("#runningPluggedIn").hide();
+		$("#Unplugged").css("display", display);
 	}
 }
 
@@ -902,6 +893,7 @@ function onReceiveStatus(message) {
 			$("#deviceStatusPeltier").css("color",color);
 			
 		}
+		
 		if (status["s"] == "running" || status["s"] == "lidwait") {
 			//debug
 			// preset name
@@ -1074,34 +1066,6 @@ function stopPCR() {
 	return false;
 }
 
-/* humanTime()
- * Input: seconds (integer)
- * Returns: time in a human friendly format, i.e. 2 hours, 10 minutes, 1 hour, 10 minutes, 1 hour, 1 minute, 60 minutes, 1 minute
- */
-function humanTime(secondsRemaining) {
-	var timeRemaining = "";
-	var minutesRemaining = Math.floor(secondsRemaining / 60);
-	var hoursRemaining = Math.floor(minutesRemaining / 60);
-	if (hoursRemaining > 0) {
-		timeRemaining += hoursRemaining + " " + chrome.i18n.getMessage((hoursRemaining>1)?'hours':'hour');
-		timeRemaining += " <br />";
-		minutesRemaining -= (hoursRemaining) * 60;
-	}
-	if (minutesRemaining > 1) {
-		timeRemaining += minutesRemaining + " " + chrome.i18n.getMessage('minutes');
-	}
-	else if (minutesRemaining == 1) {
-		timeRemaining += chrome.i18n.getMessage('minute1');
-	}
-	else if (secondsRemaining <= 60) {
-		// should say "less than a minute" but font is too big
-		timeRemaining += chrome.i18n.getMessage('minute1');
-	}
-	else if (secondsRemaining == 0) {
-		timeRemaining = chrome.i18n.getMessage('done');
-	}
-	return timeRemaining;
-}
 
 function _deleteStep () {
 	$(this).parent().slideUp('slow', function() {
@@ -1126,6 +1090,15 @@ function activateDeleteButton() {
  * Buttons     *
  ***************/
 function prepareButtons() {
+
+	$('#newExperimentButton').on('click', newExperiment);
+	$('#listSubmitButton').on('click', listSubmit);
+	$('#initialStep').on('click', addInitialStep);
+	$('#finalStep').on('click', addFinalStep);
+	$('#saveForm').on('click', function() {
+		$('#Start').click();
+	});
+	$('#appVersion').html(chrome.runtime.getManifest().version);
 	
 	/*  "About" button on the OpenPCR Home page
 	 * Displays about info
@@ -1179,6 +1152,7 @@ function prepareButtons() {
 	 * Sends an experiment to OpenPCR and switches to the Running page
 	 */
 	$('#Start').on('click', function() {
+		Log.d("#Start.click");
 		startPCR();
 	});
 

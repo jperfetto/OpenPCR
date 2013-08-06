@@ -1,5 +1,5 @@
 var DEFAULT_EXPERIMENT = {
-	"name": "Simple test",
+	"name": "Simple Test",
 	"steps": [
 		{
 			"type": "step",
