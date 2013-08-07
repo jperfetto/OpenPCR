@@ -13,7 +13,7 @@ var START_CODE = 0xFF;
 var END_CODE = 0xFE;
 
 Serial.prototype.scan = function (callbackExternal, _wait) {
-	var wait = _wait || 100; //TODO change to 100
+	var wait = _wait || 100;
 	if (this.locked) {
 		callbackExternal();
 	}
@@ -156,6 +156,7 @@ Serial.prototype.listenStatus = function (port, connectionId) {
 	if (this.lastResponseTime && RESPONSE_TIMEOUT_MSEC<now.getTime() - this.lastResponseTime.getTime() && !this.connectionAlertDone) {
 		this.connectionAlertDone = true;
 		Log.w("Connection on port " + this.port + " seems to be lost. Reconnect...");
+		document.getElementById('runningUnplugged').style.display = 'block';
 		var self = this;
 		var options = {
 				bitrate:BAUD_RATE
