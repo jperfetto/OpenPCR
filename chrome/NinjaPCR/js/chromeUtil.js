@@ -54,6 +54,16 @@ function humanTime(secondsRemaining) {
 	return timeRemaining;
 };
 
+function clockTime (totalSec) {
+	totalSec = Math.floor(totalSec);
+	var sec = totalSec%60;
+	var min = Math.floor(totalSec/60)%60;
+	var hour = Math.floor(totalSec/(60*60))%60;
+	return fillZero(hour, 2) + ":" +
+		fillZero(min, 2) + ":" +
+		fillZero(sec, 2);
+}
+
 chromeUtil.alertUpdate = function (currentVersion, latestVersion) {
 	var message = chrome.i18n.getMessage('firmwareVersionDialog')
 		.replace("___LATEST_VERSION___", latestVersion)

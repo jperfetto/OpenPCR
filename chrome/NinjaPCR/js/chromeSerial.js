@@ -225,7 +225,6 @@ Serial.prototype.processByte= function(readByte) {
 	} 
 	else	{
 		// Other messages
-		Log.v("Debug byte=" + String.fromCharCode(readByte));
 		this.finishReading();
 	}
 }

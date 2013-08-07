@@ -61,11 +61,11 @@ TempGraph.prototype.drawGraph = function (opts) {
 			o);
 }
 
-TempGraph.prototype.addTime = function (tempLid, tempBlock) {
-	this.dataLid.push([this.time, tempLid]);
-	this.dataBlock.push([this.time, tempBlock]);
+TempGraph.prototype.addTime = function (elapsedSec, tempLid, tempBlock) {
+	this.dataLid.push([elapsedSec, tempLid]);
+	this.dataBlock.push([elapsedSec, tempBlock]);
 	this.drawCurrentData ();
-	this.time ++;
+	this.time = elapsedSec;
 };
 
 TempGraph.prototype.clear = function () {

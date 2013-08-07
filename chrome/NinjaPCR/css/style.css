@@ -316,3 +316,8 @@ meter {
 	text-align:center;
 	font-size:22px;
 }
+#elapsed_time_section {
+	font-size:14px;
+	text-align:right;
+	padding-right:55px;
+}

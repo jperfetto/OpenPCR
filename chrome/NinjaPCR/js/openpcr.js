@@ -15,6 +15,11 @@
 var LATEST_FIRMWARE_VERSION = "1.0.6";
 var MIN_FINAL_HOLD_TEMP = 16;
 
+
+var COLOR_HEATING = "red";
+var COLOR_COOLING  = "blue";
+var COLOR_STOP = "black";
+
 /**************
  * Home screen*
  ***************/
@@ -253,425 +258,7 @@ function newExperimentButtons() {
 	$('#singleTemp').hide();
 	// make sure the "More options" button says so
 	$('#OptionsButton').html(chrome.i18n.getMessage('moreOptions'));
-}
-
-/* writeoutExperiment
- * Reads out all the variables from the OpenPCR form into a JSON object to "Save" the experiment
- * Separate function is used to write out the experiment to the device
- */
-function writeoutExperiment() {
-	// grab the Experiment Name
-	experimentName = document.getElementById("ExperimentName").innerHTML;
-
-	// grab the pre cycle variables if any exist
-	preArray = [];
-	$("#preContainer .textinput").each(function(index, elem) {
-		//just throw them in an array for now
-		if ($(this) != null)
-			preArray.push($(this).val());
-	});
-
-	// grab the cycle variables
-	cycleArray = [];
-	cycleNameArray = [];
-	$("#cycleContainer .textinput").each(function(index, elem) {
-		//just throw them in an array for now
-		cycleArray.push($(this).val());
-	});
-	$("#cycleContainer .step_name").each (function(index, elem){
-		var stepName = globalizeStepName($(this).text());
-		Log.v("Step Name=" + stepName);
-		cycleNameArray.push(stepName);
-	});
-
-	// grab the post cycle variables if any exist
-	postArray = [];
-	$("#postContainer .textinput").each(function(index, elem) {
-		//just throw them in an array for now
-		postArray.push($(this).val());
-	});
-
-	// grab the final hold steps if any exist
-	holdArray = [];
-	$("#holdContainer .textinput").each(function(index, elem) {
-		//just throw them in an array for now
-		holdArray.push($(this).val());
-	});
-	// grab the lid temp
-	$("#lidContainer .textinput").each(function(index, elem) {
-		lidTemp = $(this).val();
-	});
-
-	// Push variables into an experiment JSON object
-	var experimentJSON = new Object();
-	// Experiment name
-	experimentJSON.name = experimentName;
-	experimentJSON.steps = [];
-	experimentJSON.lidtemp = lidTemp;
-	// Pre Steps
-	// every step will have 3 elements in preArray (Time, temp, rampDuration)
-	preLength = (preArray.length) / 3;
-	for (a = 0; a < preLength; a++) {
-		experimentJSON.steps.push({
-			"type" : "step",
-			"name" : "Initial Step",
-			"temp" : preArray.shift(),
-			"time" : preArray.shift(),
-			"rampDuration" : preArray.shift()
-		});
-	}
-
-	// Cycle and cycle steps
-	// the cycle will be a # of cycles as the first element, then temp/time pairs after that
-	count = cycleArray.shift();
-	if (cycleArray.length > 0 && count > 0) {
-		experimentJSON.steps.push({
-			"type" : "cycle",
-			// add the number of cycles
-			"count" : count,
-			"steps" : []
-		});
-
-		// then add the cycles
-		current = experimentJSON.steps.length - 1;
-
-		// every step will have 3 elements in cycleArray (Time, temp, rampDuration)
-		cycleLength = (cycleArray.length) / 3;
-		for (a = 0; a < cycleLength; a++) {
-
-			experimentJSON.steps[current].steps.push({
-				"type" : "step",
-				"name" : cycleNameArray.shift(),
-				"temp" : cycleArray.shift(),
-				"time" : cycleArray.shift(),
-				"rampDuration" : cycleArray.shift()
-			});
-		}
-	}
-
-	// every step will have 3 elements in preArray (Time, temp, rampDuration)
-	// a better way to do this would be for a=0, postArray!=empty, a++
-	postLength = (postArray.length) / 3;
-	for (a = 0; a < postLength; a++) {
-		experimentJSON.steps.push({
-			"type" : "step",
-			"name" : "Final Step",
-			"temp" : postArray.shift(),
-			"time" : postArray.shift(),
-			"rampDuration" : postArray.shift()
-		});
-	}
-
-	// Final Hold step
-	if (holdArray.length > 0) {
-		experimentJSON.steps.push({
-			"type" : "step",
-			"name" : "Final Hold",
-			"time" : 0,
-			"temp" : holdArray.shift(),
-			"rampDuration" : 0
-		});
-	}
-
-	// return the experiment JSON object
-	return experimentJSON;
-}
-
-/* Save(name)
- * Writes out the current window.experiment to the app:/Experiments directory
- * Input: name, name of the file to be written out (add .pcr extension)
- */
-function Save(name, isNew) {
-	Log.v("Save " + name + ", isNew=" + isNew);
-	// grab the current experiment and update window.experiment
-	pcrProgram = writeoutExperiment();
-	// update the name of the experiment
-	pcrProgram.name = name;
-	// turn the pcrProgram into a string
-	if (isNew) {
-		pcrStorage.insertExperiment(name, pcrProgram, function(result) {
-			Log.v("result=" + result);
-			$('#save_confirmation_dialog').dialog('open');
-			// then close it after 1 second
-			setTimeout(function() {
-				$('#save_confirmation_dialog').dialog('close');
-			}, 750);
-		});
-	}
-	else {
-		pcrStorage.updateCurrentExperiment(name, pcrProgram, function(result) {
-			Log.v("result=" + result);
-			$('#save_confirmation_dialog').dialog('open');
-			// then close it after 1 second
-			setTimeout(function() {
-				$('#save_confirmation_dialog').dialog('close');
-			}, 750);
-		});
-	}
-}
-
-/* experimentToHTML(inputJSON)
- * Takes a given experiment JSON object and loads it into the OpenPCR interface
- */
-function experimentToHTML(inputJSON) {
-	// store the experiment to the JSON. This can be modified using the interface buttons, sent to OpenPCR, or saved
-	window.experiment = inputJSON;
-	// clear the Form
-	clearForm();
-	// Update the experiment name
-	var experimentName = inputJSON.name;
-	// only use the first 20 chars of the experimentName
-	experimentName = experimentName.slice(0, 18);
-	$("#ExperimentName").html(experimentName);
-
-	// for every .steps in the experiment, convert it to HTML
-	var experimentHTML = "";
-	// break the rest of the experiment up into "pre cycle" (0), "cycle" (1), and "post cycle" (2) sections
-	var count = 0;
-	// add the lid temperature div but hide it
-	$('#lidContainer').hide();
-	// max temp 120, min temp 0 (off)
-	$('#lidTemp')
-			.html(
-					'<span class="title">'+chrome.i18n.getMessage('heaterLid')+'</span>'
-							+ '<input type="text" name="lid_temp" id="lid_temp" class="required integer textinput" maxlength="3" min="0" max="120"  value="'
-							+ inputJSON.lidtemp + '">');
-	// 4 possibile DIVs
-	// pre-steps, cycle steps, post-steps, and final hold step
-	// Add the experiment to the page	
-	for (i = 0; i < inputJSON.steps.length; i++) {
-		// pre-cycle to start
-		if (count == 0 & inputJSON.steps[i].type == "step"
-				&& inputJSON.steps[i].time != 0)
-		// if it's for pre-cycle, and not a final hold (0 time)
-		{
-			// show the preContainer div
-			$('#preContainer').show();
-			$('#preSteps').append(stepToHTML(inputJSON.steps[i]))
-		}
-
-		else if (count == 0 && inputJSON.steps[i].type == "cycle")
-		// if it's cycle, put the cycle in the Cycle container
-		{
-			$('#cycleContainer').show();
-			$('#cycleSteps').append(stepToHTML(inputJSON.steps[i]));
-			count = 1;
-		}
-
-		else if (count == 1 && inputJSON.steps[i].type == "step"
-				&& inputJSON.steps[i].time != 0)
-		// if it's post (but not a final hold), put the steps in the Post container
-		{
-			$('#postContainer').show();
-			$('#postSteps').append(stepToHTML(inputJSON.steps[i]));
-		}
-
-		else if (inputJSON.steps[i].type == "step"
-				&& inputJSON.steps[i].time == 0)
-		// if it's the final hold (time = 0), put it in the final hold container
-		{
-			$('#holdContainer').show();
-			$('#holdSteps').append(stepToHTML(inputJSON.steps[i]));
-		}
-
-	}
-	activateDeleteButton();
-}
-
-var STEP_NAMES = [
-              	["stepStep","Step"],
-            	["stepDenaturing","Denaturing"],
-            	["stepAnnealing","Annealing"],
-            	["stepExtending","Extending"],
-            	["stepFinalHold","Final Hold"],
-            	["stepInitialStep","Initial Step"],
-            	["stepFinalStep","Final Step"]
-                  ];
-function localizeStepName (stepName) {
-	for (var i=0; i<STEP_NAMES.length; i++) {
-		if (STEP_NAMES[i][1]==stepName)
-			return chrome.i18n.getMessage(STEP_NAMES[i][0]);
-	}
-	return stepName;
-}
-function globalizeStepName (_stepName) {
-	var stepName = _stepName.replace(/^[ \t\n]+/g,'').replace(/[ \t\n]+$/g, '');
-	for (var i=0; i<STEP_NAMES.length; i++) {
-		if (chrome.i18n.getMessage(STEP_NAMES[i][0])==stepName)
-			return STEP_NAMES[i][1];
-	}
-	return stepName;
-}
-
-/* stepToHTML(step)
- * Turns a step into HTML. However, this HTML doesn't have a container div/fieldset
- * If the step is a cycle, it will return html with all the cycles represented.
- * If the step is a single step, html with just one cycle is returned
- */
-
-function stepToHTML(step) {
-	stepHTML = "";
-	// if cycle
-	if (step.type == "cycle") {
-		// printhe "Number of Cycles" div
-		// max 99 cycles
-		stepHTML += '<label for="number_of_cycles"></label><div><span class="title">'+chrome.i18n.getMessage('numberOfCycles')+':</span><input type="text" name="number_of_cycles" id="number_of_cycles" class="required number textinput" maxlength="2" min="0" max="99"  value="'
-				+ step.count + '"></div><br />';
-		// steps container
-		// print each individual step
-		for (a = 0; a < step.steps.length; a++) {
-			// make the js code a little easier to read
-			step_number = a;
-			step_name = localizeStepName(step.steps[a].name);
-			step_temp = step.steps[a].temp;
-			step_time = step.steps[a].time;
-			step_rampDuration = step.steps[a].rampDuration;
-			if (step_rampDuration == null)
-				step_rampDuration = 0;
-
-			// print HTML for the step
-			// min,max temp = -20, 105
-			// min,max time = 0, 6000, 1 decimal point
-			stepHTML += '<div class="step"><span id="step'
-					+ step_number
-					+ '_name" class="title step_name">'
-					+ step_name
-					+ ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
-					+ '<table><tr>'
-					+ '<th><label for="step'
-					+ step_number
-					+ '_temp">'+chrome.i18n.getMessage('tempShort')+':</label> <div class="step'
-					+ step_number
-					+ '_temp"><input type="text" style="font-weight:normal;" class="required number textinput" name="step'
-					+ step_number
-					+ '_temp" id="step'
-					+ step_number
-					+ '_temp" value="'
-					+ step_temp
-					+ '" maxlength="4" min="-20" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>'
-					+ '<th><label for="step'
-					+ step_number
-					+ '_time">'+chrome.i18n.getMessage('stepDuration')+':</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step'
-					+ step_number
-					+ '_time" id="step'
-					+ step_number
-					+ '_time" value="'
-					+ step_time
-					+ '" maxlength="4" min="0" max="6000"  ></div><span htmlfor="openpcr_time" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
-					+ '<th><label for="step'
-					+ step_number
-					+ '_rampDuration">'+chrome.i18n.getMessage('rampDuration')+':</label> <div class=""><input type="text" class="required number textinput"  style="font-weight:normal;" name="step'
-					+ step_number
-					+ '_rampDuration" id="step'
-					+ step_number
-					+ '_rampDuration" value="'
-					+ step_rampDuration
-					+ '" maxlength="6" min="0" max="999999"  ></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
-					+ '</tr></table></div>';
-
-		}
-	}
-	// if single step
-	else if (step.type == "step") {
-		// make the js code a little easier to read
-		step_number = new Date().getTime();
-		step_name = localizeStepName(step.name);
-		step_time = step.time;
-		step_temp = step.temp;
-		step_rampDuration = step.rampDuration;
-		if (step_rampDuration == null)
-			step_rampDuration = 0;
-
-		// main HTML, includes name and temp
-		stepHTML += '<div class="step"><span id="'
-				+ step_number
-				+ '" class="title step_name">'
-				+ step_name
-				+ ' </span><a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
-				+ '<table cellspacing="20"><tr>'
-				+ '<th><label>'+chrome.i18n.getMessage('tempShort')+':</label> <div><input type="text" style="font-weight:normal;" class="required number textinput" value="'
-				+ step_temp
-				+ '" maxlength="4" name="temp_'
-				+ step_number
-				+ '" min="'+MIN_FINAL_HOLD_TEMP+'" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>';
-
-		// if the individual step has 0 time (or blank?) time, then it is a "hold" step and doesn't have a "time" component
-		if (step_time != 0) {
-			stepHTML += '<th><label>'+chrome.i18n.getMessage('stepDuration')+':</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="'
-					+ step_time
-					+ '" name="time_'
-					+ step_number
-					+ '" maxlength="4" min="0" max="6000"></div><span htmlfor="openpcr_time" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>';
-			stepHTML += '<th><label>ramp duration:</label> <div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value="'
-					+ step_rampDuration
-					+ '" name="rampDuration_'
-					+ step_number
-					+ '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>';
-		}
-	}
-	else
-		chromeUtil.alert(chrome.i18n.getMessage('error')+" #1986");
-	stepHTML += '</tr></table></div>';
-	return stepHTML;
-}
-
-/* stepToString(inputJSON)
- * Takes a JSON object and turns it into a string
- * This is used to load an experiment into the OpenPCR device
- */
-function stepToString(inputJSON) {
-	var stepString = "";
-	// if single step return something like (1[300|95|Denaturing])
-	if (inputJSON.type == "step") {
-		//			stepString += "[" + inputJSON.time + "|" + inputJSON.temp + "|" + inputJSON.name.slice(0,13) + "]";			
-		stepString += "[" + inputJSON.time + "|" + inputJSON.temp + "|"
-				+ inputJSON.name.slice(0, 13) + "|" + inputJSON.rampDuration
-				+ "]";
-	}
-	// if cycle return something like (35,[60|95|Step A],[30|95|Step B],[30|95|Step C])
-	else if (inputJSON.type == "cycle") {
-		// add the number of Cycles
-		stepString += "(";
-		stepString += inputJSON.count;
-
-		for (a = 0; a < inputJSON.steps.length; a++) {
-			//						stepString += "[" + inputJSON.steps[a].time + "|" + inputJSON.steps[a].temp + "|" + inputJSON.steps[a].name.slice(0,13) + "]";
-			stepString += "[" + inputJSON.steps[a].time + "|"
-					+ inputJSON.steps[a].temp + "|"
-					+ inputJSON.steps[a].name.slice(0, 13) + "|"
-					+ inputJSON.steps[a].rampDuration + "]";
-		}
-		// close the stepString string
-		stepString += ")";
-	}
-	//alert(stepString);
-	return stepString;
-}
-
-/* clearForm()
- * Reset all elements on the Forms page
- */
-function clearForm() {
-	// empty everything
-	$('#preSteps').empty();
-	$('#cycleSteps').empty();
-	$('#postSteps').empty();
-	$('#holdSteps').empty();
-	$('#lidTemp').empty();
-	// hide everything
-	$('#preContainer').hide();
-	$('#cycleContainer').hide();
-	$('#postContainer').hide();
-	$('#holdContainer').hide();
-	$('#lidContainer').hide();
-
-	// reset the size of the DIV to 700 px
-	//defaultHeight = "700";
-	//$(".SlidingPanelsContent").height(defaultHeight);
-	//$(".SlidingPanels").height(defaultHeight);
-}
-
-/* disableEnterKey(e)
+}/* disableEnterKey(e)
  * The Enter/Return key doesn't do anything right now
  */
 function disableEnterKey(e) {
@@ -685,33 +272,12 @@ function disableEnterKey(e) {
 	return (key != 13);
 }
 
-function startPCR() {
-	experimentLog = [];
-	// check if the form is validated
-	if (false == ($("#pcrForm").validate().form())) {
-		return 0;
-	} // if the form is not valid, show the errors
-	// command_id will be a random ID, stored to the window for later use
-	window.command_id = Math.floor(Math.random() * 65534);
-	// command id can't be 0 
-	// where is OpenPCR
-	var devicePort = chromeSerial.port;
-	Log.v("devicePort=" + devicePort);
-	/*
-	// name of the output file written to OpenPCR
-	var controlFile = devicePath.resolvePath("CONTROL.TXT");
-	Log.v("controlFile=" + controlFile);
-	// grab all the variables from the form in JSON format
-	*/
-	pcrProgram = writeoutExperiment();
+function programToDeviceCommand (pcrProgram) {
 	// now parse it out
 	// Start with the signature
 	var parsedProgram = "s=ACGTC";
 	// Command
 	parsedProgram += "&c=start";
-	// Contrast
-	//// contrast no longer controlld here, delete this
-	////parsedProgram += "&t=50";
 	// Command id 
 	parsedProgram += "&d=" + window.command_id;
 	// Lid Temp NO DECIMALS. Not handeled by UI currently, but just making sure it doesn't make it to OpenPCR
@@ -749,6 +315,26 @@ function startPCR() {
 			window.lessthan20steps = pcrProgram.steps[i].steps.length;
 		}
 	}
+	return parsedProgram;
+}
+
+var experimentLogger = null;
+function startPCR() {
+	experimentLogger = new ExperimentLogger();
+	experimentLog = [];
+	// check if the form is validated
+	if (false == ($("#pcrForm").validate().form())) {
+		return 0;
+	} // if the form is not valid, show the errors
+	// command_id will be a random ID, stored to the window for later use
+	window.command_id = Math.floor(Math.random() * 65534);
+	// command id can't be 0 
+	// where is OpenPCR
+	var devicePort = chromeSerial.port;
+	Log.v("devicePort=" + devicePort);
+	
+	pcrProgram = writeoutExperiment();
+	var parsedProgram = programToDeviceCommand (pcrProgram);	
 	// verify that there are no more than 16 top level steps
 	Log.v(pcrProgram.steps.length + " : top level steps");
 	Log.v(window.lessthan20steps + " : cycle level steps");
@@ -790,8 +376,10 @@ function startPCR() {
 	$("#cancelButton").show();
 
 	$('#starting').dialog('open');
+	
 	// write out the file to the OpenPCR device
 	chromeSerial.startWithCommand(parsedProgram);
+	experimentLogger.start();
 	running();
 	
 	// then close windows it after 1 second
@@ -803,8 +391,6 @@ function startPCR() {
 	}, 100);
 	// also, reset the command_id_counter
 	window.command_id_counter = 0;
-	// load the OpenPCR Running page
-	//running(path);
 }
 
 /*****************
@@ -830,205 +416,31 @@ function updateRunning() {
 }
 var experimentLog;
 
-var COLOR_HEATING = "red";
-var COLOR_COOLING  = "blue";
-var COLOR_STOP = "black";
+function messageToStatus (message) {
+	// split on &
+	var splitonAmp = message.split("&");
+	// split on =
+	var status = new Array();
+	for (i = 0; i < splitonAmp.length; i++) {
+		var data = splitonAmp[i].split("=");
+		if (isNaN(parseFloat(data[1]))) {
+			// not a number
+			status[data[0]] = data[1];
+		}
+		else {
+			// a number
+			status[data[0]] = parseFloat(data[1]);
+		}
+	}
+	return status;
+}
 
 // Process Status update
 function onReceiveStatus(message) {
-	{
-		// split on &
-		var splitonAmp = message.split("&");
-		// split on =
-		var status = new Array();
-		for (i = 0; i < splitonAmp.length; i++) {
-			var data = splitonAmp[i].split("=");
-			if (isNaN(parseFloat(data[1]))) {
-				// not a number
-				status[data[0]] = data[1];
-			}
-			else {
-				// a number
-				status[data[0]] = parseFloat(data[1]);
-			}
-		}
-
-		// make sure the status isn't blank
-		// if command id in the running file doesn't match, check again 50 times and then quit if there is still no match
-		if (status["d"] != window.command_id) {
-			if (window.command_id_counter > 50) {
-				//alert("OpenPCR command_id does not match running file, window.command_id_counter =" + window.command_id_counter +  " . This error should not appear\nstatus"+status["d"]+"\nwindow:"+window.command_id);
-				// quit
-				//air.NativeApplication.nativeApplication.exit();
-			}
-			window.command_id_counter++;
-			// debug
-		}
-		// if app command id matches the device command id, reset the counter
-		if (status["d"] == window.command_id) {
-			window.command_id_counter = 0;
-		}
-		//if (Math.random()<0.1) status["s"]="complete"; //TODO debug
-
-		var statusLid = status["x"].toFixed(1);
-		var statusPeltier = status["y"].toFixed(1);
-		$("#deviceStatusLid").html((statusLid>0)?chrome.i18n.getMessage('statusHeating'):chrome.i18n.getMessage('statusStop'));
-		$("#deviceStatusLid").css("color", (statusLid>0)?COLOR_HEATING:COLOR_STOP);
-		{
-			var color;
-			var text;
-			if (statusPeltier>0) {
-				color = COLOR_HEATING;
-				text = chrome.i18n.getMessage('statusHeating');
-			}
-			else if (statusPeltier<0) {
-				color = COLOR_COOLING;
-				text = chrome.i18n.getMessage('statusCooling');
-			} 
-			else {
-				color = COLOR_STOP;
-				text = chrome.i18n.getMessage('statusStop');
-			}
-			$("#deviceStatusPeltier").html(text);
-			$("#deviceStatusPeltier").css("color",color);
-			
-		}
-		
-		if (status["s"] == "running" || status["s"] == "lidwait") {
-			//debug
-			// preset name
-			var prog_name = status["n"];
-			$("#runningHeader").html(prog_name);
-
-			if (status["s"] == "lidwait") {
-				// if the lid is heating say so
-				$("#progressbar").hide();
-				$("#cycleNumOfNum").hide();
-				$("#timeRemaining").html("");
-				$("#minutesRemaining").html(chrome.i18n.getMessage('lidHeating'));
-
-				// during lidwait, no protocol name is included, so include the protocol name from the previous page
-				$("#runningHeader").html(
-						document.getElementById("ExperimentName").innerHTML);
-			}
-
-			if (status["s"] == "running") {
-				$("#timeRemaining").html(chrome.i18n.getMessage('timeRemaining'));
-				// otherwise, if running set variable for percentComplete
-				// never display less than 2% for UI purposes
-				var percentComplete = 100 * status["e"]
-						/ (status["e"] + status["r"]);
-				if (percentComplete < 2) {
-					percentComplete = 2;
-				}
-				// Progress bar
-				$("#progressbar").progressbar({
-					value : percentComplete
-				});
-				$("#progressbar").show();
-
-				// Time Remaining
-				var secondsRemaining = status["r"];
-				var timeRemaining = humanTime(secondsRemaining);
-				$("#minutesRemaining").html(timeRemaining);
-			}
-			// Current step name
-			var current_step = status["p"];
-			$("#currentStep").html(current_step);
-
-			// Current cycle # of #
-			$("#cycleNumOfNum").show();
-
-			var current_cycle = status["c"];
-			$("#cycleNumber").html(current_cycle);
-			// Total # of cycles
-			var total_cycles = status["u"];
-			$("#totalCycles").html(total_cycles);
-
-			// Current temp
-			var block_temp = status["b"].toFixed(1);
-			$("#blockTemperature").html(block_temp);
-
-			// Current lid temp
-			var lid_temp = status["l"].toFixed(1);
-			$("#lidTemperature").html(lid_temp);
-			graph.addTime(lid_temp,block_temp);
-			$('#meterBlock')[0].value = block_temp;
-			$('#meterLid')[0].value = lid_temp;
-		}
-		else if (status["s"] == "complete") {
-			// Current temp
-			var block_temp = status["b"].toFixed(1);
-			$("#blockTemperature").html(block_temp);
-			// Current lid temp
-			var lid_temp = status["l"].toFixed(1);
-			$("#lidTemperature").html(lid_temp);
-			// if the status of OpenPCR comes back as "complete"		
-			// show the "Home" button
-			$("#homeButton").show();
-			// hide the cancel button
-			$("#cancelButton").hide();
-			// hide timeRemaining
-			$("#timeRemaining").hide()
-			// finish the progress bar
-			$("#progressbar").progressbar({
-				value : 100
-			});
-			// show the completed message
-			minutesRemaining = '<span style="color:#04B109;">'+chrome.i18n.getMessage('done')+'</span>';
-			$("#minutesRemaining").html(minutesRemaining);
-			// update the "current temp"
-			var block_temp = status["b"];
-			$("#blockTemperature").html(block_temp);
-			// update the lid temp
-			var lid_temp = status["l"];
-			$("#lidTemperature").html(lid_temp);
-			// replace the "cycle # of total#" span with "PCR took..."
-			$("#cycleNumOfNum").html(chrome.i18n.getMessage('tookTime').replace('___TIME___', humanTime(status["e"])));
-			// i.e. hide the "Holding for 10 sec", just show "Holding"
-			$("#stepRemaining").hide();
-			// Current step name
-			var current_step = status["p"];
-			$("#currentStep").html(current_step);
-			createCSV();
-		}
-		else if (status["status"] == "stopped") {
-			// nothing
-		}
-		else if (status["status"] == "error") {
-			// error
-			chromeUtil.alert("Error");
-		}
-		// add to experimentLog;
-		experimentLog.push(status);
-	}
-
-	// Show the Settings button if the status file contains "o="
-	var contrast_pattern = /o=/;
-	// grab the text from STATUS.TXT
-
-	status_string = message;
-
-	// if it contains "o=", show the settings button, otherwise don't
-	if (contrast_pattern.test(status_string)) {
-		($("#Settings").show());
-	}
-	else {
-		Log.v("doesn't have an o");
-		Log.v(window.runningFile);
-	}
-
+	var status = messageToStatus(message);
+	experimentLog.push(status);
+	experimentLogger.log(status);
 }
-
-
-/* outputHandler()
- * Grabs stdout from the middleman USB app, used in readDevice()
- */
-function outputHandler(event) {
-	window.deviceFile = nativeProcess.standardOutput
-			.readUTFBytes(nativeProcess.standardOutput.bytesAvailable);
-}
-
 
 /* StopPCR()
  * This function is called when the Stop button (Running page) is clicked and confirmed
@@ -1333,72 +745,6 @@ function deleteCurrentExperiment() {
 	});
 
 	// 
-}
-
-/* addStep()
- * Add the HTML for a blank step to the desired css selector div
- */
-function addStep(location) {
-	// first off, if the location is cycleContainer, we really want to modify stepsContainer
-	if (location == "cycleContainer") {
-		location = "cycleSteps";
-	}
-	// add to HTML
-	if (location == "preSteps") {
-		step_name = localizeStepName("Initial Step");
-	}
-	if (location == "postSteps") {
-		step_name = localizeStepName("Final Step");
-	}
-	if (location == "cycleSteps") {
-		step_name = localizeStepName("Step");
-	}
-	step_number = new Date().getTime();
-	;
-	var step = '<div class="step">'
-			+ '<span class="title step_name">'
-			+ step_name
-			+ ' </span>'
-			+ '<a class="edit deleteStepButton"><img src="images/minus.png" height="30"></a>'
-			+ '<table cellspacing="20">'
-			+ '<tr>'
-			+ '<th><label>'+chrome.i18n.getMessage('tempShort')+'</label><div><input type="text" style="font-weight:normal;" class="required number textinput" value="" name="temp_'
-			+ step_number
-			+ '" maxlength="4" min="0" max="120" ></div><span htmlfor="openpcr_temp" generated="true" class="units">&deg;C</span> </th>'
-			+ '<th><label>'+chrome.i18n.getMessage('stepDuration')+'</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="time_'
-			+ step_number
-			+ '" maxlength="4" min="0" max="1000"></div><span htmlfor="openpcr_time" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
-			+ '<th><label>'+chrome.i18n.getMessage('rampDuration')+'</label><div class=""><input type="text" class="required number textinput" style="font-weight:normal;" value=""  name="rampDuration_'
-			+ step_number
-			+ '" maxlength="6" min="0" max="999999"></div><span htmlfor="openpcr_rampDuration" generated="true" class="units">'+chrome.i18n.getMessage('sec')+'</span></th>'
-			+ '</tr>' + '</table>' + '</div>';
-	// append a new step to location
-	$('#' + location).append(step);
-	// make sure the form elements are editable
-	$("input").removeAttr("readonly");
-	//// make the window bigger
-	// make all the delete buttons shown
-	// and if there are any other parts of a "step" that are hide/show, they need to be included here
-	activateDeleteButton();
-	$(".edit").show();
-
-}
-
-function addInitialStep() {
-	// add the step to the preContainer
-	addStep("preSteps");
-}
-
-function addFinalStep() {
-	// add the step to the postContainer
-	addStep("postSteps");
-}
-
-/* deleteStep()
- * Delete the parent step
- */
-function deleteStep() {
-	// doesn't do anything right now. The delete step button should reference here
 }
 
 // JQUERY UI stuffs

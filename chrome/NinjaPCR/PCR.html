@@ -20,8 +20,10 @@
   <script type="text/javascript" src="js/lib/i18n.js"></script> 
   <script type="text/javascript" src="js/chromeUtil.js"></script>
   <script type="text/javascript" src="js/logger.js"></script>
+  <script type="text/javascript" src="js/experimentLogger.js"></script>
   <script type="text/javascript" src="js/chromeSerial.js"></script>
   <script type="text/javascript" src="js/serialPortScanner.js"></script>
+  <script type="text/javascript" src="js/form.js"></script>
   <script type="text/javascript" src="js/openpcr.js"></script>
   <script type="text/javascript" src="js/first_run.js"></script>
   <script type="text/javascript" src="js/experiments/default_experiment.js"></script>
@@ -185,6 +187,10 @@
 							<input type="button" id="graph_plus" class="small_button" value=" + "/>
 							<input type="button" id="graph_minus" class="small_button" value=" - "/>
 						</div>
+					</div>
+					<div id="elapsed_time_section">
+						<span class="pcr_localize_elapsedTime">Elapsed time: </span>
+						<span id="elapsedTime">00:00:00</span>
 					</div>
 					<div id="runningPluggedIn">
 						<div id="cancelButton">
