@@ -99,14 +99,12 @@ boolean SerialControl::ReadPacket(){
 			finishReading();
 			return false;
 		} else if (millis() > serialStart+SERIAL_TIMEOUT_MSEC) {
-			Serial.println("T");
 			return false;
 		}
 		else {
 			finishReading(); // Refresh and wait for valid message
 		}
 	} else if (millis() > serialStart+SERIAL_TIMEOUT_MSEC) {
-		Serial.println("T");
 		return false;
 	}
 	return true;
