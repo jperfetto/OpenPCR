@@ -1,6 +1,7 @@
 NinjaPCR
 ============
 ![image](https://raw.github.com/hisashin/NinjaPCR/master/logo.png)
+![image](https://raw.github.com/hisashin/NinjaPCR/master/NinjaPCRver3.jpg)
 
 Opensource(GPL) Thermocycler Implementation for PCR,polymerase chain reaction.
 
