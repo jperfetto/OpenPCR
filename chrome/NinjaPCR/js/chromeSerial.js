@@ -19,7 +19,8 @@ Serial.prototype.scan = function (callbackExternal, _wait) {
 	}
 	this.locked = true;
 	var self = this;
-	chrome.serial.getPorts(function (ports) {
+	
+	chrome.serial.getDevices(function (ports){
 		if (!self.latestPorts) self.latestPorts = [];
 		var portsToSearch = [];
 		for (var i=0, l=ports.length; i<l; i++) {
@@ -29,8 +30,8 @@ Serial.prototype.scan = function (callbackExternal, _wait) {
 			}
 			if (!found) {
 				// New Port Found!
-				Log.d("New Port Found! " + ports[i]);
-				portsToSearch.push(ports[i]);
+				Log.d("New Port Found! path=" + ports[i].path);
+				portsToSearch.push(ports[i].path);
 			}
 		}
 		self.latestPorts = ports;
