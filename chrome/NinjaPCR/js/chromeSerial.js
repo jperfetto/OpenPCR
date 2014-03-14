@@ -80,7 +80,7 @@ Serial.prototype.startWithCommand = function (commandBody) {
 		Log.e("Connection error.");
 	} else {
 		var data = getFullCommand(commandBody, SEND_CMD);
-		chrome.serial.write(connectionId, data, function (sendInfo){
+		chrome.serial.send(connectionId, data, function (sendInfo){
 			self.startListeningStatus(port, connectionId);
 		});
 	}
@@ -119,7 +119,7 @@ Serial.prototype.sendStopCommand = function (command, callback) {
 		Log.e("Connection error. ID=" + connectionId);
 	} else {
 		var data = getFullCommand(command, SEND_CMD);
-		chrome.serial.write(connectionId, data, function (sendInfo){
+		chrome.serial.send(connectionId, data, function (sendInfo){
 			self.startListeningStatus(self.port, connectionId, callback);
 		});
 	}
@@ -138,7 +138,7 @@ Serial.prototype.requestStatus = function (callback) {
 	var connectionId = self.connectionId;
 	var data = getFullCommand("", STATUS_REQ);
 	Log.v("Request status... connectionId=" + connectionId);
-	chrome.serial.write(connectionId, data, function (sendInfo){
+	chrome.serial.send(connectionId, data, function (sendInfo){
 		self.txBusy = false;
 		self.startListeningStatus(port, connectionId);
 	});

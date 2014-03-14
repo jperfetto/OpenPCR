@@ -30,6 +30,12 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 	}
 };
 
+var serialDataArray = [];
+var currentScanner = null;
+chrome.serial.onReceive.addListener(function (info){
+	//console.log("onReceive connectionId=" + info.connectionId + ", dataArray=" + info.data);
+	if (info.data && currentScanner) {currentScanner._read(info.data);}
+});
 //Private
 SerialPortScanner.prototype._scan = function(callback) {
 	var port = this.ports[this.currentPortIndex];
@@ -42,9 +48,16 @@ SerialPortScanner.prototype._scan = function(callback) {
 	var options = {
 			bitrate:BAUD_RATE
 	};
-	Log.v("Opening port " + port);
-	chrome.serial.open(port, options, function (openInfo) {
+	chrome.serial.connect(port, options, function (openInfo) {
+
+		window.setTimeout (function(){
+			console.log("TIMEOUT.");
+			currentScanner._read();
+			currentScanner = null;
+		},
+				SerialPortScanner.DURATION_MSEC)
 		var connectionId = openInfo.connectionId;
+		self.connectionId = connectionId;
 		if (connectionId<0) {
 			Log.e("Connection error. ID=" + connectionId);
 			callback(null);
@@ -53,7 +66,9 @@ SerialPortScanner.prototype._scan = function(callback) {
 				onSerialOpen(connectionId);
 			self.scanStartTimestamp = new Date().getTime();
 			self.readMessage = "";
-			self._read(connectionId, callback);
+			self.readCallback = callback;
+			currentScanner = self;
+			//self._read(connectionId, callback);
 		}
 	});
 };
@@ -65,39 +80,41 @@ for (var i=0; i<512; i++) {
 	SerialPortScanner.INITIAL_MESSAGE += "a";
 }
 // Called from _scan"
-SerialPortScanner.prototype._read = function (connectionId, callback) {
+SerialPortScanner.prototype._read = function (data) {
+	var callback = this.readCallback;
 	var port = this.ports[this.currentPortIndex];
 	var self = this;
-	chrome.serial.read(connectionId, SerialPortScanner.BYTES_TO_READ, function (readInfo) {
-		if (readInfo.bytesRead>0) {
-			var message = String.fromCharCode.apply(null, new Uint8Array(readInfo.data));
-			self.readMessage += message;
-		}
-		
-		if (new Date().getTime()-self.scanStartTimestamp<SerialPortScanner.DURATION_MSEC) {
-			// Continue reading until time limit
-			self._read(connectionId, callback);
-		} else {
-			// Finish reading and check message
-			Log.d("Message=" + self.readMessage);
-			if (self.readMessage.match(MESSAGE_FROM_DEVICE)) {
-				var version = RegExp.$1;
-				Log.i("Device found. Firmware version " + version);
-				self.foundPort = port;
-				self.firmwareVersion = version;
-				self.connectionId = connectionId;
-				var data = getArrayBufferForString(SerialPortScanner.INITIAL_MESSAGE);
-				chrome.serial.write(connectionId, data, function (sendInfo){
-					chrome.serial.read(connectionId, 1024, function(){
-						callback();
-					});
-				});
-			} else {
-				chrome.serial.close(connectionId, function () {
-					Log.d("Device was not found on port " + port);
+	console.log("data=" + data);
+
+	if (data) {
+		var message = String.fromCharCode.apply(null, new Uint8Array(data));
+		self.readMessage += message;
+	}
+	if (new Date().getTime()-self.scanStartTimestamp<SerialPortScanner.DURATION_MSEC) {
+		// Continue reading until time limit
+		//self._read(connectionId, callback);
+	} else {
+		// Finish reading and check message
+		Log.d("Message=" + self.readMessage);
+		if (self.readMessage.match(MESSAGE_FROM_DEVICE)) {
+			var version = RegExp.$1;
+			Log.i("Device found. Firmware version " + version);
+			self.foundPort = port;
+			self.firmwareVersion = version;
+			console.log("self.connectionId=" + self.connectionId);
+			var data = getArrayBufferForString(SerialPortScanner.INITIAL_MESSAGE);
+			chrome.serial.send(self.connectionId, data, function (sendInfo){
+				
+				//chrome.serial.read(connectionId, 1024, function(){
 					callback();
-				});
-			}
+				//});
+			});
+		} else {
+			chrome.serial.disconnect(this.connectionId, function () {
+				Log.d("Device was not found on port " + port);
+				callback();
+			});
 		}
-	});
+	}
 };
+console.log("_read 2");
