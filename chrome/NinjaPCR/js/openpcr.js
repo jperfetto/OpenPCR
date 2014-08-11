@@ -592,7 +592,7 @@ function prepareButtons() {
 		// Grab the Experiment name, could also do this by reading from the experiments list on the homepage
 		name = document.getElementById("ExperimentName").innerHTML;
 		// Save the file, overwriting the existing file
-		Save(name, false);
+		save(name, false);
 		// re-load the experiment with the new settings
 		loadExperiment(experimentID);
 	});
@@ -860,7 +860,7 @@ $(function() {
 				// grab the name from the form
 				name = $("#name").val();
 				// save the current experiment as the given name
-				Save(name, true);
+				save(name, true);
 				// update the experiment name in the UI
 				$("#ExperimentName").html(name);
 				// close the dialog window

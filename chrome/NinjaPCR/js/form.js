@@ -330,7 +330,7 @@ function deleteStep() {
 
 
 /* writeoutExperiment
- * Reads out all the variables from the OpenPCR form into a JSON object to "Save" the experiment
+ * Reads out all the variables from the OpenPCR form into a JSON object to "save" the experiment
  * Separate function is used to write out the experiment to the device
  */
 function writeoutExperiment() {
@@ -451,12 +451,12 @@ function writeoutExperiment() {
 	return experimentJSON;
 }
 
-/* Save(name)
+/* save(name)
  * Writes out the current window.experiment to the app:/Experiments directory
  * Input: name, name of the file to be written out (add .pcr extension)
  */
-function Save(name, isNew) {
-	Log.v("Save " + name + ", isNew=" + isNew);
+function save(name, isNew) {
+	Log.v("save " + name + ", isNew=" + isNew);
 	// grab the current experiment and update window.experiment
 	pcrProgram = writeoutExperiment();
 	// update the name of the experiment
