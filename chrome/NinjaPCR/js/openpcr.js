@@ -592,9 +592,7 @@ function prepareButtons() {
 		// Grab the Experiment name, could also do this by reading from the experiments list on the homepage
 		name = document.getElementById("ExperimentName").innerHTML;
 		// Save the file, overwriting the existing file
-		save(name, false);
-		// re-load the experiment with the new settings
-		loadExperiment(experimentID);
+		save(name, false, function(){loadExperiment(experimentID);});
 	});
 
 	/*  "Cancel" button on the OpenPCR Form in EDIT MODE
@@ -944,7 +942,7 @@ $(function() {
 		width : 300,
 		modal : true,
 		draggable : false,
-		resizable : false,
+		resizable : false
 	});
 
 	//hover states on the static widgetson the static widgets

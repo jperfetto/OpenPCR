@@ -455,16 +455,20 @@ function writeoutExperiment() {
  * Writes out the current window.experiment to the app:/Experiments directory
  * Input: name, name of the file to be written out (add .pcr extension)
  */
-function save(name, isNew) {
+function save(name, isNew, callback) {
 	Log.v("save " + name + ", isNew=" + isNew);
 	// grab the current experiment and update window.experiment
 	pcrProgram = writeoutExperiment();
+	console.log("pcrProgram=" + pcrProgram);
 	// update the name of the experiment
 	pcrProgram.name = name;
 	// turn the pcrProgram into a string
 	if (isNew) {
 		pcrStorage.insertExperiment(name, pcrProgram, function(result) {
 			Log.v("result=" + result);
+			if (callback) {
+				callback();
+			}
 			$('#save_confirmation_dialog').dialog('open');
 			// then close it after 1 second
 			setTimeout(function() {
@@ -475,6 +479,9 @@ function save(name, isNew) {
 	else {
 		pcrStorage.updateCurrentExperiment(name, pcrProgram, function(result) {
 			Log.v("result=" + result);
+			if (callback) {
+				callback();
+			}
 			$('#save_confirmation_dialog').dialog('open');
 			// then close it after 1 second
 			setTimeout(function() {
