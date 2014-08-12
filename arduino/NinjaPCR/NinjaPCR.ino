@@ -39,6 +39,7 @@ void setup() {
   pinMode(6,OUTPUT);
   digitalWrite(5,LOW);
   digitalWrite(6,LOW);
+  digitalWrite(PIN_LID_RESISTOR_SWITCH, LOW);
   //init factory settings
   if (InitialStart()) {
     EEPROM.write(0, 100); // set contrast to 100

@@ -61,10 +61,29 @@ boolean startFound = false;
 boolean waitingForMessage = true;
 unsigned char commandBody[256];
 
+int debugPhase = 0;
+
 boolean firstDone = false;
 boolean SerialControl::ReadPacket(){
+	digitalWrite();
 	if (Serial.available()) {
 		unsigned char readByte = Serial.read();
+		if (debugPhase==0) {
+			digitalWrite(5,HIGH);
+			digitalWrite(6,LOW);
+			digitalWrite(7,LOW);
+		}
+		else if (debugPhase==0) {
+			digitalWrite(5,LOW);
+			digitalWrite(6,HIGH);
+			digitalWrite(7,LOW);
+		}
+		else if (debugPhase==0) {
+			digitalWrite(5,LOW);
+			digitalWrite(6,LOW);
+			digitalWrite(7,HIGH);
+		}
+		debugPhase = (debugPhase+3)%3;
         unsigned char startCode = 0xFF;
         unsigned char endCode = 0xFE;
 		if (waitingForMessage && readByte==startCode) {

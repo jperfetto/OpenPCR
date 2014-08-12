@@ -24,6 +24,7 @@
 #include "program.h"
 #include "thermistors.h"
 
+#define PIN_LID_RESISTOR_SWITCH 8
 
 class Display;
 class SerialControl;
