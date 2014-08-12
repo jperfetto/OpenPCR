@@ -18,6 +18,7 @@
 
 #ifndef _LID_THERMISTOR_H_
 #define _LID_THERMISTOR_H_
+#define PIN_LID_RESISTOR_SWITCH 8
 
 class CLidThermistor {
 public:
@@ -31,18 +32,28 @@ private:
   unsigned long resistance;
 };
 
+typedef enum {
+	TEMP_LOW,
+	TEMP_HIGH
+} ResistorMode;
+
 class CPlateThermistor {
 public:
-  CPlateThermistor();
-  double& GetTemp() { return iTemp; }
-  unsigned long& GetResistance() { return resistance; }
-  void ReadTemp();
+	CPlateThermistor();
+	double& GetTemp() {
+		return iTemp;
+	}
+	unsigned long& GetResistance() {
+		return resistance;
+	}
+	void ReadTemp();
 private:
-   char SPITransfer(volatile char data);
-   
+	char SPITransfer(volatile char data);
+
 private:
-  double iTemp;
-  unsigned long resistance;
+	double iTemp;
+	unsigned long resistance;
+	ResistorMode resistorMode;
 };
 
 #endif
