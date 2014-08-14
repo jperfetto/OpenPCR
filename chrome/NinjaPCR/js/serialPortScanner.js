@@ -7,6 +7,11 @@ var SerialPortScanner = function (ports) {
 };
 
 SerialPortScanner.prototype.findPcrPort = function (callback) {
+	chromeSerial.setOnReceive(function(info){
+		if (info.data && currentScanner) {
+			currentScanner._read(info.data);
+		}
+	});
 	if (!this.ports || this.ports.length==0) {
 		//No port found. return null.
 		callback(null);
@@ -22,6 +27,7 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 			self.currentPortIndex++;
 			if (self.foundPort) {
 				Log.d("Finish scanning.");
+				chromeSerial.setOnReceive(null);
 				callback(self.foundPort, self.connectionId, self.firmwareVersion);
 			} else {
 				self.findPcrPort(callback);
@@ -30,12 +36,6 @@ SerialPortScanner.prototype.findPcrPort = function (callback) {
 	}
 };
 
-var serialDataArray = [];
-var currentScanner = null;
-chrome.serial.onReceive.addListener(function (info){
-	//console.log("onReceive connectionId=" + info.connectionId + ", dataArray=" + info.data);
-	if (info.data && currentScanner) {currentScanner._read(info.data);}
-});
 //Private
 SerialPortScanner.prototype._scan = function(callback) {
 	var port = this.ports[this.currentPortIndex];
@@ -104,10 +104,7 @@ SerialPortScanner.prototype._read = function (data) {
 			console.log("self.connectionId=" + self.connectionId);
 			var data = getArrayBufferForString(SerialPortScanner.INITIAL_MESSAGE);
 			chrome.serial.send(self.connectionId, data, function (sendInfo){
-				
-				//chrome.serial.read(connectionId, 1024, function(){
-					callback();
-				//});
+				callback();
 			});
 		} else {
 			chrome.serial.disconnect(this.connectionId, function () {
