@@ -40,6 +40,11 @@
 #define LID_RESISTANCE_TABLE_OFFSET 0
 #define PLATE_RESISTANCE_TABLE_OFFSET -10*4
 
+/* For debug */
+//#define DEBUG_FORCE_STOP_LID_HEATER
+#define DEBUG_FIX_HEATER_VALUE 105
+//#define DEBUG_WEAKEN_PELTIER
+
 // lid resistance table, in Ohms
 #ifdef LID_THERMISTOR_ORIGINAL
 PROGMEM const unsigned int LID_RESISTANCE_TABLE[] = {
@@ -340,9 +345,13 @@ CLidThermistor::CLidThermistor():
 
 //------------------------------------------------------------------------------
 void CLidThermistor::ReadTemp() {
+#ifdef DEBUG_FIX_HEATER_VALUE
+	iTemp = DEBUG_FIX_HEATER_VALUE;
+#else
 	unsigned long voltage_mv = (unsigned long) analogRead(1) * 5000 / 1024;
   resistance = voltage_mv * 2200 / (5000 - voltage_mv);
   iTemp = TableLookup(LID_RESISTANCE_TABLE, sizeof(LID_RESISTANCE_TABLE) / sizeof(LID_RESISTANCE_TABLE[0]), 0, resistance);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -358,8 +367,8 @@ CPlateThermistor::CPlateThermistor():
   digitalWrite(SLAVESELECT,HIGH); //disable device
 }
 //------------------------------------------------------------------------------
-#define RESISTOR_SINGLE 16000*10
-#define RESISTOR_DOUBLE 6153*10
+#define RESISTOR_SINGLE 16000
+#define RESISTOR_DOUBLE 6153
 #define RESISTOR_MODE_THRESHOLD_TEMPERATURE 81.35
 
 void CPlateThermistor::ReadTemp() {
@@ -388,6 +397,7 @@ void CPlateThermistor::ReadTemp() {
 	digitalWrite(SLAVESELECT, HIGH);
 
 	unsigned long voltage_mv = voltage * 1000;
+
 	unsigned int resistor = (resistorMode==TEMP_LOW)? RESISTOR_SINGLE:RESISTOR_DOUBLE;
 	resistance = voltage_mv * resistor / (5000 - voltage_mv); // in hecto ohms
 	iTemp = TableLookup(PLATE_RESISTANCE_TABLE,
@@ -404,6 +414,12 @@ void CPlateThermistor::ReadTemp() {
 		resistorMode = TEMP_HIGH;
 		digitalWrite(PIN_LID_RESISTOR_SWITCH, LOW);
 	}
+	/*
+	resistance = voltage_mv * 22000 / (5000 - voltage_mv); // in hecto ohms
+	iTemp = TableLookup(PLATE_RESISTANCE_TABLE, sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]), -40, resistance);
+	iTemp = voltage_mv;
+	*/
+	
 }
 //------------------------------------------------------------------------------
 char CPlateThermistor::SPITransfer(volatile char data) {

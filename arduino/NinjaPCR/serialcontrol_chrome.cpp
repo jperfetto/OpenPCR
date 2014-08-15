@@ -65,7 +65,6 @@ int debugPhase = 0;
 
 boolean firstDone = false;
 boolean SerialControl::ReadPacket(){
-	digitalWrite();
 	if (Serial.available()) {
 		unsigned char readByte = Serial.read();
 		if (debugPhase==0) {
