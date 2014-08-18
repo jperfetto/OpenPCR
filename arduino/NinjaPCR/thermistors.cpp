@@ -19,31 +19,6 @@
 #include "pcr_includes.h"
 #include "thermistors.h"
 
-/* Use original ohm-to-celsius table */
-//#define LID_THERMISTOR_ORIGINAL
-/* Use ohm-to-celsius table for NXFT15XH103FA */
-//#define LID_THERMISTOR_NXFT15XH103FA
-#define LID_THERMISTOR_CONSTB_3980
-
-// #define PLATE_THERMISTOR_OPENPCR
-// #define PLATE_THERMISTOR_NO1
-// #define PLATE_THERMISTOR_NO2
-// #define PLATE_THERMISTOR_NO3
-// #define PLATE_THERMISTOR_NO4
-// #define PLATE_THERMISTOR_NO5
-// #define PLATE_THERMISTOR_NO6
-// #define PLATE_THERMISTOR_NO7
-// #define PLATE_THERMISTOR_NO8
-// #define PLATE_THERMISTOR_NO9
-#define PLATE_THERMISTOR_NXFT15WF104FA2B100
-
-#define LID_RESISTANCE_TABLE_OFFSET 0
-#define PLATE_RESISTANCE_TABLE_OFFSET -10*4
-
-/* For debug */
-//#define DEBUG_FORCE_STOP_LID_HEATER
-#define DEBUG_FIX_HEATER_VALUE 105
-//#define DEBUG_WEAKEN_PELTIER
 
 // lid resistance table, in Ohms
 #ifdef LID_THERMISTOR_ORIGINAL
@@ -278,19 +253,19 @@ PROGMEM const unsigned long PLATE_RESISTANCE_TABLE[] = {
 
 #elif defined(PLATE_THERMISTOR_NXFT15WF104FA2B100)
 PROGMEM const unsigned long PLATE_RESISTANCE_TABLE[] = {
-	691288, 649503, 610530, 574163, 540210, 508497, 478860, 451151, 425232, 400977, // 0-9 (-10)
-	378268, 356997, 337063, 318376, 300848, 284401, 268961, 254461, 240837, 228032, // 10-19 (0)
-	215991, 204664, 194004, 183969, 174517, 165611, 157216, 149301, 141834, 134789, // 20-29 (10)
-	128137, 121856, 115923, 110315, 105014, 100000, 95257, 90768, 86519, 82495, // 30-39 (20)
-	78682, 75069, 71644, 68397, 65316, 62392, 59617, 56983, 54480, 52103, // 40-49 (30)
-	49843, 47695, 45652, 43709, 41860, 40100, 38424, 36828, 35308, 33860, // 50-59 (40)
-	32479, 31163, 29907, 28709, 27567, 26476, 25435, 24440, 23490, 22583, // 60-69 (50)
-	21715, 20886, 20093, 19335, 18610, 17915, 17251, 16615, 16006, 15422, // 70-79 (60)
-	14863, 14328, 13815, 13322, 12850, 12398, 11964, 11547, 11147, 10763, // 80-89 (70)
-	10394, 10040, 9700, 9374, 9060, 8758, 8468, 8189, 7920, 7662, // 90-99 (80)
-	7414, 7175, 6945, 6723, 6510, 6304, 6106, 5916, 5732, 5555, // 100-109 (90)
-	5384, 5220, 5061, 4908, 4760, 4618, 4480, 4348, 4219, 4096, // 110-119 (100)
-	3976, 3861, 3749, 3642, 3538, 3437, 3340, 3246, 3155, 3067 // 120-129 (110)
+	6912880, 6495030, 6105300, 5741630, 5402100, 5084970, 4788600, 4511510, 4252320, 4009770, // 0-9 (-10)
+	3782680, 3569970, 3370630, 3183760, 3008480, 2844010, 2689610, 2544610, 2408370, 2280320, // 10-19 (0)
+	2159910, 2046640, 1940040, 1839690, 1745170, 1656110, 1572160, 1493010, 1418340, 1347890, // 20-29 (10)
+	1281370, 1218560, 1159230, 1103150, 1050140, 1000000, 952570, 907680, 865190, 824950, // 30-39 (20)
+	786820, 750690, 716440, 683970, 653160, 623920, 596170, 569830, 544800, 521030, // 40-49 (30)
+	498430, 476950, 456520, 437090, 418600, 401000, 384240, 368280, 353080, 338600, // 50-59 (40)
+	324790, 311630, 299070, 287090, 275670, 264760, 254350, 244400, 234900, 225830, // 60-69 (50)
+	217150, 208860, 200930, 193350, 186100, 179150, 172510, 166150, 160060, 154220, // 70-79 (60)
+	148630, 143280, 138150, 133220, 128500, 123980, 119640, 115470, 111470, 107630, // 80-89 (70)
+	103940, 100400, 97000, 93740, 90600, 87580, 84680, 81890, 79200, 76620, // 90-99 (80)
+	74140, 71750, 69450, 67230, 65100, 63040, 61060, 59160, 57320, 55550, // 100-109 (90)
+	53840, 52200, 50610, 49080, 47600, 46180, 44800, 43480, 42190, 40960, // 110-119 (100)
+	39760, 38610, 37490, 36420, 35380, 34370, 33400, 32460, 31550, 30670 // 120-129 (110)
 };
 #else
 	#error "Number of the plate thermistor is not specified!"
@@ -367,8 +342,8 @@ CPlateThermistor::CPlateThermistor():
   digitalWrite(SLAVESELECT,HIGH); //disable device
 }
 //------------------------------------------------------------------------------
-#define RESISTOR_SINGLE 16000
-#define RESISTOR_DOUBLE 6153
+#define RESISTOR_SINGLE 160000
+#define RESISTOR_DOUBLE 61538
 #define RESISTOR_MODE_THRESHOLD_TEMPERATURE 81.35
 
 void CPlateThermistor::ReadTemp() {
@@ -395,11 +370,12 @@ void CPlateThermistor::ReadTemp() {
 	unsigned int convHigh = (conv >> 16);
 
 	digitalWrite(SLAVESELECT, HIGH);
-
 	unsigned long voltage_mv = voltage * 1000;
 
-	unsigned int resistor = (resistorMode==TEMP_LOW)? RESISTOR_SINGLE:RESISTOR_DOUBLE;
-	resistance = voltage_mv * resistor / (5000 - voltage_mv); // in hecto ohms
+	unsigned long resistor = (resistorMode==TEMP_LOW)? RESISTOR_SINGLE:RESISTOR_DOUBLE;
+
+	/*
+	resistance = (voltage_mv * resistor) / (5000 - voltage_mv); // in hecto ohms
 	iTemp = TableLookup(PLATE_RESISTANCE_TABLE,
 			sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]),
 			PLATE_RESISTANCE_TABLE_OFFSET, resistance);
@@ -414,12 +390,12 @@ void CPlateThermistor::ReadTemp() {
 		resistorMode = TEMP_HIGH;
 		digitalWrite(PIN_LID_RESISTOR_SWITCH, LOW);
 	}
-	/*
-	resistance = voltage_mv * 22000 / (5000 - voltage_mv); // in hecto ohms
-	iTemp = TableLookup(PLATE_RESISTANCE_TABLE, sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]), -40, resistance);
-	iTemp = voltage_mv;
 	*/
-	
+
+	resistance = voltage_mv * RESISTOR_SINGLE / (5000 - voltage_mv); // in hecto ohms
+	//resistance = voltage_mv * 22000 / (5000 - voltage_mv); // in hecto ohms
+	iTemp = TableLookup(PLATE_RESISTANCE_TABLE, sizeof(PLATE_RESISTANCE_TABLE) / sizeof(PLATE_RESISTANCE_TABLE[0]), PLATE_RESISTANCE_TABLE_OFFSET, resistance);
+
 }
 //------------------------------------------------------------------------------
 char CPlateThermistor::SPITransfer(volatile char data) {

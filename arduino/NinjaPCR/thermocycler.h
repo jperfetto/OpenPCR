@@ -87,7 +87,8 @@ public:
   
   int getAnalogValuePeltier() { return analogValuePeltier; }
   int getAnalogValueLid() { return analogValueLid; }
-  
+  //ResistorMode getPlateResistorMode () { return iPlateThermistor.GetResistorMode(); }
+
   // control
   void SetProgram(Cycle* pProgram, Cycle* pDisplayCycle, const char* szProgName, int lidTemp); //takes ownership of cycles
   void Stop();
