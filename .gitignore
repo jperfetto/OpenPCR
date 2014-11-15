@@ -9,6 +9,7 @@
 *.elf
 *.aws
 *.s
+*~
 *.zip
 .dep
 usb/default
