@@ -192,7 +192,7 @@ void SerialControl::SendStatus() {
   } else if (state == Thermocycler::EIdle) {
     statusPtr = AddParam(statusPtr, 'v', OPENPCR_FIRMWARE_VERSION_STRING);
   }
-//#ifdef DEBUG_THERMISTORS
+#ifdef DEBUG_THERMISTORS
   // Lid Voltage
   /*
   statusPtr = AddParam(statusPtr, 'w', tc.getAnalogValueLid());
@@ -200,14 +200,15 @@ void SerialControl::SendStatus() {
   // Peltier Voltage
   //statusPtr = AddParam(statusPtr, 'x', tc.getAnalogValuePeltier());
   // Peltier Resistance Value
-  /*
+
   unsigned long resistance = (unsigned long)tc.GetPlateResistance();
   statusPtr = AddParam(statusPtr, 'y', resistance, false);
   // Plate resistor mode (HIGH/LOW)
+  /*
   int resistorMode = (tc.getPlateResistorMode()==TEMP_HIGH)? 2:1;
   statusPtr = AddParam(statusPtr, 'z', resistorMode);
   */
-//#endif
+#endif
   
   statusPtr++; //to include null terminator
   

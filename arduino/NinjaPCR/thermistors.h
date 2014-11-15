@@ -46,7 +46,7 @@
 
 /* For debug */
 //#define DEBUG_FORCE_STOP_LID_HEATER
-#define DEBUG_FIX_HEATER_VALUE 105
+//#define DEBUG_FIX_HEATER_VALUE 105
 
 class CLidThermistor {
 public:
