@@ -1,5 +1,5 @@
 var BAUD_RATE = 4800;
-var PORT_TO_IGNORE = new RegExp("Bluetooth");
+var PORT_TO_IGNORE = new RegExp("(Bluetooth|Wireless)");
 //chromeSerial
 var Serial = function () {
 	this.rxBuffer = [];
