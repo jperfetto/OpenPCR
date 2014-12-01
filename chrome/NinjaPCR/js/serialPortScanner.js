@@ -52,8 +52,10 @@ SerialPortScanner.prototype._scan = function(callback) {
 
 		window.setTimeout (function(){
 			console.log("TIMEOUT.");
-			currentScanner._read();
-			currentScanner = null;
+			if (currentScanner) {
+			    currentScanner._read();
+			    currentScanner = null;
+			}
 		},
 				SerialPortScanner.DURATION_MSEC)
 		var connectionId = openInfo.connectionId;
