@@ -406,11 +406,15 @@ void Thermocycler::ControlPeltier() {
   SetPeltier(newDirection, abs(iPeltierPwm));
 }
 void Thermocycler::ControlLid() {
+#ifdef DEBUG_FORCE_STOP_LID_HEATER
+  //Nothing to do.
+#else
   int drive = 0;  
   if (iProgramState == ERunning || iProgramState == ELidWait)
     drive = iLidPid.Compute(iTargetLidTemp, GetLidTemp());
   analogWrite(3, drive);
   analogValueLid = drive;
+#endif
 }
 
 //PreprocessProgram initializes ETA parameters and validates/modifies ramp conditions
@@ -480,7 +484,6 @@ void Thermocycler::SetPeltier(ThermalDirection dir, int pwm) {
     digitalWrite(2, LOW);
     digitalWrite(4, LOW);
   }
-
   analogWrite(9, pwm);
   analogValuePeltier = (dir==COOL)?-pwm:pwm;
 }

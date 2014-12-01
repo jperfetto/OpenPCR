@@ -16,8 +16,8 @@
  *  the OpenPCR control software.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <LiquidCrystal.h>
 #include <EEPROM.h>
+#include <LiquidCrystal.h>
 
 #include "pcr_includes.h"
 #include "thermocycler.h"

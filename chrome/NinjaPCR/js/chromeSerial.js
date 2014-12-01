@@ -1,9 +1,23 @@
 var BAUD_RATE = 4800;
 var PORT_TO_IGNORE = new RegExp("Bluetooth");
-
+//chromeSerial
 var Serial = function () {
+	this.rxBuffer = [];
 	this.port = null;
+	this.onReceive = null;
+	var self = this;
+	chrome.serial.onReceive.addListener(function (info){
+		if (self.onReceive) {
+			self.onReceive(info);
+		}
+	});
 };
+Serial.prototype.setOnReceive = function (func) {
+	this.onReceive =  func;
+}; 
+
+var serialDataArray = [];
+var currentScanner = null;
 
 /* Command Code */
 var SEND_CMD = 0x10;
@@ -138,52 +152,36 @@ Serial.prototype.requestStatus = function (callback) {
 	var connectionId = self.connectionId;
 	var data = getFullCommand("", STATUS_REQ);
 	Log.v("Request status... connectionId=" + connectionId);
-	chrome.serial.send(connectionId, data, function (sendInfo){
-		self.txBusy = false;
-		self.startListeningStatus(port, connectionId);
-	});
-};
-
-Serial.prototype.startListeningStatus = function (port, connectionId) {
-	this.readMessage = "";
-	this.listenStatus(port, connectionId);
-};
-Serial.prototype.listenStatus = function (port, connectionId) {
-	if (this.txBusy || this.complete) {
-		return;
-	}
-	var self = this;
-	var now = new Date();
-	if (this.lastResponseTime && RESPONSE_TIMEOUT_MSEC<now.getTime() - this.lastResponseTime.getTime() && !this.connectionAlertDone) {
-		this.connectionAlertDone = true;
-		Log.w("Connection on port " + this.port + " seems to be lost. Reconnect...");
-		document.getElementById('runningUnplugged').style.display = 'block';
-		var self = this;
-		var options = {
-				bitrate:BAUD_RATE
-		};
-		chrome.serial.open(this.port, options, function (openInfo) {
-			var connectionId = openInfo.connectionId;
-			if (connectionId<0) {
-				Log.e("Connection error. ID=" + connectionId);
-				callback(null);
-			} else {
-				self.connectionId = connectionId;
-				Log.d("Reconnected. conenctionId=" + connectionId);
-			}
-		});
+	chrome.serial.send(connectionId, data, function (sendInfo) {
+		if (sendInfo.error) {
+			console.log("sendInfo=" + sendInfo.error);this.connectionAlertDone = true;
+			Log.w("Connection on port " + this.port + " seems to be lost. Reconnecting...");
+			document.getElementById('runningUnplugged').style.display = 'block';
+			var options = {
+					bitrate:BAUD_RATE
+			};
+			chrome.serial.open(this.port, options, function (openInfo) {
+				var connectionId = openInfo.connectionId;
+				if (connectionId<0) {
+					Log.e("Connection error. ID=" + connectionId);
+					callback(null);
+				} else {
+					self.connectionId = connectionId;
+					Log.d("Reconnected. conenctionId=" + connectionId);
+				}
+			});
+		}
 		
-	}
-	chrome.serial.read(connectionId, Serial.BYTES_TO_READ, function (readInfo) {
-		if (readInfo.bytesRead>0) {
-			var arr = new Uint8Array(readInfo.data);
+		self.txBusy = false;
+		var time = new Date();
+		self.setOnReceive(function(info){
+			var arr = new Uint8Array(info.data);
 			for (var i=0; i<arr.length; i++) {
 				self.processByte(arr[i]);
 			}
-		}
-		self.listenStatus(port, connectionId);
+		});
 	});
-}
+};
 
 var nextByteIndex = 0;
 var currentCommand = 0;
@@ -248,22 +246,6 @@ Serial.prototype.finishReading= function() {
 }
 Serial.BYTES_TO_READ = 128;
 Serial.REMOVE_SIGNAL = new RegExp("(pcr)+");
-Serial.prototype.startListeningPort = function (port, connectionId) {
-	this.readMessage = "";
-	this.listenPort(port, connectionId);
-};
-Serial.prototype.listenPort = function (port, connectionId) {
-	var self = this;
-	chrome.serial.read(connectionId, Serial.BYTES_TO_READ, function (readInfo) {
-		if (readInfo.bytesRead>0) {
-			var message = String.fromCharCode.apply(null, new Uint8Array(readInfo.data));
-			self.readMessage += message;
-			self.readMessage = self.readMessage.replace(Serial.REMOVE_SIGNAL,'');
-			Log.v(self.readMessage);
-		}
-		self.listenPort(port, connectionId);
-	});
-}
 
 function getArrayBufferForString(str) {
 	var buff = new ArrayBuffer(str.length);
