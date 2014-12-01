@@ -44,6 +44,7 @@ SerialPortScanner.prototype._scan = function(callback) {
 		callback(null);
 		return;
 	}
+	Log.d("Port found: " + port);
 	var self = this;
 	var options = {
 			bitrate:BAUD_RATE
