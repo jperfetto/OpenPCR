@@ -9,5 +9,12 @@
 *.elf
 *.aws
 *.s
+*~
+*.zip
 .dep
 usb/default
+.project
+.gitignore
+chrome/build_MakersToyPCR
+chrome/build_NinjaPCR
+Thums.db

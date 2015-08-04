@@ -1,0 +1,144 @@
+/*
+Theme Name: OpenPCR
+Author: Tito Jankowski
+Modified by Mariko GODA for NinjaPCR
+*/
+
+/* Buttons on the OpenPCR Form  ------------------------------------------  */
+input[type="button"] {
+	margin-top: 4px 7px;
+	border-radius: 4px;
+	border-width: 1px;
+	border-style: solid;
+	cursor: pointer;
+	padding:4px 8px;
+}
+input.small_button, a.small_button {
+	background: -webkit-linear-gradient(top, #ffffff, #dddddd);
+}
+.options_button {
+	float: right;
+	background: -webkit-linear-gradient(top, #ffffff, #dddddd);
+}
+
+input.home_button {
+	background: -webkit-linear-gradient(top, #ffffff, #dddddd);
+	font-size:120%;
+	text-indent:20px;
+	background-image:url(../images/home_background.png)!important;
+	background-repeat:no-repeat!important;
+}
+
+input.edit {
+	background: -webkit-linear-gradient(top, #ffffff, #dddddd);
+}
+
+.start {
+	background: -webkit-linear-gradient(top, #beebff, #58cdff);
+	border-color: #00a8f0;
+}
+
+.homeRunning {
+	background: -webkit-linear-gradient(top, #beebff, #58cdff);
+	border-color: #00a8f0;
+}
+
+.unplugged {
+	background: -webkit-linear-gradient(top, #beebff, #58cdff);
+	border-color: #00a8f0;
+}
+
+.save {
+	background: -webkit-linear-gradient(top, #b5ffa8, #76dc64);
+	border-color: #43a931;
+}
+
+.saveEdits {
+	background: -webkit-linear-gradient(top, #b5ffa8, #76dc64);
+	border-color: #43a931;
+}
+
+.cancel {
+	float: right;
+	background: -webkit-linear-gradient(top, #eeeeee, #cccccc);
+	border-color: #B8B8B8;
+}
+
+.stop {
+	align: right;
+	background: -webkit-linear-gradient(top, #eeeeee, #cccccc);
+	border-color: #B8B8B8;
+}
+
+.moreoptions {
+	float:right;
+}
+
+input.button {
+	border-radius: 9px!important;
+	width: 345px;
+	text-align: center;
+	font-weight:bold;
+	font-size: 18px;
+	outline: 0;
+	padding: 12px;
+	cursor: pointer;
+	display: block;
+	float: left;
+	text-decoration: none;
+}
+
+
+a.button {
+	-webkit-border-radius: 9px;
+	-moz-border-radius: 9px;
+	border-radius: 9px;
+	width: 315px;
+	text-align: center;
+	font-weight:;
+	font-size: 18px;
+	outline: 0;
+	padding: 12px;
+	cursor: pointer;
+	display: block;
+	float: left;
+	margin-top: 10px;
+	text-decoration: none;
+}
+
+a.button span {
+	display: block;
+	line-height: 14px;
+	padding: 5px 0 5px 18px;
+}
+
+a.button:active {
+	background-color: #B3B3B3;
+	outline: none; /* hide dotted outline in Firefox */
+}
+
+a.button:active span {
+	padding: 7px 0 3px 22px; /* push text down 1px */
+}
+
+a.small_button {
+	border-radius: 9px;
+	width: 80px;
+	text-align: center;
+	font-size: 12px;
+	outline: 0;
+	margin: 20px 4px;
+	border: #B8B8B8 solid 1px;
+	color: #000000;
+	cursor: pointer;
+	vertical-align: middle;
+	padding: 5px 10px;
+	text-decoration: none;
+	font-weight: normal;
+}
+
+
+a.small_button:active span {
+	background-position: bottom left;
+	padding: 11px 9px; /* push text down 1px */
+}

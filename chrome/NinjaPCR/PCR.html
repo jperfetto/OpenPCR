@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8" />
+  <link type="text/css" href="css/redmond/jquery-ui-1.8.13.custom.css" rel="stylesheet" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/reset.css" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/style.css" />
+  <link rel="stylesheet" type="text/css" media="all" href="css/buttons.css" />
+  <link href="css/SprySlidingPanels.css" rel="stylesheet" type="text/css" />
+  
+  <script type="text/javascript" src="js/lib/jquery-1.9.1.min.js"></script>
+  <script type="text/javascript" src="js/lib/jquery-ui-1.10.3.custom.min.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.validate.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.dialog.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.button.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.slider.js"></script>
+  <script type="text/javascript" src="js/lib/jquery.ui.progressbar.js"></script>
+  <script type="text/javascript" src="js/lib/sprypanels.js"></script>
+  	
+  <script type="text/javascript" src="js/lib/i18n.js"></script> 
+  <script type="text/javascript" src="js/chromeUtil.js"></script>
+  <script type="text/javascript" src="js/logger.js"></script>
+  <script type="text/javascript" src="js/experimentLogger.js"></script>
+  <script type="text/javascript" src="js/chromeSerial.js"></script>
+  <script type="text/javascript" src="js/serialPortScanner.js"></script>
+  <script type="text/javascript" src="js/form.js"></script>
+  <script type="text/javascript" src="js/openpcr.js"></script>
+  <script type="text/javascript" src="js/first_run.js"></script>
+  <script type="text/javascript" src="js/experiments/default_experiment.js"></script>
+  <script type="text/javascript" src="js/experiments/new_experiment.js"></script>
+ 
+  <style type="text/css">
+</style>
+</head>
+<body>
+<div id="content" role="main">
+	<div id="example2" class="SlidingPanels">
+	<div class="SlidingPanelsContentGroup">
+	
+	<!-- PANEL 1: Home Screen -->
+		<div id="ex1_p1" class="SlidingPanelsContent p1">
+			<div id="homeHeader" class="Header pcr_localize_appTitle">NinjaPCR</div>
+			<br />
+			<!-- Create a new blank experiment -->
+			<a href="#" id="newExperimentButton"><img src="images/new.png" style="vertical-align:middle;" ><span class="home_title pcr_localize_addNewExperiment">Add a new experiment</span></a>
+			<br /><br /><br />
+
+			<!-- Rerun an experiment -->
+			<a href="#" id="listSubmitButton"><img src="images/rerun.png" style="vertical-align:middle;">
+				<span class="home_title pcr_localize_reRunExperiment">Re-run an experiment</span></a>
+			<div id="reRun" align="right"></div>
+			<div id="portLabel" class="pcr_localize_searching">Searching for a device...</div>
+			<div id="update_dialog" style="display:none">
+				<div id="update_dialog_content"></div>
+				<a class="pcr_localize_download" id="OpenDownloadPage">Open Download Page</a>
+			</div>
+			<div>
+				<input type="button" id="About" value="About this app" class="small_button pcr_localize_about"/>
+			</div>
+			<div style="display:none">
+				<a class="small_button pcr_localize_contrast" id="Settings" style="display:none">Adjust the screen contrast</a>
+			</div>
+			<a class="small_button pcr_localize_clearData" id="ClearData" style="display:none">Clear all data(For Developer)</a>
+		</div>
+	<!-- END PANEL 1 -->
+	
+	<!-- PANEL 2: Experiment Screen -->
+			<div id="ex2_p2" class="SlidingPanelsContent p2">
+				<form class="cmxform" id="pcrForm" method="get" action="">
+				<div class="openpcr-form-div"> 
+				
+				<div class="Header"><a id="deleteButton" href="#"><img src="images/delete.png" height="30"></a> <span id="ExperimentName"></span>
+				
+				<input type="button" id="editButton" class="small_button edit pcr_localize_edit" value="Edit">
+				</div>
+				
+				
+				<div id="lidContainer" style="display:none;">
+					<div id="lidTemp"></div>
+					</div>
+				<div id="preContainer" style="display:none;">
+					<div id="preSteps"></div>
+					<a id="initialStep" class="edit"href="#"><img src="images/plus.png" height="30"> <span class="pcr_localize_initialStep">Initial Step</span></a>
+					</div>
+				<div id="cycleContainer" style="display:none;">
+					<div id="cycleSteps"></div>
+					<a id="addStepButton" class="edit" style="display:none;">
+						<span><img src="images/plus.png" height="30"> <span class="pcr_localize_step">Step</span></span>
+					</a>
+					</div>
+				<div id="postContainer" style="display:none;">
+					<div id="postSteps"></div>
+					<a id="finalStep" class="edit" href="#"><img src="images/plus.png" height="30"> <span class="pcr_localize_finalStep">Final Step</span></a>
+					</div>
+				<div id="holdContainer" style="display:none;">
+					<div id="holdSteps"></div>
+					</div>
+				</form>
+					</div>
+					<input type="button" class="small_button moreoptions pcr_localize_moreOptions" value="More Options" id="OptionsButton"/>
+					<input type="button" class="start button pcr_localize_start" id="Start" value="Start"/>
+				<input type="button" id="Unplugged" class="unplugged button pcr_localize_pleasePlug" value="Plug in your Toy PCR to Start"/>
+				<input type="button" id="Save" class="save button pcr_localize_savePreset" value="Save Preset"/>
+				<input type="button" id="SaveEdits" class="saveEdits button pcr_localize_saveEdits" value="Save Edits"/>
+				<input type="button" id="Cancel" class="cancel button pcr_localize_cancel" value="Cancel"/>
+			<div class="newline">
+				<input type="button" id="Home" class="small_button home_button pcr_localize_home" value="Home"/>
+			</div>
+		</div>
+		<!-- save-dialog -->
+				<div id="save_form" title="Save">
+					<form id="saveForm">
+						<fieldset>
+							<label for="name">Name your experiment</label>
+							<input type="text" name="name" id="name" maxlength="20" class="required text ui-widget-content ui-corner-all" />
+						</fieldset>
+					</form>
+				</div>
+				<!-- save_confirmation_dialog -->
+			<div id="save_confirmation_dialog" title="Saved">
+				<span class="pcr_localize_saved">Experiment saved!</span><br />
+			</div>
+			<!-- delete_dialog -->
+			<div id="delete_dialog" title="Delete">
+				<span class="pcr_localize_confirmDelete">Delete Experiment?</span><br />
+			</div>
+			<div id="delete_confirmation_dialog" title="Deleted">
+				<span class="pcr_localize_deleted">Deleted!</span><br />
+			</div>			
+	<!-- END PANEL 2 -->
+	
+	<!-- PANEL 3: Running Screen
+	This page is opened when NinjaPCR is in "Running" mode -->
+		<div id="ex2_p3" class="SlidingPanelsContent p3">
+		
+			<div id="running_header" role="main">
+				<div id="runningHeader" class="Header"></div>
+				
+				<span id="timeRemaining" class="pcr_localize_timeRemaining">Time remaining:</span><br />
+				<div id="minutesRemaining"></div>
+				<div id="progressbar"></div>
+				<br />
+				<div id="runningStats">
+					<table id="statsTable" class="runningTable">
+						<tr>
+							<th style="width:110px">
+								<span class="pcr_localize_status">Status</span>
+							</th>
+							<th colspan="3">
+								<span class="pcr_localize_currentTemp">Current Temperature</span>
+							</th>
+						</tr>
+						<tr>
+							<td rowspan="3">
+									<div id="cycleNumOfNum"><span class="pcr_localize_cycle">Cycle</span><br/><span id="cycleNumber">-</span> / 
+									<span id="totalCycles">-</span></div>
+							</td>
+							<td style="text-align:right;"><span class="pcr_localize_lid">Lid</span>: </td>
+							<td>
+								<span id="lidTemperature"></span>&deg;C
+							</td>
+							<td>
+								<meter min="0" max="120" value="85" id="meterLid"></meter>
+							</td>
+						</tr>
+						<tr>
+							<td style="text-align:right;"><span class="pcr_localize_block">Block</span>:</td>
+							<td>
+								<span id="blockTemperature"></span>&deg;C
+							</td>
+							<td>
+								<meter min="0" max="120" value="25" id="meterBlock"></meter>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<div class="deviceLabel"><span class="pcr_localize_lid">Lid</span>: </div>
+								<div class="deviceStatus" id="deviceStatusLid"></div>
+								<div class="deviceLabel"><span class="pcr_localize_peltier">Peltier</span>: </div>
+								<div class="deviceStatus" id="deviceStatusPeltier"></div>
+							</td>
+						</tr>
+					</table>
+					<div>
+						<div id="graph_container" style="width:420px;height:240px;padding:6px 8px 12px 8px;"></div>
+						<div style="text-align:center;">
+							<input type="button" id="graph_plus" class="small_button" value=" + "/>
+							<input type="button" id="graph_minus" class="small_button" value=" - "/>
+						</div>
+					</div>
+					<div id="elapsed_time_section">
+						<span class="pcr_localize_elapsedTime">Elapsed time: </span>
+						<span id="elapsedTime">00:00:00</span>
+					</div>
+					<div id="runningPluggedIn">
+						<div id="cancelButton">
+							<input type="button" id="stop_link" class="stop small_button pcr_localize_stop" value="Stop"/>
+						</div>
+					</div>
+					<div id="runningUnplugged" class="unplugged_message pcr_localize_unplugged">
+						Your NinjaPCR is unplugged from the computer.<br />
+						Plug in your NinjaPCR to get updated information on your run.
+					</div>
+						
+				</div>
+				<script type="text/javascript" src="js/lib/flotr2.min.js"></script>
+				<script type="text/javascript" src="js/graph.js"></script>
+				
+			<div id="homeButton">
+				<input type="button" id="Home" class="button homeRunning pcr_localize_home" value="Home"/>
+			</div>
+			<div style="clear:both;"></div>
+			<div style="margin-top:6px;">
+				<a class="small_button pcr_localize_saveCsv" id="download" style="display:none;">Save CSV</a>
+			</div>
+			<!-- stop-dialog -->
+			<div id="stop_dialog" title="Stop">
+				<span class="pcr_localize_stopPcr">Stop PCR?</span>
+			</div>
+			<!-- about-dialog -->
+			<div id="about_dialog" title="About NinjaPCR">
+				Version <span id="appVersion"></span><br />
+				NinjaPCR App<br />
+				http://www.tori.st<br />
+				Email us: all@tori.st
+			</div>
+
+			<div id="alert_dialog" title="Alert">
+				<div id="alert_dialog_content"></div>
+			</div>
+			
+			<!-- settings-dialog -->
+			<div id="settings_dialog" title="Set Screen Contrast">
+				<span class="pcr_localize_dragSlider">Drag the slider to adjust the screen's contrast.</span>
+				<div id="contrast_slider"></div>
+			</div>	
+			
+			</div>
+		</div>
+	<!-- END PANEL 3 -->
+</div>
+			<div id="starting" title="Starting">
+				<span class="pcr_localize_readySteadyGo">Ready. Steady. Go!</span>
+			</div>
+
+</body>
+</html>

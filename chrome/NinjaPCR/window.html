@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Chrome Serial Monitor</title>
+	</head>
+	<body>
+		<script type="text/javascript" src="serial.js"></script>
+		<h1>Serial Monitor</h1>
+		<select id="ports"></select>
+		<input type="text" id="baud" value="9600" size="5"/>
+		<input type="button" id="open" value="Open"/>
+		<input type="button" id="close" value="Close"/>
+		<h2>Write</h2>
+		<div>
+			<textarea cols="60" rows="4" id="textWrite"></textarea>
+			<div>
+				<input type="button" id="write" value="Write"/>
+			</div>
+		</div>
+		<h2>Read</h2>
+		<div>
+			<textarea cols="60" rows="4" id="textRead"></textarea>
+			<div>
+				<input type="button" id="clear" value="Clear"/>
+				
+			</div>
+		</div>
+	</body>
+</html>

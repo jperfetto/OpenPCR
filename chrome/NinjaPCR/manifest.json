@@ -1,0 +1,13 @@
+{
+	"name": "__MSG_extTitle__",
+	"description": "__MSG_extDescription__",
+	"version": "1.2.1",
+	"default_locale": "en",
+	"app": {
+		"background": {
+			"scripts": ["background.js"]
+		}
+	},
+	"icons": { "16": "img/icon16.png", "128": "img/icon128.png" },
+	"permissions": ["serial","storage","fileSystem","fileSystem.write"]
+}

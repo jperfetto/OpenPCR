@@ -1,0 +1,323 @@
+/*
+Theme Name: OpenPCR
+Author: Tito Jankowski
+Modified by Mariko GODA for NinjaPCR
+*/
+image:active span {
+	padding: 7px 0 3px 22px; /* push text down 1px */
+}
+
+#dropdown {
+	padding: 4px 2px;
+	border: solid 1px #aacfe4;
+	height: 50px;
+	margin: 2px 0 20px 10px;
+	font-size: 20px;
+	text-align: center;
+}
+
+/* The main containers for the OpenPCR Form ------------------------------------------ */
+#lidContainer {
+	border-top: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+}
+
+#preContainer {
+	border-top: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+}
+
+#cycleContainer {
+	border: 1px solid grey;
+	padding: 10px;
+}
+
+#postContainer {
+	border-bottom: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 10px;
+}
+
+#holdContainer {
+	border-bottom: 1px solid grey;
+	border-left: 1px solid grey;
+	border-right: 1px solid grey;
+	padding: 5px 10px;
+}
+
+#runningUnplugged {
+	text-align: center;
+	color: red;
+}
+
+#portLabel {
+	margin: 10px 0px;
+}
+
+#presetName {
+	font-size: 24px;
+	text-align: center;
+	padding-bottom: 10px;
+}
+
+#save_form {
+	text-align: center;
+}
+
+.Header {
+	font-size: 30px;
+	padding-bottom: 14px;
+	text-align: center;
+	font-weight: bold;
+	color: #4C4C4C;
+}
+
+#runningStats {
+	border: 1px #959595 solid;
+	margin: 0px;
+	padding: 10px;
+	-webkit-border-radius: 9px;
+	-moz-border-radius: 9px;
+	border-radius: 9px;
+}
+
+.runningTable {
+	width: 100%;
+	margin-bottom: 10px;
+}
+
+.runningTable td,.runningTable th {
+	vertical-align: top;
+	text-align: left;
+	padding: 4px !important;
+}
+
+#statsTable meter {
+	width: 160px;
+}
+
+.runningHeaders {
+	font-size: 17px;
+	padding-bottom: 20px;
+}
+
+.runningNums {
+	font-size: 14px;
+}
+
+a {
+	text-decoration: none;
+	color: black;
+}
+
+.home_title {
+	font-size: 24px;
+	padding-left: 10px;
+}
+
+.title {
+	font-weight: bold;
+	padding-top: 10px;
+	padding-left: 3px;
+	padding-right: 50px;
+}
+
+/* Running Page  ------------------------------------------  */
+* /
+
+#running_header {
+	width: 100%;
+}
+
+.timer {
+	font-size: 24px;
+	text-align: center;
+	padding-top: 0px;
+	padding-bottom: 15px;
+	white-space: nowrap;
+}
+
+#about_dialog {
+	margin-top: 6px;
+}
+
+#update_dialog {
+	border: 1px solid #46f;
+	background-color: #def;
+	padding: 6px;
+	margin: 12px;
+}
+/* =Layout -------------------------------------------------------------- */
+html {
+	overflow-y: scroll;
+}
+
+body {
+	font-family: helvetica, arial, sans-serif;
+	background-color: white;
+}
+
+#wrapper {
+	margin: 0 auto;
+	min-height: 1200px;
+	height: auto !important;
+	height: 1200px;
+	position: relative;
+}
+
+#header {
+	
+}
+
+/* Dialogs shouldn't have titles/close buttons */
+.ui-dialog-titlebar {
+	display: none;
+}
+
+/*contentbox*/
+#main {
+	padding: 30px 0;
+}
+
+#content {
+	padding: 10px 50px;
+	width: 500px;
+	margin: 0 auto 10px;
+}
+
+.openpcr-form-div label {
+	display: block;
+	margin: 5px 0 0px -55px;
+}
+
+.openpcr-form-div .textinput {
+	margin: 0;
+	-webkit-border-radius: 9px;
+	-moz-border-radius: 9px;
+	border-radius: 9px;
+	font-size: 18px;
+	font-family: helvetica, arial, sans-serif;
+	border: 0;
+	background: #F0F0F0;
+	width: 70px;
+	padding: 8px 9px 6px;
+	border: #B8B8B8 solid 1px;
+	text-align: center;
+}
+
+.openpcr-form-div .textinput:focus {
+	border: #6EABEB solid 3px;
+	padding: 6px 7px 4px;
+	outline: 0;
+}
+
+.openpcr-form-div input.invalid,.openpcr-form-div textarea.invalid {
+	background-color: pink;
+}
+
+.openpcr-form-div .reqdinput {
+	position: relative;
+}
+
+/* Positions the C and "sec" labels on the form */
+.openpcr-form-div span.units {
+	font-size: 12px;
+	font-weight: normal;
+	position: relative;
+	left: 25px;
+	top: -23px;
+}
+
+label.error {
+	font-size: 11px;
+	float: right;
+	position: relative;
+	left: -60px;
+	top: 0 px;
+	font-weight: bold;
+	color: #FF0067;
+}
+
+.clear { /* generic container (i.e. div) for floating buttons */
+	overflow: hidden;
+	width: 100%;
+}
+
+.newline {
+	clear: both;
+}
+
+hr,.clearAll {
+	clear: both;
+}
+
+#example2.SlidingPanels {
+	float: left;
+}
+
+#example2 .SlidingPanelsContentGroup {
+	float: left;
+	width: 10000px;
+}
+
+#example2 .SlidingPanelsContent {
+	float: left;
+	width: 500px;
+}
+
+div.deviceLabel {
+	float: left;
+	font-weight: bold;
+	text-align: right;
+	width: 68px;
+	display: block;
+	font-size: 80%;
+}
+
+div.deviceStatus {
+	float: left;
+	font-weight: normal;
+	text-align: left;
+	width: 80px;
+	display: block;
+	font-size: 90%;
+}
+
+/* Temperature Meters */
+meter {
+	-webkit-appearance: none;
+}
+
+::-webkit-meter-bar {
+	height: 12px;
+	background: #fff;
+	border: 1px solid #888;
+	box-shadow: inset 0px 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+#meterBlock::-webkit-meter-optimum-value {
+	background: -webkit-linear-gradient(top, #bcdb84 0%, #5ba009 100%);
+}
+
+#meterLid::-webkit-meter-optimum-value {
+	background: -webkit-linear-gradient(top, #a4e3ff 0%, #01a4ea 100%);
+}
+
+#OpenDownloadPage {
+	text-decoration:underline;
+	cursor:pointer;
+}
+#minutesRemaining {
+	text-align:center;
+	font-size:22px;
+}
+#elapsed_time_section {
+	font-size:14px;
+	text-align:right;
+	padding-right:55px;
+}
