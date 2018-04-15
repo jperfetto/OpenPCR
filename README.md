@@ -10,3 +10,6 @@ Software for the OpenPCR thermocycler
 ## For more information
 - Visit [openpcr.org](http://openpcr.org) for more information on the OpenPCR project
 - Visit [www.chaibio.com/openpcr](https://www.chaibio.com/openpcr) to purchase an OpenPCR device
+
+## License
+OpenPCR is licensed under [GNU GPLv3](http://www.gnu.org/copyleft/gpl.html).
